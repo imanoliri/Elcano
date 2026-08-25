@@ -16,7 +16,7 @@ if (ocean && shell) {
   let camera: CameraDetail | null = null;
   let detailedRenderer: ((ctx: CanvasRenderingContext2D, screenScale: number) => void) | null = null;
   let loading = false;
-  const DETAIL_ZOOM = 18;
+  const DETAIL_ZOOM = 10;
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
