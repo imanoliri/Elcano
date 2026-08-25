@@ -1,4 +1,5 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
+import { createAtlanticClimatologyProvider } from './grid-environment';
 
 export type EnvironmentalSample = EastNorthVector;
 
@@ -17,13 +18,12 @@ function vectorFromTowardBearing(speed: number, bearingDeg: number): Environment
 }
 
 /**
- * Lightweight baked approximation used as an offline fallback and development
- * provider. It captures broad trade-wind/westerly belts and subtropical gyres,
- * but is deliberately not presented as historical weather truth.
+ * Lightweight analytic approximation retained as an offline fallback and for
+ * positions outside the packed Atlantic dataset. It is not historical truth.
  */
 export const climatologyEnvironment: EnvironmentProvider = {
   id: 'baked-climatology-v1',
-  label: 'Simplified climatology',
+  label: 'Simplified climatology fallback',
   windAt(position, time) {
     const lat = position.lat;
     const monthPhase = (time.getUTCMonth() / 12) * Math.PI * 2;
@@ -38,9 +38,6 @@ export const climatologyEnvironment: EnvironmentProvider = {
   },
   currentAt(position) {
     const { lat, lon } = position;
-
-    // Broad Atlantic/Pacific/Indian gyre hints. These are intentionally smooth
-    // and low-detail so the provider can later be replaced by gridded data.
     let east = 0;
     let north = 0;
     if (lat > 5 && lat < 35) east -= 0.35;
@@ -56,7 +53,8 @@ export const climatologyEnvironment: EnvironmentProvider = {
   },
 };
 
-let activeEnvironment: EnvironmentProvider = climatologyEnvironment;
+export const observedAtlanticEnvironment = createAtlanticClimatologyProvider(climatologyEnvironment);
+let activeEnvironment: EnvironmentProvider = observedAtlanticEnvironment;
 
 export function setEnvironmentProvider(provider: EnvironmentProvider) {
   activeEnvironment = provider;
