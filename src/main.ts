@@ -2,8 +2,10 @@ import './style.css';
 import {
   currentAt,
   distanceToDestination,
+  sailingVelocity,
   stepWorld,
   windAt,
+  type Vec2,
   type WorldState,
 } from './simulation';
 
@@ -27,7 +29,7 @@ app.innerHTML = `
     <section class="instrument-strip" aria-label="Navigation instruments">
       <div class="instrument compass-instrument">
         <span class="instrument-label">Heading</span>
-        <div id="compass" class="compass"><span class="compass-needle">↑</span></div>
+        <div class="compass"><span id="compass-needle" class="compass-needle">↑</span></div>
         <strong id="heading">0°</strong>
       </div>
       <div class="instrument">
@@ -61,9 +63,19 @@ app.innerHTML = `
           <span>Helm</span>
           <strong id="rudder-readout">Centered</strong>
         </div>
+        <div class="dynamic-value-row">
+          <span>Slip angle</span>
+          <strong id="slip-readout">0°</strong>
+        </div>
         <div class="helm-row">
           <div id="wheel" class="wheel" aria-hidden="true">✥</div>
-          <input id="rudder" type="range" min="-45" max="45" step="1" value="0" aria-label="Rudder angle">
+          <div id="rudder-track" class="slider-stack slip-stack">
+            <div class="dynamic-track slip-track" aria-hidden="true">
+              <span class="track-center"></span>
+              <span id="slip-indicator" class="slip-indicator"></span>
+            </div>
+            <input id="rudder" type="range" min="-45" max="45" step="1" value="0" aria-label="Rudder angle">
+          </div>
           <button id="center-rudder" class="center-button">Center</button>
         </div>
         <div class="range-labels"><span>Port</span><span>Starboard</span></div>
@@ -74,11 +86,56 @@ app.innerHTML = `
           <span>Sails</span>
           <strong id="sail-readout">75%</strong>
         </div>
+        <div class="dynamic-value-row">
+          <span>Apparent wind</span>
+          <strong id="apparent-wind-readout">0.0 kn</strong>
+        </div>
         <div class="sail-row">
           <span class="sail-icon" aria-hidden="true">◢</span>
-          <input id="sails" type="range" min="0" max="100" step="1" value="75" aria-label="Sail area">
+          <div class="slider-stack wind-stack">
+            <div class="dynamic-track apparent-wind-track" aria-hidden="true">
+              <span id="apparent-wind-fill" class="apparent-wind-fill"></span>
+            </div>
+            <input id="sails" type="range" min="0" max="100" step="1" value="75" aria-label="Sail area">
+          </div>
         </div>
         <div class="range-labels"><span>Furled</span><span>Full sail</span></div>
+      </div>
+
+      <div class="ship-vector-panel" aria-label="Ship-relative wind and current diagram">
+        <div class="vector-panel-heading">
+          <span>Ship forces</span>
+          <small>ship-relative</small>
+        </div>
+        <svg id="ship-diagram" viewBox="0 0 150 120" role="img" aria-label="Top-down ship with relative wind and current vectors">
+          <defs>
+            <marker id="arrow-wind" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#f4efe6" />
+            </marker>
+            <marker id="arrow-current" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#4bd4ff" />
+            </marker>
+            <marker id="arrow-track" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#e8b94f" />
+            </marker>
+          </defs>
+          <circle cx="75" cy="60" r="42" class="vector-ring" />
+          <line x1="75" y1="12" x2="75" y2="108" class="vector-axis" />
+          <line x1="27" y1="60" x2="123" y2="60" class="vector-axis" />
+          <text x="75" y="10" text-anchor="middle" class="bow-label">BOW</text>
+          <g class="ship-silhouette">
+            <path d="M75 28 C84 40 86 75 75 92 C64 75 66 40 75 28 Z" />
+            <line x1="75" y1="34" x2="75" y2="84" />
+          </g>
+          <line id="relative-wind-vector" x1="75" y1="60" x2="75" y2="32" class="diagram-vector wind-vector" marker-end="url(#arrow-wind)" />
+          <line id="relative-current-vector" x1="75" y1="60" x2="96" y2="60" class="diagram-vector current-vector" marker-end="url(#arrow-current)" />
+          <line id="track-vector" x1="75" y1="60" x2="75" y2="36" class="diagram-vector track-vector" marker-end="url(#arrow-track)" />
+        </svg>
+        <div class="vector-legend">
+          <span class="wind-key">Wind</span>
+          <span class="current-key">Current</span>
+          <span class="track-key">Track</span>
+        </div>
       </div>
 
       <div class="time-control">
@@ -101,7 +158,7 @@ app.innerHTML = `
           <span><i class="legend-line current-line"></i> Current</span>
           <span><i class="legend-dot"></i> Destination</span>
         </div>
-        <p class="modal-note">The ship does not move toward the destination automatically. Your heading, sail area, wind and current determine the actual track.</p>
+        <p class="modal-note">The ship does not move toward the destination automatically. Your heading, sail area, wind and current determine the actual track. The slip gauge shows the difference between where the bow points and where the ship actually moves.</p>
         <button id="start-mission" class="primary-button">Take the helm</button>
       </section>
     </div>
@@ -149,11 +206,11 @@ const tutorial = [
   },
   {
     title: '2. Make way',
-    text: 'Set some sail and start time. Your ship accelerates according to the wind angle and sail area. The current adds its own motion underneath you.',
+    text: 'Set some sail and start time. Your ship accelerates according to the wind angle and sail area. Watch apparent wind behind the sail control and the slip angle behind the helm.',
   },
   {
     title: '3. Find the current',
-    text: 'Keep working northeast into the upper half of the chart. Watch the blue current gauge: a stronger current can justify sailing a longer geometric route.',
+    text: 'Keep working northeast into the upper half of the chart. The ship diagram shows wind and current relative to your bow, helping you see which force is pushing you off course.',
   },
   {
     title: '4. Turn for landfall',
@@ -168,7 +225,6 @@ function setTimeScale(value: number) {
 }
 
 timeButtons.forEach((button) => button.addEventListener('click', () => setTimeScale(Number(button.dataset.time))));
-
 rudder.addEventListener('input', updateControlReadouts);
 sails.addEventListener('input', updateControlReadouts);
 centerRudder.addEventListener('click', () => {
@@ -350,59 +406,122 @@ function draw() {
 function updateInstruments() {
   const wind = windAt(state.ship.x, state.ship.y, state.timeHours);
   const current = currentAt(state.ship.x, state.ship.y);
-  const windStrength = Math.hypot(wind.x, wind.y);
-  const currentStrength = Math.hypot(current.x, current.y);
+  const sail = sailingVelocity(state.ship.headingDeg, wind, Number(sails.value) / 100);
+  const groundVelocity = { x: sail.x + current.x, y: sail.y + current.y };
+  const apparentWind = { x: wind.x - groundVelocity.x, y: wind.y - groundVelocity.y };
+
+  const speed = Math.hypot(groundVelocity.x, groundVelocity.y);
+  const windSpeed = Math.hypot(wind.x, wind.y);
+  const currentSpeed = Math.hypot(current.x, current.y);
+  const apparentWindSpeed = Math.hypot(apparentWind.x, apparentWind.y);
   const distance = distanceToDestination(state);
   const progress = Math.max(0, Math.min(1, 1 - distance / START_DISTANCE));
 
   setText('heading', `${state.ship.headingDeg.toFixed(0)}°`);
-  setText('speed', `${state.ship.speed.toFixed(2)} kn`);
-  setText('wind', windStrength.toFixed(2));
-  setText('current', currentStrength.toFixed(2));
+  setText('speed', `${speed.toFixed(2)} kn`);
+  setText('wind', windSpeed.toFixed(2));
   setText('wind-bearing', bearing(wind));
+  setText('current', currentSpeed.toFixed(2));
   setText('current-bearing', bearing(current));
-  setText('elapsed', `${state.timeHours.toFixed(1)} h`);
   setText('distance', `${distance.toFixed(0)} nm`);
+  setText('elapsed', `${state.timeHours.toFixed(1)} h`);
 
-  setBar('speed-bar', state.ship.speed / 2.2);
-  setBar('wind-bar', windStrength / 1.3);
-  setBar('current-bar', currentStrength / 0.7);
-  setBar('progress-bar', progress);
-  document.querySelector<HTMLElement>('.compass-needle')!.style.transform = `rotate(${state.ship.headingDeg}deg)`;
+  setWidth('speed-bar', Math.min(100, speed / 2.1 * 100));
+  setWidth('wind-bar', Math.min(100, windSpeed / 1.25 * 100));
+  setWidth('current-bar', Math.min(100, currentSpeed / 0.7 * 100));
+  setWidth('progress-bar', progress * 100);
+  document.querySelector<HTMLElement>('#compass-needle')!.style.transform = `rotate(${state.ship.headingDeg + 90}deg)`;
+
+  const course = vectorBearing(groundVelocity);
+  const slip = signedAngleDifference(course, state.ship.headingDeg);
+  const slipSide = slip < -0.5 ? 'port' : slip > 0.5 ? 'starboard' : 'none';
+  setText('slip-readout', `${Math.abs(slip).toFixed(1)}°${slipSide === 'none' ? '' : ` ${slipSide}`}`);
+  const slipIndicator = document.querySelector<HTMLElement>('#slip-indicator')!;
+  const clampedSlip = Math.max(-45, Math.min(45, slip));
+  slipIndicator.style.left = `${50 + clampedSlip / 90 * 100}%`;
+  slipIndicator.classList.toggle('port-slip', slip < -0.5);
+  slipIndicator.classList.toggle('starboard-slip', slip > 0.5);
+
+  setText('apparent-wind-readout', `${apparentWindSpeed.toFixed(2)} kn`);
+  setWidth('apparent-wind-fill', Math.min(100, apparentWindSpeed / 2.5 * 100));
+  updateShipDiagram(apparentWind, current, groundVelocity);
 }
 
-function setBar(id: string, ratio: number) {
-  document.querySelector<HTMLElement>(`#${id}`)!.style.width = `${Math.max(4, Math.min(100, ratio * 100))}%`;
+function updateShipDiagram(apparentWind: Vec2, current: Vec2, track: Vec2) {
+  setDiagramVector('relative-wind-vector', rotateIntoShipFrame(apparentWind), 37);
+  setDiagramVector('relative-current-vector', rotateIntoShipFrame(current), 33);
+  setDiagramVector('track-vector', rotateIntoShipFrame(track), 31);
+}
+
+function setDiagramVector(id: string, local: Vec2, maxLength: number) {
+  const element = document.querySelector<SVGLineElement>(`#${id}`)!;
+  const magnitude = Math.hypot(local.x, local.y);
+  if (magnitude < 0.001) {
+    element.setAttribute('x2', '75');
+    element.setAttribute('y2', '60');
+    return;
+  }
+  const scale = Math.min(maxLength, 16 + magnitude * 18) / magnitude;
+  // In the diagram, the bow points up. Ship-forward x therefore maps to SVG -y,
+  // while ship-starboard y maps to SVG +x.
+  element.setAttribute('x2', String(75 + local.y * scale));
+  element.setAttribute('y2', String(60 - local.x * scale));
+}
+
+function rotateIntoShipFrame(vector: Vec2): Vec2 {
+  const angle = -state.ship.headingDeg * Math.PI / 180;
+  return {
+    x: vector.x * Math.cos(angle) - vector.y * Math.sin(angle),
+    y: vector.x * Math.sin(angle) + vector.y * Math.cos(angle),
+  };
+}
+
+function vectorBearing(vector: Vec2) {
+  return (Math.atan2(vector.y, vector.x) * 180 / Math.PI + 360) % 360;
+}
+
+function signedAngleDifference(target: number, reference: number) {
+  return ((target - reference + 540) % 360) - 180;
+}
+
+function bearing(vector: Vec2) {
+  return `${vectorBearing(vector).toFixed(0)}°`;
 }
 
 function setText(id: string, value: string) {
-  document.querySelector(`#${id}`)!.textContent = value;
+  document.querySelector<HTMLElement>(`#${id}`)!.textContent = value;
 }
 
-function bearing(v: { x: number; y: number }) {
-  const deg = (Math.atan2(v.y, v.x) * 180 / Math.PI + 360) % 360;
-  return `${deg.toFixed(0)}°`;
+function setWidth(id: string, percent: number) {
+  document.querySelector<HTMLElement>(`#${id}`)!.style.width = `${Math.max(0, Math.min(100, percent))}%`;
 }
 
+let toastTimer = 0;
 function showToast(message: string) {
   toast.textContent = message;
   toast.classList.add('show');
-  window.setTimeout(() => toast.classList.remove('show'), 2200);
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => toast.classList.remove('show'), 1700);
 }
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, 0.1);
   last = now;
+
   if (timeScale > 0 && !reached) {
-    const dt = seconds * timeScale;
-    const rudderAngle = Number(rudder.value);
-    state.ship.headingDeg = (state.ship.headingDeg + rudderAngle * 0.03 * dt + 360) % 360;
-    state = stepWorld(state, dt, Number(sails.value) / 100);
+    const dtHours = seconds * timeScale;
+    const rudderValue = Number(rudder.value);
+    const sailTrim = Number(sails.value) / 100;
+    const speedFactor = Math.max(0.25, Math.min(1, state.ship.speed / 1.2));
+    state.ship.headingDeg = (state.ship.headingDeg + rudderValue * 0.42 * speedFactor * dtHours + 360) % 360;
+    state = stepWorld(state, dtHours, sailTrim);
     state.ship.x = Math.max(10, Math.min(canvas.width - 10, state.ship.x));
     state.ship.y = Math.max(10, Math.min(canvas.height - 10, state.ship.y));
   }
+
   revealAroundShip();
   updateTutorial();
+  updateControlReadouts();
   draw();
   requestAnimationFrame(frame);
 }
@@ -410,5 +529,4 @@ function frame(now: number) {
 revealAroundShip();
 updateControlReadouts();
 updateTutorial();
-openHelp();
 requestAnimationFrame(frame);
