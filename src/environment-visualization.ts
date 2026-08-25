@@ -6,12 +6,13 @@ const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
 
 if (ocean && shell) {
+  const mapCanvas = ocean;
   const overlay = document.createElement('canvas');
   overlay.id = 'environment-overlay';
-  overlay.width = ocean.width;
-  overlay.height = ocean.height;
+  overlay.width = mapCanvas.width;
+  overlay.height = mapCanvas.height;
   overlay.setAttribute('aria-hidden', 'true');
-  ocean.insertAdjacentElement('afterend', overlay);
+  mapCanvas.insertAdjacentElement('afterend', overlay);
 
   const ctx = overlay.getContext('2d');
   const badge = document.createElement('div');
@@ -77,11 +78,11 @@ if (ocean && shell) {
   }
 
   function syncTransform() {
-    overlay.style.transform = ocean.style.transform;
+    overlay.style.transform = mapCanvas.style.transform;
   }
 
   const observer = new MutationObserver(syncTransform);
-  observer.observe(ocean, { attributes: true, attributeFilter: ['style'] });
+  observer.observe(mapCanvas, { attributes: true, attributeFilter: ['style'] });
   syncTransform();
   refresh();
   window.setInterval(refresh, 500);
