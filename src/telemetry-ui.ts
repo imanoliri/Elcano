@@ -26,10 +26,10 @@ if (shipSilhouette) {
       fill="rgba(235,208,152,.12)" stroke="#ead098" stroke-width="1.6" />
     <path d="M65 87 Q75 94 85 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
     <path d="M75 31 L75 89" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
-    <path d="M65 43 Q75 39 85 43 L84 54 Q75 51 66 54 Z"
-      fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".65" />
-    <path d="M67 59 Q75 56 83 59 L82 69 Q75 66 68 69 Z"
-      fill="rgba(244,239,230,.58)" stroke="rgba(244,239,230,.88)" stroke-width=".6" />
+    <path d="M61 43 Q75 40.5 89 43 L88 49 Q75 47 62 49 Z"
+      fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".6" />
+    <path d="M63 59 Q75 57 87 59 L86 64 Q75 62.5 64 64 Z"
+      fill="rgba(244,239,230,.58)" stroke="rgba(244,239,230,.88)" stroke-width=".55" />
   `;
 }
 
