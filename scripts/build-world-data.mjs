@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { NetCDFReader } from 'netcdfjs';
 
 const WIND_URL = 'https://oceanwatch.pifsc.noaa.gov/erddap/griddap/ccmp-monthly-v2-0.json';
-const CURRENT_URL = 'https://ncss.hycom.org/thredds/ncss/grid/GLBu0.08/reanalysis';
+const CURRENT_URL = 'https://ncss.hycom.org/thredds/ncss/grid/GLBu0.08/expt_19.1/2012';
 const OUTPUT = new URL('../src/world/data/atlantic-climatology.generated.ts', import.meta.url);
 
 const MONTHS = 12;
@@ -139,9 +139,8 @@ async function buildCurrentGrid() {
   const step = 0.08;
   const grid = createGrid(41.04, 46.48, -11.44, 0.96, step);
 
-  // One representative monthly field keeps the deploy deterministic and avoids
-  // making dozens of large remote requests during every Netlify build. The
-  // native HYCOM 0.08° spatial resolution is preserved.
+  // One representative monthly field keeps the data-generation job compact.
+  // The native HYCOM 0.08° spatial resolution is preserved in the checked-in data.
   const year = 2012;
   for (let month = 0; month < 12; month += 1) {
     const date = `${year}-${String(month + 1).padStart(2, '0')}-15`;
@@ -180,7 +179,7 @@ async function main() {
   const wind = await buildWindGrid();
   const current = await buildCurrentGrid();
   const data = {
-    source: 'CCMP v2 monthly winds + HYCOM GLBu0.08 1/12° monthly current fields (2012)',
+    source: 'CCMP v2 monthly winds + HYCOM GLBu0.08 expt_19.1 2012 monthly current fields',
     generatedAt: 'deterministic-build',
     wind: serializableGrid(wind, pack(wind)),
     current: serializableGrid(current, pack(current)),
