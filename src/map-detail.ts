@@ -4,10 +4,12 @@ const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
 
 if (ocean && shell) {
+  const mapCanvas = ocean;
+  const viewport = shell;
   const overlay = document.createElement('canvas');
   overlay.id = 'map-detail-overlay';
   overlay.setAttribute('aria-hidden', 'true');
-  ocean.insertAdjacentElement('afterend', overlay);
+  mapCanvas.insertAdjacentElement('afterend', overlay);
 
   const ctx = overlay.getContext('2d');
   type CameraDetail = { x: number; y: number; scale: number; zoomMultiplier: number };
@@ -18,8 +20,8 @@ if (ocean && shell) {
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
-    const width = Math.max(1, shell.clientWidth);
-    const height = Math.max(1, shell.clientHeight);
+    const width = Math.max(1, viewport.clientWidth);
+    const height = Math.max(1, viewport.clientHeight);
     overlay.width = Math.round(width * dpr);
     overlay.height = Math.round(height * dpr);
     overlay.style.width = `${width}px`;
@@ -43,7 +45,7 @@ if (ocean && shell) {
     if (!ctx) return;
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, shell.clientWidth, shell.clientHeight);
+    ctx.clearRect(0, 0, viewport.clientWidth, viewport.clientHeight);
     if (!camera || camera.zoomMultiplier < DETAIL_ZOOM) return;
 
     if (!detailedRenderer) {
@@ -69,6 +71,6 @@ if (ocean && shell) {
     resize();
     render();
   });
-  resizeObserver.observe(shell);
+  resizeObserver.observe(viewport);
   resize();
 }
