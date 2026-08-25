@@ -117,7 +117,7 @@ async function fetchHycomSnapshot(date) {
     east: String(REGION.maxLon),
     time: `${date}T00:00:00Z`,
     vertCoord: '0',
-    accept: 'netCDF3',
+    accept: 'netCDF',
     addLatLon: 'true',
   });
   const response = await fetch(`${CURRENT_URL}?${params}`);
