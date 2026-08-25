@@ -43,6 +43,34 @@ if (windStack) {
   windStack.append(speedRow, angleRow);
 }
 
+// The main prototype currently exposes Pause/1x/4x/16x. Insert an 8x step
+// without changing the simulation API: the existing 16x control is used as a
+// bridge because its click handler reads data-time at click time.
+const timeControl = document.querySelector<HTMLElement>('.time-control');
+const sixteenButton = document.querySelector<HTMLButtonElement>('.time-button[data-time="16"]');
+let eightButton: HTMLButtonElement | null = null;
+if (timeControl && sixteenButton) {
+  eightButton = document.createElement('button');
+  eightButton.className = 'time-button';
+  eightButton.dataset.time = '8';
+  eightButton.textContent = '8×';
+  sixteenButton.before(eightButton);
+
+  eightButton.addEventListener('click', () => {
+    const original = sixteenButton.dataset.time;
+    sixteenButton.dataset.time = '8';
+    sixteenButton.click();
+    sixteenButton.dataset.time = original;
+    sixteenButton.classList.remove('active');
+    eightButton?.classList.add('active');
+  });
+
+  timeControl.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.time-button');
+    if (button && button !== eightButton) eightButton?.classList.remove('active');
+  });
+}
+
 const slipBar = document.querySelector<HTMLElement>('#geo-slip-bar');
 const slipValue = document.querySelector<HTMLElement>('#geo-slip-value');
 const windSpeedBar = document.querySelector<HTMLElement>('#geo-wind-speed-bar');
