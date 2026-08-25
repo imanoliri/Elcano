@@ -1,4 +1,5 @@
 import './camera-ui.css';
+import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
@@ -9,7 +10,7 @@ if (canvas && viewport) {
   indicator.setAttribute('aria-hidden', 'true');
   viewport.append(indicator);
 
-  let target = { x: canvas.width / 2, y: canvas.height / 2 };
+  let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
   let minScale = 1;
   let offsetX = 0;
@@ -21,10 +22,13 @@ if (canvas && viewport) {
   let pinchStartScale = 1;
   let pinchWorldAnchor = { x: 0, y: 0 };
 
-  // Midpoint of the San Sebastián → A Coruña tutorial in world pixels.
+  // Midpoint of the San Sebastián → A Coruña tutorial in logical world pixels.
   const tutorialCenter = { x: 699.2, y: 263.6 };
   const INITIAL_ZOOM_MULTIPLIER = 12;
   const MAX_ZOOM_MULTIPLIER = 64;
+
+  canvas.style.width = `${WORLD_MAP_WIDTH}px`;
+  canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
 
   function viewportSize() {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
@@ -32,25 +36,35 @@ if (canvas && viewport) {
 
   function clampCamera() {
     const { width, height } = viewportSize();
-    const mapWidth = canvas.width * scale;
-    const mapHeight = canvas.height * scale;
+    const mapWidth = WORLD_MAP_WIDTH * scale;
+    const mapHeight = WORLD_MAP_HEIGHT * scale;
 
     offsetX = mapWidth <= width ? (width - mapWidth) / 2 : Math.min(0, Math.max(width - mapWidth, offsetX));
     offsetY = mapHeight <= height ? (height - mapHeight) / 2 : Math.min(0, Math.max(height - mapHeight, offsetY));
   }
 
+  function announceCamera() {
+    const zoomMultiplier = scale / Math.max(0.0001, minScale);
+    canvas.dataset.cameraScale = String(scale);
+    canvas.dataset.zoomMultiplier = String(zoomMultiplier);
+    window.dispatchEvent(new CustomEvent('elcano:camera-change', {
+      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier },
+    }));
+  }
+
   function applyCamera() {
     clampCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    announceCamera();
     updateTargetIndicator();
   }
 
   function resetCamera() {
-    const { width, height } = viewportSize();
-    minScale = width / canvas.width;
+    const { width } = viewportSize();
+    minScale = width / WORLD_MAP_WIDTH;
     scale = Math.max(minScale, minScale * INITIAL_ZOOM_MULTIPLIER);
     offsetX = width / 2 - tutorialCenter.x * scale;
-    offsetY = height / 2 - tutorialCenter.y * scale;
+    offsetY = viewport.clientHeight / 2 - tutorialCenter.y * scale;
     applyCamera();
   }
 
@@ -186,7 +200,7 @@ if (canvas && viewport) {
   window.addEventListener('resize', () => {
     const oldMin = minScale;
     const { width } = viewportSize();
-    minScale = width / canvas.width;
+    minScale = width / WORLD_MAP_WIDTH;
     if (scale < minScale) scale = minScale;
     else if (Math.abs(scale - oldMin) < 0.001) scale = minScale * INITIAL_ZOOM_MULTIPLIER;
     applyCamera();
