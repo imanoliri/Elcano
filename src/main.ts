@@ -187,10 +187,12 @@ function draw() {
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawGrid(); drawLand(ctx); drawEnvironment(); drawFog();
 
-  const target = project(state.destination); window.dispatchEvent(new CustomEvent('elcano:camera-target', { detail: target }));
-  ctx.fillStyle = '#f0bd45'; ctx.beginPath(); ctx.arc(target.x, target.y, 10, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = 'rgba(240,189,69,.35)'; ctx.lineWidth = 7; ctx.stroke();
-
-  const ship = project(state.ship.position); ctx.save(); ctx.translate(ship.x, ship.y); ctx.rotate(state.ship.headingDeg * Math.PI / 180); ctx.fillStyle = '#f7f0df'; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(-8, 10); ctx.lineTo(0, 6); ctx.lineTo(8, 10); ctx.closePath(); ctx.fill(); ctx.restore();
+  const target = project(state.destination);
+  const ship = project(state.ship.position);
+  window.dispatchEvent(new CustomEvent('elcano:camera-target', { detail: target }));
+  window.dispatchEvent(new CustomEvent('elcano:map-markers', {
+    detail: { target, ship, headingDeg: state.ship.headingDeg },
+  }));
   updateInstruments();
 
   if (!reached && distanceToDestination(state) < 20) { reached = true; setTimeScale(0); missionTitle.textContent = 'Mission complete'; showToast(`A Coruña · ${state.elapsedHours.toFixed(1)} hours`); openHelp(); }
