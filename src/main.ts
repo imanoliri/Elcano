@@ -19,16 +19,26 @@ app.innerHTML = `
       <div class="controls">
         <button id="turn-left">◀ Turn</button>
         <button id="turn-right">Turn ▶</button>
+        <button id="reset">Restart mission</button>
         <label>Time
           <select id="time-scale">
-            <option value="0">Paused</option>
+            <option value="0" selected>Paused</option>
             <option value="0.25">1×</option>
-            <option value="1" selected>4×</option>
+            <option value="1">4×</option>
             <option value="4">16×</option>
+            <option value="16">64×</option>
           </select>
         </label>
       </div>
     </header>
+
+    <section class="mission-card">
+      <div>
+        <p class="eyebrow">Tutorial mission · Atlantic proving ground</p>
+        <h2 id="tutorial-title">1. Read the sea</h2>
+      </div>
+      <p id="tutorial-text">Your ship is paused. White arrows show wind; blue arrows show current. Turn to roughly 330° so the ship heads northeast toward the favorable east-going current band.</p>
+    </section>
 
     <section class="game-layout">
       <canvas id="ocean" width="1000" height="650"></canvas>
@@ -42,8 +52,9 @@ app.innerHTML = `
           <div><dt>Elapsed</dt><dd id="elapsed"></dd></div>
           <div><dt>Distance</dt><dd id="distance"></dd></div>
         </dl>
-        <p class="hint">Turn with the buttons or ← / →. Wind and current arrows are only revealed near your explored route.</p>
-        <p id="status" class="status">Reach the golden destination.</p>
+        <p class="legend"><span class="wind-key"></span> Wind <span class="current-key"></span> Current</p>
+        <p class="hint">Turn with the buttons or ← / →. Ocean conditions are revealed around your explored route.</p>
+        <p id="status" class="status">Mission objective: reach the golden destination.</p>
       </aside>
     </section>
   </main>
@@ -53,31 +64,80 @@ const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const ctx = canvas.getContext('2d')!;
 const turnLeft = document.querySelector<HTMLButtonElement>('#turn-left')!;
 const turnRight = document.querySelector<HTMLButtonElement>('#turn-right')!;
+const reset = document.querySelector<HTMLButtonElement>('#reset')!;
 const timeScale = document.querySelector<HTMLSelectElement>('#time-scale')!;
+const tutorialTitle = document.querySelector<HTMLElement>('#tutorial-title')!;
+const tutorialText = document.querySelector<HTMLElement>('#tutorial-text')!;
+const status = document.querySelector<HTMLElement>('#status')!;
 
-let state: WorldState = {
+const START: WorldState = {
   timeHours: 0,
-  ship: { x: 120, y: 330, headingDeg: 0, speed: 0 },
-  destination: { x: 860, y: 300 },
+  ship: { x: 120, y: 350, headingDeg: 0, speed: 0 },
+  destination: { x: 650, y: 245 },
 };
 
+let state: WorldState = structuredClone(START);
 const explored = new Set<string>();
 let last = performance.now();
 let reached = false;
+let tutorialStage = 0;
 
 function turn(delta: number) {
   state.ship.headingDeg = (state.ship.headingDeg + delta + 360) % 360;
+  updateTutorial();
 }
 
 turnLeft.addEventListener('click', () => turn(-10));
 turnRight.addEventListener('click', () => turn(10));
+reset.addEventListener('click', resetMission);
+timeScale.addEventListener('change', updateTutorial);
 window.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') turn(-10);
   if (event.key === 'ArrowRight') turn(10);
 });
 
+function resetMission() {
+  state = structuredClone(START);
+  explored.clear();
+  reached = false;
+  tutorialStage = 0;
+  timeScale.value = '0';
+  status.textContent = 'Mission objective: reach the golden destination.';
+  revealAroundShip();
+  updateTutorial();
+}
+
+function updateTutorial() {
+  if (reached) {
+    tutorialTitle.textContent = 'Mission complete';
+    tutorialText.textContent = 'You made landfall. Restart the mission and experiment with a different route to see how the same ocean produces a different travel time.';
+    return;
+  }
+
+  const heading = state.ship.headingDeg;
+  const northeastCourse = heading >= 310 && heading <= 350;
+
+  if (tutorialStage === 0 && northeastCourse) tutorialStage = 1;
+  if (tutorialStage === 1 && Number(timeScale.value) > 0) tutorialStage = 2;
+  if (tutorialStage === 2 && state.ship.y < 300) tutorialStage = 3;
+
+  if (tutorialStage === 0) {
+    tutorialTitle.textContent = '1. Read the sea';
+    tutorialText.textContent = 'Your ship is paused. White arrows show wind; blue arrows show current. Turn to roughly 330° so the ship heads northeast toward the favorable east-going current band.';
+  } else if (tutorialStage === 1) {
+    tutorialTitle.textContent = '2. Make way';
+    tutorialText.textContent = 'Good course. Set time to 16× or 64×. The ship will move according to its heading, sailing efficiency, wind, and current — not toward the marker automatically.';
+  } else if (tutorialStage === 2) {
+    tutorialTitle.textContent = '3. Find the current';
+    tutorialText.textContent = 'Keep moving northeast until you are around the upper half of the map. Watch the blue current readout strengthen eastward. You are trading some distance now for a faster west-to-east passage later.';
+  } else {
+    tutorialTitle.textContent = '4. Turn for the destination';
+    tutorialText.textContent = 'You have reached the useful current band. Turn gradually toward 0°–10° (east) and use the current to carry you toward the golden destination. Adjust as needed for the final approach.';
+  }
+}
+
 function revealAroundShip() {
-  const radius = 75;
+  const radius = 90;
   const cell = 25;
   for (let x = state.ship.x - radius; x <= state.ship.x + radius; x += cell) {
     for (let y = state.ship.y - radius; y <= state.ship.y + radius; y += cell) {
@@ -123,6 +183,10 @@ function draw() {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
   }
 
+  // Subtle tutorial cue for the favorable current band.
+  ctx.fillStyle = 'rgba(91,210,255,.055)';
+  ctx.fillRect(0, 220, canvas.width, 90);
+
   const cell = 25;
   for (const key of explored) {
     const [cx, cy] = key.split(',').map(Number);
@@ -133,11 +197,10 @@ function draw() {
 
     ctx.strokeStyle = 'rgba(255,255,255,.30)';
     arrow(x, y, wind.x, wind.y, 18);
-    ctx.strokeStyle = 'rgba(91,210,255,.55)';
+    ctx.strokeStyle = 'rgba(91,210,255,.65)';
     arrow(x + 7, y + 7, current.x, current.y, 12);
   }
 
-  // Unexplored ocean veil.
   ctx.fillStyle = 'rgba(3, 12, 18, .64)';
   for (let x = 0; x < canvas.width; x += cell) {
     for (let y = 0; y < canvas.height; y += cell) {
@@ -179,7 +242,8 @@ function draw() {
   if (!reached && distanceToDestination(state) < 25) {
     reached = true;
     timeScale.value = '0';
-    document.querySelector('#status')!.textContent = `Landfall after ${state.timeHours.toFixed(1)} hours.`;
+    status.textContent = `Landfall after ${state.timeHours.toFixed(1)} hours. Tutorial complete.`;
+    updateTutorial();
   }
 }
 
@@ -202,9 +266,11 @@ function frame(now: number) {
     state.ship.y = Math.max(10, Math.min(canvas.height - 10, state.ship.y));
   }
   revealAroundShip();
+  updateTutorial();
   draw();
   requestAnimationFrame(frame);
 }
 
 revealAroundShip();
+updateTutorial();
 requestAnimationFrame(frame);
