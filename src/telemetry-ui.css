@@ -62,9 +62,6 @@
   pointer-events: none;
 }
 
-/* The slider itself stays visually clean. Telemetry occupies separate,
-   full-width rows immediately below it, sharing exactly the same left/right
-   bounds as the slider track. */
 .dynamic-track,
 .dynamic-value-row {
   display: none !important;
@@ -81,10 +78,35 @@
 }
 
 .slider-stack > input[type="range"] {
+  position: relative;
+  z-index: 2;
   width: 100% !important;
   min-width: 0 !important;
   height: 34px !important;
   margin: 0 !important;
+}
+
+.slider-tick-guide {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 34px;
+  pointer-events: none;
+}
+.slider-tick {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  transform: translateX(-.5px);
+  background: rgba(255,255,255,.28);
+}
+.slider-tick.major-tick {
+  width: 2px;
+  transform: translateX(-1px);
+  background: rgba(232,185,79,.78);
 }
 
 .ship-vector-panel {
@@ -142,6 +164,8 @@
     min-width: 0 !important;
   }
   .slider-stack > input[type="range"] { height: 30px !important; }
+  .slider-tick-guide { height: 30px; }
+  .slider-tick { top: 7px; bottom: 7px; }
   .wheel { display: grid !important; }
   .sail-icon { display: inline-block !important; }
   .time-control { grid-template-columns: repeat(5, 1fr) !important; }
