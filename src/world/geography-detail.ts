@@ -35,7 +35,7 @@ function geometry(ctx: CanvasRenderingContext2D, value: GeoJsonGeometry | null) 
   }
 }
 
-/** High-detail coastline only. Loaded lazily for close zoom levels. */
+/** High-detail land layer. Loaded lazily for close zoom levels. */
 export function drawDetailedCoastline(ctx: CanvasRenderingContext2D, screenScale: number) {
   ctx.save();
   ctx.beginPath();
@@ -45,11 +45,10 @@ export function drawDetailedCoastline(ctx: CanvasRenderingContext2D, screenScale
     geometry(ctx, land.geometry);
   }
 
-  // A land-colored under-stroke hides jagged pixels from the low-resolution
-  // base canvas, then a thin coastline stroke restores the chart outline.
-  ctx.strokeStyle = '#7f7253';
-  ctx.lineWidth = 3.2 / Math.max(0.01, screenScale);
-  ctx.stroke();
+  // At close zoom the detailed layer must replace the visibly pixelated land
+  // fill, not merely trace a thin line over it.
+  ctx.fillStyle = '#7f7253';
+  ctx.fill('evenodd');
   ctx.strokeStyle = 'rgba(224, 211, 170, .72)';
   ctx.lineWidth = 1.15 / Math.max(0.01, screenScale);
   ctx.stroke();
