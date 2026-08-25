@@ -11,21 +11,14 @@ const windVector = document.querySelector<SVGLineElement>('#relative-wind-vector
 const shipSilhouette = document.querySelector<SVGGElement>('.ship-silhouette');
 const shipDiagram = document.querySelector<SVGSVGElement>('#ship-diagram');
 
-// Replace the tiny ship drawing with a cleaner carrack/nao silhouette. The bow
-// stays narrow, while the body and especially the stern are fuller, closer to
-// the proportions of an exploration-era nao.
+// Keep the earlier, slimmer carrack/nao hull proportions. The sails remain the
+// newer wider and thinner version for better readability at small size.
 if (shipSilhouette) {
   shipSilhouette.innerHTML = `
-    <path d="M75 23
-      C81 30 87 43 89 57
-      C91 71 90 83 86 91
-      C83 96 79 99 75 101
-      C71 99 67 96 64 91
-      C60 83 59 71 61 57
-      C63 43 69 30 75 23 Z"
+    <path d="M75 24 C80 31 84 42 85 55 C86 69 84 82 80 92 L75 98 L70 92 C66 82 64 69 65 55 C66 42 70 31 75 24 Z"
       fill="rgba(235,208,152,.12)" stroke="#ead098" stroke-width="1.6" />
-    <path d="M65 87 Q75 94 85 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
-    <path d="M75 31 L75 89" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
+    <path d="M68 86 Q75 90 82 86" fill="none" stroke="rgba(234,208,152,.72)" stroke-width="1" />
+    <path d="M75 31 L75 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
     <path d="M61 43 Q75 40.5 89 43 L88 49 Q75 47 62 49 Z"
       fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".6" />
     <path d="M63 59 Q75 57 87 59 L86 64 Q75 62.5 64 64 Z"
