@@ -27,6 +27,7 @@ Read `ARCHITECTURE.md` before making structural changes.
 - Do not overwrite unrelated changes.
 - Keep commits scoped and descriptive.
 - Do not merge a PR unless explicitly instructed.
+- When a pull request is connected to Netlify, pushing a new commit to the PR branch automatically triggers a new Netlify deploy preview. Do not manually trigger an extra Netlify deploy unless the automatic integration fails or the user explicitly asks for one.
 - When deployment matters, verify the current deploy/status rather than assuming a push succeeded.
 
 ## Development commands
@@ -223,6 +224,7 @@ For simulation changes, add deterministic unit tests once a test harness exists.
 - silently changing heading/wind conventions;
 - introducing backend dependencies for core gameplay;
 - adding heavy libraries for simple vector/math problems;
+- manually triggering Netlify deploys for a PR branch when a normal branch push already triggers the deploy preview;
 - assuming Netlify deployed successfully without checking;
 - claiming work was performed or validated when it was not.
 
