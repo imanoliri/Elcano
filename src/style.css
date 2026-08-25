@@ -134,7 +134,7 @@ button { color: inherit; cursor: pointer; }
   right: 12px;
   bottom: max(12px, env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 190px auto;
   gap: 12px;
   align-items: stretch;
   padding: 12px;
@@ -146,9 +146,12 @@ button { color: inherit; cursor: pointer; }
 }
 
 .control-block { min-width: 0; }
-.control-heading { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: .72rem; }
-.control-heading span { text-transform: uppercase; letter-spacing: .1em; opacity: .55; }
-.control-heading strong { font-variant-numeric: tabular-nums; }
+.control-heading, .dynamic-value-row { display: flex; justify-content: space-between; gap: 12px; font-size: .72rem; }
+.control-heading { margin-bottom: 3px; }
+.control-heading span, .dynamic-value-row span { text-transform: uppercase; letter-spacing: .1em; opacity: .55; }
+.control-heading strong, .dynamic-value-row strong { font-variant-numeric: tabular-nums; }
+.dynamic-value-row { margin-bottom: 5px; font-size: .61rem; }
+.dynamic-value-row strong { opacity: .82; }
 .helm-row, .sail-row { display: flex; align-items: center; gap: 10px; }
 
 .wheel {
@@ -165,11 +168,78 @@ button { color: inherit; cursor: pointer; }
 }
 .sail-icon { color: #eee4ca; font-size: 2rem; line-height: 1; transform: rotate(-7deg); }
 
+.slider-stack {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 80px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+}
+.dynamic-track {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 12px;
+  transform: translateY(-50%);
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.track-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255,255,255,.28);
+}
+.slip-track::before, .slip-track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  opacity: .17;
+}
+.slip-track::before { left: 0; background: linear-gradient(90deg, #e08d67, transparent); }
+.slip-track::after { right: 0; background: linear-gradient(270deg, #6fc5e8, transparent); }
+.slip-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 16px;
+  transform: translate(-50%, -50%);
+  border-radius: 99px;
+  background: #f4efe6;
+  box-shadow: 0 0 8px rgba(255,255,255,.45);
+  transition: left .12s linear, background .12s;
+}
+.slip-indicator.port-slip { background: #e59b78; }
+.slip-indicator.starboard-slip { background: #69c9ee; }
+
+.apparent-wind-track { background: rgba(244,239,230,.055); }
+.apparent-wind-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(244,239,230,.16), rgba(244,239,230,.72));
+  transition: width .12s linear;
+}
+
 input[type="range"] {
+  position: relative;
+  z-index: 2;
   width: 100%;
   min-width: 80px;
   height: 34px;
   margin: 0;
+  background: transparent;
   accent-color: #e8b94f;
   touch-action: pan-x;
 }
@@ -184,6 +254,32 @@ input[type="range"] {
 }
 .range-labels { display: flex; justify-content: space-between; padding-left: 48px; margin-top: -2px; font-size: .59rem; opacity: .42; }
 .sail-control .range-labels { padding-left: 42px; }
+
+.ship-vector-panel {
+  min-width: 0;
+  padding: 7px 9px 6px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+.vector-panel-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+.vector-panel-heading span { font-size: .68rem; text-transform: uppercase; letter-spacing: .09em; opacity: .62; }
+.vector-panel-heading small { font-size: .54rem; opacity: .38; }
+#ship-diagram { display: block; width: 100%; height: 86px; overflow: visible; }
+.vector-ring { fill: rgba(255,255,255,.015); stroke: rgba(255,255,255,.10); stroke-width: 1; }
+.vector-axis { stroke: rgba(255,255,255,.08); stroke-width: 1; stroke-dasharray: 2 4; }
+.bow-label { fill: rgba(255,255,255,.35); font-size: 7px; letter-spacing: 1px; }
+.ship-silhouette path { fill: rgba(235,208,152,.12); stroke: #ead098; stroke-width: 1.6; }
+.ship-silhouette line { stroke: rgba(234,208,152,.65); stroke-width: 1; }
+.diagram-vector { stroke-width: 2.2; stroke-linecap: round; transition: x2 .12s linear, y2 .12s linear; }
+.wind-vector { stroke: #f4efe6; }
+.current-vector { stroke: #4bd4ff; }
+.track-vector { stroke: #e8b94f; stroke-dasharray: 3 2; }
+.vector-legend { display: flex; justify-content: center; gap: 9px; font-size: .52rem; opacity: .65; }
+.vector-legend span::before { content: ''; display: inline-block; width: 11px; height: 2px; margin-right: 4px; vertical-align: middle; background: currentColor; }
+.wind-key { color: #f4efe6; }
+.current-key { color: #4bd4ff; }
+.track-key { color: #e8b94f; }
 
 .time-control {
   display: grid;
@@ -251,6 +347,12 @@ input[type="range"] {
 }
 .toast.show { opacity: 1; transform: translate(-50%, -50%); }
 
+@media (max-width: 900px) {
+  .bottom-controls { grid-template-columns: 1fr 1fr; }
+  .ship-vector-panel { grid-column: 1 / 2; }
+  .time-control { grid-column: 2 / 3; grid-template-columns: repeat(4, 1fr); align-self: end; }
+}
+
 @media (max-width: 760px) {
   .hud-top { top: max(8px, env(safe-area-inset-top)); left: 8px; right: 8px; }
   .mission-chip { padding: 8px 10px; border-radius: 12px; }
@@ -275,28 +377,44 @@ input[type="range"] {
     left: 8px;
     right: 8px;
     bottom: max(8px, env(safe-area-inset-bottom));
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
-    padding: 10px;
+    padding: 9px;
     border-radius: 16px;
   }
-  .helm-row, .sail-row { gap: 8px; }
-  .wheel { flex-basis: 34px; width: 34px; height: 34px; font-size: 1.25rem; }
-  .sail-icon { font-size: 1.7rem; }
-  .control-heading { margin-bottom: 3px; }
-  input[type="range"] { height: 28px; }
-  .range-labels { padding-left: 42px; font-size: .55rem; }
-  .sail-control .range-labels { padding-left: 36px; }
-  .time-control { grid-template-columns: repeat(4, 1fr); }
-  .time-button { min-width: 0; padding: 7px 5px; }
+  .helm-control, .sail-control { grid-column: span 1; }
+  .ship-vector-panel { grid-column: 1 / 2; padding: 5px 7px; }
+  #ship-diagram { height: 72px; }
+  .time-control { grid-column: 2 / 3; grid-template-columns: repeat(2, 1fr); }
+  .helm-row, .sail-row { gap: 6px; }
+  .wheel { display: none; }
+  .sail-icon { display: none; }
+  .center-button { padding: 6px 7px; }
+  .control-heading { margin-bottom: 1px; }
+  .dynamic-value-row { margin-bottom: 2px; font-size: .55rem; }
+  input[type="range"], .slider-stack { height: 27px; }
+  .range-labels { padding-left: 0; font-size: .52rem; }
+  .sail-control .range-labels { padding-left: 0; }
+  .vector-panel-heading small { display: none; }
 
   .modal { padding: 10px; }
   .modal-card { padding: 22px; border-radius: 18px; }
 }
 
+@media (max-width: 470px) {
+  .bottom-controls { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); }
+  .control-heading span, .dynamic-value-row span { letter-spacing: .05em; }
+  .control-heading { font-size: .66rem; }
+  .center-button { font-size: .58rem; }
+  .vector-legend { gap: 5px; font-size: .46rem; }
+}
+
 @media (max-height: 650px) and (orientation: landscape) {
   .instrument-strip { width: min(620px, calc(100vw - 120px)); right: auto; }
-  .bottom-controls { grid-template-columns: 1fr 1fr auto; padding: 8px 10px; }
+  .bottom-controls { grid-template-columns: 1fr 1fr 160px auto; padding: 7px 9px; }
   .range-labels { display: none; }
-  .control-heading { margin-bottom: 2px; }
+  .control-heading, .dynamic-value-row { margin-bottom: 1px; }
+  #ship-diagram { height: 66px; }
+  .time-control { grid-column: auto; grid-template-columns: repeat(2, 1fr); }
+  .ship-vector-panel { grid-column: auto; }
 }
