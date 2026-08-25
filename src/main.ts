@@ -19,8 +19,8 @@ app.innerHTML = `
 
     <header class="hud-top">
       <button id="mission-chip" class="mission-chip" aria-label="Open mission instructions">
-        <span class="eyebrow">Atlantic proving ground</span>
-        <strong id="mission-title">1. Read the real sea</strong>
+        <span class="eyebrow">Elcano's road to the Moluccas</span>
+        <strong id="mission-title">1. Read the Bay of Biscay</strong>
       </button>
       <div class="top-actions">
         <button id="reset" class="icon-button" aria-label="Restart mission">↻</button>
@@ -77,7 +77,7 @@ app.innerHTML = `
 
     <div id="modal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-backdrop"></div>
-      <section class="modal-card"><button id="close-modal" class="modal-close" aria-label="Close instructions">×</button><p class="eyebrow">Sanlúcar → Canary Islands</p><h1 id="modal-title">Sail the real Atlantic</h1><p id="modal-text"></p><div class="legend-row"><span><i class="legend-line wind-line"></i> Wind</span><span><i class="legend-line current-line"></i> Current</span><span><i class="legend-dot"></i> Destination</span></div><p class="modal-note">The coastline is real-world geography. The current environment layer is a simplified offline climatology; the provider boundary is ready for historical reanalysis datasets later.</p><button id="start-mission" class="primary-button">Take the helm</button></section>
+      <section class="modal-card"><button id="close-modal" class="modal-close" aria-label="Close instructions">×</button><p class="eyebrow">San Sebastián → A Coruña · July 1525</p><h1 id="modal-title">Sail to Elcano's expedition</h1><p id="modal-text"></p><div class="legend-row"><span><i class="legend-line wind-line"></i> Wind</span><span><i class="legend-line current-line"></i> Current</span><span><i class="legend-dot"></i> A Coruña</span></div><p class="modal-note">A Coruña was the departure port of the Loaísa–Elcano expedition, which sailed for the Moluccas on 24 July 1525. This tutorial voyage from San Sebastián is a playable historical prelude, not a documented leg of Elcano's journey.</p><button id="start-mission" class="primary-button">Take the helm</button></section>
     </div>
     <div id="toast" class="toast" role="status"></div>
   </main>
@@ -96,10 +96,10 @@ const toast = document.querySelector<HTMLElement>('#toast')!;
 const timeButtons = [...document.querySelectorAll<HTMLButtonElement>('.time-button')];
 
 const START: WorldState = {
-  time: new Date('1522-09-06T12:00:00Z'),
+  time: new Date('1525-07-01T12:00:00Z'),
   elapsedHours: 0,
-  ship: { position: { lat: 36.78, lon: -6.35 }, headingDeg: 205, speed: 0 },
-  destination: { lat: 28.29, lon: -16.63 },
+  ship: { position: { lat: 43.3183, lon: -1.9812 }, headingDeg: 275, speed: 0 },
+  destination: { lat: 43.3623, lon: -8.4115 },
 };
 const START_DISTANCE = distanceToDestination(START);
 let state: WorldState = structuredClone(START);
@@ -110,9 +110,9 @@ let timeScale = 0;
 const explored = new Set<string>();
 
 const tutorial = [
-  { title: '1. Read the real sea', text: 'You are off Sanlúcar de Barrameda. The chart now uses real coastlines, islands and latitude/longitude. White arrows show the offline prevailing-wind approximation; blue arrows show currents.' },
-  { title: '2. Make way south-west', text: 'Set sail and run south-west toward the Canary Islands. The ship moves in nautical miles over geographic coordinates, not canvas pixels.' },
-  { title: '3. Work the Atlantic', text: 'Experiment with headings instead of aiming directly at the target. The route should respond to the environmental field and your sail angle.' },
+  { title: '1. Read the Bay of Biscay', text: 'Depart San Sebastián and study the real northern Spanish coastline. White arrows show prevailing wind; blue arrows show surface current. A Coruña is your destination on the Galician coast.' },
+  { title: '2. Make way west', text: 'Set sail and work west across the Bay of Biscay. Do not simply point at A Coruña: compare your heading with wind, current and actual track.' },
+  { title: '3. Approach Galicia', text: 'As you close the Galician coast, adjust your route for the final approach to A Coruña, where the Loaísa–Elcano fleet will depart for the Moluccas on 24 July 1525.' },
 ];
 
 function setTimeScale(value: number) {
@@ -139,8 +139,8 @@ window.addEventListener('keydown', (event) => {
 
 function openHelp() {
   const step = tutorial[Math.min(tutorialStage, tutorial.length - 1)];
-  modalTitle.textContent = reached ? 'Landfall' : step.title;
-  modalText.textContent = reached ? `Reached Tenerife after ${state.elapsedHours.toFixed(1)} simulated hours.` : step.text;
+  modalTitle.textContent = reached ? 'A Coruña reached' : step.title;
+  modalText.textContent = reached ? `Reached A Coruña after ${state.elapsedHours.toFixed(1)} simulated hours. Elcano's next voyage will depart from this port for the Moluccas.` : step.text;
   modal.classList.add('open');
 }
 function closeHelp() { modal.classList.remove('open'); }
@@ -193,7 +193,7 @@ function draw() {
   const ship = project(state.ship.position); ctx.save(); ctx.translate(ship.x, ship.y); ctx.rotate(state.ship.headingDeg * Math.PI / 180); ctx.fillStyle = '#f7f0df'; ctx.beginPath(); ctx.moveTo(0, -14); ctx.lineTo(-8, 10); ctx.lineTo(0, 6); ctx.lineTo(8, 10); ctx.closePath(); ctx.fill(); ctx.restore();
   updateInstruments();
 
-  if (!reached && distanceToDestination(state) < 20) { reached = true; setTimeScale(0); missionTitle.textContent = 'Mission complete'; showToast(`Landfall · ${state.elapsedHours.toFixed(1)} hours`); openHelp(); }
+  if (!reached && distanceToDestination(state) < 20) { reached = true; setTimeScale(0); missionTitle.textContent = 'Mission complete'; showToast(`A Coruña · ${state.elapsedHours.toFixed(1)} hours`); openHelp(); }
 }
 
 function updateInstruments() {
@@ -217,7 +217,7 @@ function setWidth(id: string, percent: number) { document.querySelector<HTMLElem
 let toastTimer = 0; function showToast(message: string) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = window.setTimeout(() => toast.classList.remove('show'), 1700); }
 
 function updateTutorial() {
-  if (reached) return; if (tutorialStage === 0 && timeScale > 0 && Number(sails.value) > 20) tutorialStage = 1; if (tutorialStage === 1 && state.ship.position.lat < 34) tutorialStage = 2; missionTitle.textContent = tutorial[Math.min(tutorialStage, tutorial.length - 1)].title;
+  if (reached) return; if (tutorialStage === 0 && timeScale > 0 && Number(sails.value) > 20) tutorialStage = 1; if (tutorialStage === 1 && state.ship.position.lon < -5.5) tutorialStage = 2; missionTitle.textContent = tutorial[Math.min(tutorialStage, tutorial.length - 1)].title;
 }
 
 function frame(now: number) {
