@@ -117,7 +117,7 @@ async function fetchHycomSnapshot(date) {
     east: String(REGION.maxLon),
     time: `${date}T00:00:00Z`,
     vertCoord: '0',
-    accept: 'netcdf',
+    accept: 'netCDF3',
     addLatLon: 'true',
   });
   const response = await fetch(`${CURRENT_URL}?${params}`);
@@ -138,19 +138,20 @@ async function fetchHycomSnapshot(date) {
 async function buildCurrentGrid() {
   const step = 0.08;
   const grid = createGrid(41.04, 46.48, -11.44, 0.96, step);
-  const years = [2000, 2006, 2012];
 
+  // One representative monthly field keeps the deploy deterministic and avoids
+  // making dozens of large remote requests during every Netlify build. The
+  // native HYCOM 0.08° spatial resolution is preserved.
+  const year = 2012;
   for (let month = 0; month < 12; month += 1) {
-    for (const year of years) {
-      const date = `${year}-${String(month + 1).padStart(2, '0')}-15`;
-      const { lats, lons, u, v } = await fetchHycomSnapshot(date);
-      const sourceLonCount = lons.length;
-      for (let y = 0; y < lats.length; y += 1) {
-        for (let x = 0; x < lons.length; x += 1) {
-          const sourceIndex = y * sourceLonCount + x;
-          addSample(grid, month, lats[y], lons[x], 0, toCurrentKnots(u[sourceIndex]));
-          addSample(grid, month, lats[y], lons[x], 1, toCurrentKnots(v[sourceIndex]));
-        }
+    const date = `${year}-${String(month + 1).padStart(2, '0')}-15`;
+    const { lats, lons, u, v } = await fetchHycomSnapshot(date);
+    const sourceLonCount = lons.length;
+    for (let y = 0; y < lats.length; y += 1) {
+      for (let x = 0; x < lons.length; x += 1) {
+        const sourceIndex = y * sourceLonCount + x;
+        addSample(grid, month, lats[y], lons[x], 0, toCurrentKnots(u[sourceIndex]));
+        addSample(grid, month, lats[y], lons[x], 1, toCurrentKnots(v[sourceIndex]));
       }
     }
   }
@@ -179,7 +180,7 @@ async function main() {
   const wind = await buildWindGrid();
   const current = await buildCurrentGrid();
   const data = {
-    source: 'CCMP v2 monthly winds + HYCOM GLBu0.08 1/12° current composite',
+    source: 'CCMP v2 monthly winds + HYCOM GLBu0.08 1/12° monthly current fields (2012)',
     generatedAt: 'deterministic-build',
     wind: serializableGrid(wind, pack(wind)),
     current: serializableGrid(current, pack(current)),
