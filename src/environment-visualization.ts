@@ -1,6 +1,7 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
 import { project } from './world/coordinates';
+import { isLand } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -16,7 +17,7 @@ if (ocean && shell) {
   const ctx = overlay.getContext('2d');
   const badge = document.createElement('div');
   badge.className = 'environment-resolution-badge';
-  badge.textContent = 'Data: Wind 0.25° · Current 0.08° · Display: adaptive';
+  badge.textContent = 'Data: Wind 0.25° · Current 0.08° · Ocean only';
   viewport.append(badge);
 
   type Field = {
@@ -25,7 +26,8 @@ if (ocean && shell) {
     minLon: number;
     maxLon: number;
     nativeStep: number;
-    minScreenSpacing: number;
+    desktopSpacing: number;
+    mobileSpacing: number;
     vectorAt: (position: { lat: number; lon: number }, time: Date) => Vec2;
     strokeStyle: string;
     baseLength: number;
@@ -39,8 +41,10 @@ if (ocean && shell) {
       minLon: -11.375,
       maxLon: 0.875,
       nativeStep: 0.25,
-      minScreenSpacing: 28,
+      desktopSpacing: 28,
+      mobileSpacing: 42,
       vectorAt: windAt,
+      // Keep the established wind-arrow visual style unchanged.
       strokeStyle: 'rgba(255,255,255,.82)',
       baseLength: 18,
       width: 1.35,
@@ -51,7 +55,8 @@ if (ocean && shell) {
       minLon: -11.44,
       maxLon: 0.96,
       nativeStep: 0.08,
-      minScreenSpacing: 24,
+      desktopSpacing: 24,
+      mobileSpacing: 34,
       vectorAt: currentAt,
       strokeStyle: 'rgba(74,213,255,.88)',
       baseLength: 15,
@@ -90,7 +95,8 @@ if (ocean && shell) {
     const east = project({ lat: 43.5, lon: -4 });
     const pixelsPerDegree = Math.max(0.1, Math.abs(east.x - center.x) * camera.scale);
     const nativePixels = pixelsPerDegree * field.nativeStep;
-    const multiple = Math.max(1, Math.ceil(field.minScreenSpacing / nativePixels));
+    const targetSpacing = viewport.clientWidth <= 720 ? field.mobileSpacing : field.desktopSpacing;
+    const multiple = Math.max(1, Math.ceil(targetSpacing / nativePixels));
     return field.nativeStep * multiple;
   }
 
@@ -133,11 +139,14 @@ if (ocean && shell) {
 
     for (let lat = startLat; lat <= field.maxLat + step * 0.25; lat += step) {
       for (let lon = startLon; lon <= field.maxLon + step * 0.25; lon += step) {
-        const world = project({ lat, lon });
+        const position = { lat, lon };
+        if (isLand(position)) continue;
+
+        const world = project(position);
         const x = camera.x + world.x * camera.scale;
         const y = camera.y + world.y * camera.scale;
         if (x < -30 || x > width + 30 || y < -30 || y > height + 30) continue;
-        drawArrow(x, y, field.vectorAt({ lat, lon }, time), field);
+        drawArrow(x, y, field.vectorAt(position, time), field);
       }
     }
   }
