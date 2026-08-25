@@ -21,6 +21,11 @@ if (canvas && viewport) {
   let pinchStartScale = 1;
   let pinchWorldAnchor = { x: 0, y: 0 };
 
+  // Midpoint of the San Sebastián → A Coruña tutorial in world pixels.
+  const tutorialCenter = { x: 699.2, y: 263.6 };
+  const INITIAL_ZOOM_MULTIPLIER = 12;
+  const MAX_ZOOM_MULTIPLIER = 64;
+
   function viewportSize() {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
   }
@@ -41,16 +46,16 @@ if (canvas && viewport) {
   }
 
   function resetCamera() {
-    const { width } = viewportSize();
+    const { width, height } = viewportSize();
     minScale = width / canvas.width;
-    scale = minScale;
-    offsetX = 0;
-    offsetY = 0;
+    scale = Math.max(minScale, minScale * INITIAL_ZOOM_MULTIPLIER);
+    offsetX = width / 2 - tutorialCenter.x * scale;
+    offsetY = height / 2 - tutorialCenter.y * scale;
     applyCamera();
   }
 
   function zoomAround(screenX: number, screenY: number, nextScale: number) {
-    const clampedScale = Math.max(minScale, Math.min(minScale * 8, nextScale));
+    const clampedScale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, nextScale));
     const worldX = (screenX - offsetX) / scale;
     const worldY = (screenY - offsetY) / scale;
     scale = clampedScale;
@@ -154,7 +159,7 @@ if (canvas && viewport) {
       const distance = Math.hypot(b.x - a.x, b.y - a.y);
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      scale = Math.max(minScale, Math.min(minScale * 8, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
+      scale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
       offsetX = midX - pinchWorldAnchor.x * scale;
       offsetY = midY - pinchWorldAnchor.y * scale;
       applyCamera();
@@ -182,8 +187,8 @@ if (canvas && viewport) {
     const oldMin = minScale;
     const { width } = viewportSize();
     minScale = width / canvas.width;
-    if (Math.abs(scale - oldMin) < 0.001) scale = minScale;
-    else scale = Math.max(minScale, scale);
+    if (scale < minScale) scale = minScale;
+    else if (Math.abs(scale - oldMin) < 0.001) scale = minScale * INITIAL_ZOOM_MULTIPLIER;
     applyCamera();
   });
 
