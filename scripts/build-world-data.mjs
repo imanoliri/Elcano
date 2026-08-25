@@ -127,10 +127,17 @@ async function fetchHycomSnapshot(date) {
   const lonName = findVariable(reader, ['lon', 'longitude']);
   const lats = flattenNumbers(reader.getDataVariable(latName));
   const lons = flattenNumbers(reader.getDataVariable(lonName));
-  const u = flattenNumbers(reader.getDataVariable('water_u'));
-  const v = flattenNumbers(reader.getDataVariable('water_v'));
-  if (u.length !== lats.length * lons.length || v.length !== u.length) {
+  let u = flattenNumbers(reader.getDataVariable('water_u'));
+  let v = flattenNumbers(reader.getDataVariable('water_v'));
+  const expected = lats.length * lons.length;
+  if (u.length < expected || v.length < expected) {
     throw new Error(`Unexpected HYCOM shape for ${date}: ${lats.length}×${lons.length}, u=${u.length}, v=${v.length}`);
+  }
+  // netcdfjs can expose one trailing scalar from this HYCOM NCSS response;
+  // the actual spatial field is exactly latitude × longitude.
+  if (u.length !== expected || v.length !== expected) {
+    u = u.slice(0, expected);
+    v = v.slice(0, expected);
   }
   return { lats, lons, u, v };
 }
