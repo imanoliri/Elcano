@@ -1,3 +1,19 @@
+#environment-overlay {
+  position: absolute;
+  inset: auto !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform-origin: 0 0;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+  z-index: 2;
+}
+
 .environment-resolution-badge {
   position: absolute;
   top: 112px;
