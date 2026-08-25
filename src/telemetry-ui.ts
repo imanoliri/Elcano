@@ -9,21 +9,56 @@ const windStack = document.querySelector<HTMLElement>('.wind-stack');
 const windReadout = document.querySelector<HTMLElement>('#apparent-wind-readout');
 const windVector = document.querySelector<SVGLineElement>('#relative-wind-vector');
 const shipSilhouette = document.querySelector<SVGGElement>('.ship-silhouette');
+const shipDiagram = document.querySelector<SVGSVGElement>('#ship-diagram');
 
-// Replace the tiny ship drawing with a cleaner carrack/nao silhouette. Keep the
-// historical fuller hull, but use two compact square-ish sails that stay inside
-// the hull footprint so the icon remains readable at mobile size.
+// Replace the tiny ship drawing with a cleaner carrack/nao silhouette. The bow
+// stays narrow, while the body and especially the stern are fuller, closer to
+// the proportions of an exploration-era nao.
 if (shipSilhouette) {
   shipSilhouette.innerHTML = `
-    <path d="M75 24 C80 31 84 42 85 55 C86 69 84 82 80 92 L75 98 L70 92 C66 82 64 69 65 55 C66 42 70 31 75 24 Z"
+    <path d="M75 23
+      C81 30 87 43 89 57
+      C91 71 90 83 86 91
+      C83 96 79 99 75 101
+      C71 99 67 96 64 91
+      C60 83 59 71 61 57
+      C63 43 69 30 75 23 Z"
       fill="rgba(235,208,152,.12)" stroke="#ead098" stroke-width="1.6" />
-    <path d="M75 31 L75 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
-    <path d="M66 43 Q75 39 84 43 L83 54 Q75 51 67 54 Z"
+    <path d="M65 87 Q75 94 85 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
+    <path d="M75 31 L75 89" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
+    <path d="M65 43 Q75 39 85 43 L84 54 Q75 51 66 54 Z"
       fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".65" />
-    <path d="M68 58 Q75 55 82 58 L81 68 Q75 65 69 68 Z"
+    <path d="M67 59 Q75 56 83 59 L82 69 Q75 66 68 69 Z"
       fill="rgba(244,239,230,.58)" stroke="rgba(244,239,230,.88)" stroke-width=".6" />
-    <path d="M68 86 Q75 90 82 86" fill="none" stroke="rgba(234,208,152,.72)" stroke-width="1" />
   `;
+}
+
+// Label the four ship-relative directions around the force diagram.
+if (shipDiagram) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const bowLabel = shipDiagram.querySelector<SVGTextElement>('.bow-label');
+  if (bowLabel) {
+    bowLabel.textContent = 'BOW';
+    bowLabel.setAttribute('x', '75');
+    bowLabel.setAttribute('y', '9');
+  }
+
+  const directions = [
+    { text: 'STERN', x: 75, y: 116, anchor: 'middle' },
+    { text: 'PORT', x: 7, y: 63, anchor: 'start' },
+    { text: 'STARBOARD', x: 143, y: 63, anchor: 'end' },
+  ];
+
+  for (const direction of directions) {
+    const label = document.createElementNS(ns, 'text');
+    label.setAttribute('x', String(direction.x));
+    label.setAttribute('y', String(direction.y));
+    label.setAttribute('text-anchor', direction.anchor);
+    label.setAttribute('class', 'bow-label');
+    label.setAttribute('font-size', direction.text === 'STARBOARD' ? '5.4' : '6');
+    label.textContent = direction.text;
+    shipDiagram.append(label);
+  }
 }
 
 if (rudder) {
