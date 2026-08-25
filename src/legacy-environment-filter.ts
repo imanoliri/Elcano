@@ -10,6 +10,5 @@ CanvasRenderingContext2D.prototype.stroke = function (path?: Path2D): void {
   const obsoleteCurrent = style === 'rgba(74,213,255,0.75)' || style === 'rgba(74,213,255,.75)';
 
   if (canvas.id === 'ocean' && (obsoleteWind || obsoleteCurrent)) return;
-  if (path) originalStroke.call(this, path);
-  else originalStroke.call(this);
+  Reflect.apply(originalStroke, this, path ? [path] : []);
 };
