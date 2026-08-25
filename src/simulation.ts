@@ -30,7 +30,7 @@ export function currentAt(x: number, y: number): Vec2 {
   };
 }
 
-export function sailingVelocity(headingDeg: number, wind: Vec2): Vec2 {
+export function sailingVelocity(headingDeg: number, wind: Vec2, sailTrim = 1): Vec2 {
   const heading = headingDeg * DEG;
   const hx = Math.cos(heading);
   const hy = Math.sin(heading);
@@ -47,15 +47,15 @@ export function sailingVelocity(headingDeg: number, wind: Vec2): Vec2 {
   const reach = Math.sin(relative);
   const downwind = (1 - Math.cos(relative)) * 0.25;
   const efficiency = Math.max(0.08, Math.min(1, reach * 0.9 + downwind));
-  const speed = windSpeed * efficiency * 1.5;
+  const speed = windSpeed * efficiency * 1.5 * Math.max(0, Math.min(1, sailTrim));
 
   return { x: hx * speed, y: hy * speed };
 }
 
-export function stepWorld(state: WorldState, dtHours: number): WorldState {
+export function stepWorld(state: WorldState, dtHours: number, sailTrim = 1): WorldState {
   const wind = windAt(state.ship.x, state.ship.y, state.timeHours);
   const current = currentAt(state.ship.x, state.ship.y);
-  const sail = sailingVelocity(state.ship.headingDeg, wind);
+  const sail = sailingVelocity(state.ship.headingDeg, wind, sailTrim);
 
   const vx = sail.x + current.x;
   const vy = sail.y + current.y;
