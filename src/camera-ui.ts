@@ -25,7 +25,7 @@ if (canvas && viewport) {
   // Midpoint of the San Sebastián → A Coruña tutorial in logical world pixels.
   const tutorialCenter = { x: 699.2, y: 263.6 };
   const INITIAL_ZOOM_MULTIPLIER = 12;
-  const MAX_ZOOM_MULTIPLIER = 64;
+  const MAX_ZOOM_MULTIPLIER = 256;
 
   canvas.style.width = `${WORLD_MAP_WIDTH}px`;
   canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
