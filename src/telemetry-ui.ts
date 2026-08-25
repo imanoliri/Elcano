@@ -37,9 +37,9 @@ if (shipDiagram) {
   }
 
   const directions = [
-    { text: 'STERN', x: 75, y: 116, anchor: 'middle' },
-    { text: 'PORT', x: 7, y: 63, anchor: 'start' },
-    { text: 'STARBOARD', x: 143, y: 63, anchor: 'end' },
+    { lines: ['STERN'], x: 75, y: 116, anchor: 'middle' },
+    { lines: ['PORT'], x: 7, y: 63, anchor: 'start' },
+    { lines: ['STAR', 'BOARD'], x: 143, y: 60, anchor: 'end' },
   ];
 
   for (const direction of directions) {
@@ -48,8 +48,16 @@ if (shipDiagram) {
     label.setAttribute('y', String(direction.y));
     label.setAttribute('text-anchor', direction.anchor);
     label.setAttribute('class', 'bow-label');
-    label.setAttribute('font-size', direction.text === 'STARBOARD' ? '5.4' : '6');
-    label.textContent = direction.text;
+    label.setAttribute('font-size', '6');
+
+    direction.lines.forEach((line, index) => {
+      const tspan = document.createElementNS(ns, 'tspan');
+      tspan.setAttribute('x', String(direction.x));
+      if (index > 0) tspan.setAttribute('dy', '6');
+      tspan.textContent = line;
+      label.append(tspan);
+    });
+
     shipDiagram.append(label);
   }
 }
@@ -75,44 +83,23 @@ function addTickGuide(stack: HTMLElement | null, positions: number[], centerPosi
   stack.prepend(guide);
 }
 
-// Helm: -20° ... +20° with guides every 5°.
 addTickGuide(slipStack, [0, 12.5, 25, 37.5, 50, 62.5, 75, 87.5, 100], 50);
-// Sails: visually useful quarter points.
 addTickGuide(windStack, [25, 50, 75], 50);
 
 if (slipIndicator && slipStack) {
   const row = document.createElement('div');
   row.className = 'geo-feedback-row';
-  row.innerHTML = `
-    <div class="geo-signed-meter" aria-label="Slip angle graphical indicator">
-      <span class="geo-zero-line"></span>
-      <span id="geo-slip-bar" class="geo-signed-bar"></span>
-    </div>
-    <span id="geo-slip-value" class="geo-value">0°</span>
-  `;
+  row.innerHTML = `<div class="geo-signed-meter"><span class="geo-zero-line"></span><span id="geo-slip-bar" class="geo-signed-bar"></span></div><span id="geo-slip-value" class="geo-value">0°</span>`;
   slipStack.append(row);
 }
 
 if (windStack) {
   const speedRow = document.createElement('div');
   speedRow.className = 'geo-feedback-row';
-  speedRow.innerHTML = `
-    <div class="geo-fill-meter" aria-label="Apparent wind speed graphical indicator">
-      <span id="geo-wind-speed-bar" class="geo-fill-bar"></span>
-    </div>
-    <span id="geo-wind-speed-value" class="geo-value">0.0 kn</span>
-  `;
-
+  speedRow.innerHTML = `<div class="geo-fill-meter"><span id="geo-wind-speed-bar" class="geo-fill-bar"></span></div><span id="geo-wind-speed-value" class="geo-value">0.0 kn</span>`;
   const angleRow = document.createElement('div');
   angleRow.className = 'geo-feedback-row';
-  angleRow.innerHTML = `
-    <div class="geo-signed-meter" aria-label="Apparent wind angle graphical indicator">
-      <span class="geo-zero-line"></span>
-      <span id="geo-wind-angle-bar" class="geo-signed-bar wind-angle"></span>
-    </div>
-    <span id="geo-wind-angle-value" class="geo-value">0°</span>
-  `;
-
+  angleRow.innerHTML = `<div class="geo-signed-meter"><span class="geo-zero-line"></span><span id="geo-wind-angle-bar" class="geo-signed-bar wind-angle"></span></div><span id="geo-wind-angle-value" class="geo-value">0°</span>`;
   windStack.append(speedRow, angleRow);
 }
 
@@ -125,7 +112,6 @@ if (timeControl && sixteenButton && !document.querySelector('.time-button[data-t
   eightButton.dataset.time = '8';
   eightButton.textContent = '8×';
   sixteenButton.before(eightButton);
-
   eightButton.addEventListener('click', () => {
     const original = sixteenButton.dataset.time;
     sixteenButton.dataset.time = '8';
@@ -134,7 +120,6 @@ if (timeControl && sixteenButton && !document.querySelector('.time-button[data-t
     sixteenButton.classList.remove('active');
     eightButton?.classList.add('active');
   });
-
   timeControl.addEventListener('click', (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>('.time-button');
     if (button && button !== eightButton) eightButton?.classList.remove('active');
@@ -169,11 +154,9 @@ function update() {
     setSignedBar(slipBar, slipDeg, 45);
     if (slipValue) slipValue.textContent = slipReadout?.textContent || `${Math.abs(slipDeg).toFixed(1)}°`;
   }
-
   const apparentSpeed = parseNumber(windReadout?.textContent);
   if (windSpeedBar) windSpeedBar.style.width = `${Math.max(0, Math.min(100, apparentSpeed / 2.5 * 100))}%`;
   if (windSpeedValue) windSpeedValue.textContent = `${apparentSpeed.toFixed(1)} kn`;
-
   if (windVector) {
     const x2 = Number(windVector.getAttribute('x2') || 75);
     const y2 = Number(windVector.getAttribute('y2') || 60);
@@ -186,7 +169,6 @@ function update() {
       windAngleValue.textContent = `${Math.abs(angle).toFixed(0)}°${side}`;
     }
   }
-
   requestAnimationFrame(update);
 }
 
