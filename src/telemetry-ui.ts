@@ -1,11 +1,39 @@
 import './telemetry-ui.css';
 
+const rudder = document.querySelector<HTMLInputElement>('#rudder');
+const sails = document.querySelector<HTMLInputElement>('#sails');
 const slipIndicator = document.querySelector<HTMLElement>('#slip-indicator');
 const slipReadout = document.querySelector<HTMLElement>('#slip-readout');
 const slipStack = document.querySelector<HTMLElement>('.slip-stack');
 const windStack = document.querySelector<HTMLElement>('.wind-stack');
 const windReadout = document.querySelector<HTMLElement>('#apparent-wind-readout');
 const windVector = document.querySelector<SVGLineElement>('#relative-wind-vector');
+
+if (rudder) {
+  rudder.min = '-20';
+  rudder.max = '20';
+  rudder.step = '1';
+  if (Number(rudder.value) < -20 || Number(rudder.value) > 20) rudder.value = '0';
+}
+
+function addTickGuide(stack: HTMLElement | null, positions: number[], centerPosition?: number) {
+  if (!stack) return;
+  const guide = document.createElement('div');
+  guide.className = 'slider-tick-guide';
+  for (const position of positions) {
+    const tick = document.createElement('span');
+    tick.className = 'slider-tick';
+    if (centerPosition !== undefined && Math.abs(position - centerPosition) < 0.001) tick.classList.add('major-tick');
+    tick.style.left = `${position}%`;
+    guide.append(tick);
+  }
+  stack.prepend(guide);
+}
+
+// Helm: -20° ... +20° with guides every 5°.
+addTickGuide(slipStack, [0, 12.5, 25, 37.5, 50, 62.5, 75, 87.5, 100], 50);
+// Sails: visually useful quarter points.
+addTickGuide(windStack, [25, 50, 75], 50);
 
 if (slipIndicator && slipStack) {
   const row = document.createElement('div');
@@ -43,13 +71,10 @@ if (windStack) {
   windStack.append(speedRow, angleRow);
 }
 
-// The main prototype currently exposes Pause/1x/4x/16x. Insert an 8x step
-// without changing the simulation API: the existing 16x control is used as a
-// bridge because its click handler reads data-time at click time.
 const timeControl = document.querySelector<HTMLElement>('.time-control');
 const sixteenButton = document.querySelector<HTMLButtonElement>('.time-button[data-time="16"]');
 let eightButton: HTMLButtonElement | null = null;
-if (timeControl && sixteenButton) {
+if (timeControl && sixteenButton && !document.querySelector('.time-button[data-time="8"]')) {
   eightButton = document.createElement('button');
   eightButton.className = 'time-button';
   eightButton.dataset.time = '8';
