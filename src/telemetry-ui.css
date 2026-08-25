@@ -112,8 +112,8 @@
 .ship-vector-panel {
   position: fixed !important;
   z-index: 8;
-  right: 10px;
-  bottom: 168px;
+  right: 3px;
+  bottom: 148px;
   width: 148px;
   min-width: 148px;
   padding: 5px 6px 4px !important;
@@ -164,8 +164,8 @@
     grid-template-columns: repeat(5, 1fr) !important;
   }
   .ship-vector-panel {
-    right: 9px;
-    bottom: 222px;
+    right: 3px;
+    bottom: 202px;
     width: 140px;
     min-width: 140px;
   }
@@ -201,8 +201,8 @@
   .time-control { grid-template-columns: repeat(5, 1fr) !important; }
 
   .ship-vector-panel {
-    right: 7px;
-    bottom: 285px;
+    right: 2px;
+    bottom: 250px;
     width: 132px;
     min-width: 132px;
     padding: 4px 5px 3px !important;
@@ -212,9 +212,10 @@
 @media (max-width: 470px) {
   .bottom-controls { grid-template-columns: 1fr !important; }
   .ship-vector-panel {
+    right: 2px;
     width: 126px;
     min-width: 126px;
-    bottom: 282px;
+    bottom: 246px;
   }
   .time-button {
     min-width: 0 !important;
@@ -230,8 +231,8 @@
     grid-template-columns: repeat(3, 1fr) !important;
   }
   .ship-vector-panel {
-    right: 8px;
-    bottom: 105px;
+    right: 3px;
+    bottom: 94px;
     width: 128px;
     min-width: 128px;
   }
