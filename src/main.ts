@@ -107,7 +107,7 @@ app.innerHTML = `
           <span>Ship forces</span>
           <small>ship-relative</small>
         </div>
-        <svg id="ship-diagram" viewBox="0 0 150 120" role="img" aria-label="Top-down ship with relative wind and current vectors">
+        <svg id="ship-diagram" viewBox="0 0 150 120" role="img" aria-label="Top-down historical carrack with relative wind and current vectors">
           <defs>
             <marker id="arrow-wind" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
               <path d="M0,0 L6,3 L0,6 Z" fill="#f4efe6" />
@@ -124,8 +124,12 @@ app.innerHTML = `
           <line x1="27" y1="60" x2="123" y2="60" class="vector-axis" />
           <text x="75" y="10" text-anchor="middle" class="bow-label">BOW</text>
           <g class="ship-silhouette">
-            <path d="M75 28 C84 40 86 75 75 92 C64 75 66 40 75 28 Z" />
-            <line x1="75" y1="34" x2="75" y2="84" />
+            <path d="M75 24 C80 31 84 42 85 55 C86 69 84 82 80 92 L75 98 L70 92 C66 82 64 69 65 55 C66 42 70 31 75 24 Z" fill="rgba(235,208,152,.12)" stroke="#ead098" stroke-width="1.6" />
+            <path d="M75 32 L75 86" fill="none" stroke="rgba(234,208,152,.72)" stroke-width="1.2" />
+            <path d="M75 39 L61 46 L75 49 Z" fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.95)" stroke-width=".7" />
+            <path d="M75 50 L90 58 L75 61 Z" fill="rgba(244,239,230,.66)" stroke="rgba(244,239,230,.92)" stroke-width=".7" />
+            <path d="M75 63 L62 70 L75 73 Z" fill="rgba(244,239,230,.58)" stroke="rgba(244,239,230,.88)" stroke-width=".7" />
+            <path d="M68 86 Q75 90 82 86" fill="none" stroke="rgba(234,208,152,.72)" stroke-width="1" />
           </g>
           <line id="relative-wind-vector" x1="75" y1="60" x2="75" y2="32" class="diagram-vector wind-vector" marker-end="url(#arrow-wind)" />
           <line id="relative-current-vector" x1="75" y1="60" x2="96" y2="60" class="diagram-vector current-vector" marker-end="url(#arrow-current)" />
