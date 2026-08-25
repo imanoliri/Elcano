@@ -38,26 +38,12 @@
   transition: left .08s linear, width .08s linear;
 }
 
-.geo-signed-bar[data-side="port"] {
-  background: #68c8ff;
-}
-
-.geo-signed-bar[data-side="starboard"] {
-  background: #e8b94f;
-}
-
-.geo-signed-bar[data-side="center"] {
-  width: 0 !important;
-}
-
+.geo-signed-bar[data-side="port"] { background: #68c8ff; }
+.geo-signed-bar[data-side="starboard"] { background: #e8b94f; }
+.geo-signed-bar[data-side="center"] { width: 0 !important; }
 .geo-signed-bar.wind-angle[data-side="port"],
-.geo-signed-bar.wind-angle[data-side="starboard"] {
-  background: rgba(244,239,230,.92);
-}
-
-.geo-fill-bar {
-  background: linear-gradient(90deg, rgba(244,239,230,.38), rgba(244,239,230,.95));
-}
+.geo-signed-bar.wind-angle[data-side="starboard"] { background: rgba(244,239,230,.92); }
+.geo-fill-bar { background: linear-gradient(90deg, rgba(244,239,230,.38), rgba(244,239,230,.95)); }
 
 .geo-value {
   min-width: 72px;
@@ -68,38 +54,136 @@
   opacity: .9;
 }
 
-/* De-emphasize the older standalone telemetry labels now that the values live
-   immediately beside their physical indicators. */
 .dynamic-value-row {
   opacity: .48;
   font-size: .62rem;
   margin-bottom: 1px;
 }
 
-/* Make the dynamic backgrounds behind the actual sliders read more like
-   instruments: a firm zero for helm and a physical wind-energy fill for sails. */
-.dynamic-track {
-  border-radius: 2px !important;
-}
-
+.dynamic-track { border-radius: 2px !important; }
 .slip-track .track-center {
   width: 2px !important;
   background: rgba(232,185,79,.72) !important;
 }
 
+/* Keep the vector diagram independent from the control console and pinned over
+   the chart itself. */
+.ship-vector-panel {
+  position: fixed !important;
+  z-index: 8;
+  right: 12px;
+  bottom: 168px;
+  width: 190px;
+  min-width: 190px;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,.28);
+  backdrop-filter: blur(12px);
+  background: rgba(4,16,24,.72) !important;
+}
+
+/* Once the diagram leaves the grid, the bottom console only needs helm, sails
+   and time. */
+.bottom-controls {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto !important;
+}
+.time-control {
+  grid-column: auto !important;
+}
+
+@media (max-width: 900px) {
+  .bottom-controls {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .time-control {
+    grid-column: 1 / -1 !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+  .ship-vector-panel {
+    right: 10px;
+    bottom: 222px;
+    width: 176px;
+    min-width: 176px;
+  }
+}
+
 @media (max-width: 760px) {
   .geo-feedback-row {
     gap: 6px;
-    margin-top: 2px;
+    margin-top: 3px;
   }
-
   .geo-signed-meter,
-  .geo-fill-meter {
-    height: 10px;
-  }
-
+  .geo-fill-meter { height: 10px; }
   .geo-value {
     min-width: 64px;
     font-size: .58rem;
+  }
+
+  /* Full-width controls: one long helm slider, then one long sail slider. */
+  .bottom-controls {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .helm-control,
+  .sail-control,
+  .time-control {
+    grid-column: 1 / -1 !important;
+    width: 100%;
+  }
+  .helm-row,
+  .sail-row {
+    width: 100%;
+  }
+  .slider-stack {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+  .wheel,
+  .sail-icon {
+    display: grid !important;
+  }
+  .sail-icon { display: inline-block !important; }
+  .time-control {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+
+  .ship-vector-panel {
+    right: 8px;
+    bottom: 285px;
+    width: 158px;
+    min-width: 158px;
+    padding: 5px 7px !important;
+  }
+  #ship-diagram { height: 72px !important; }
+}
+
+@media (max-width: 470px) {
+  .bottom-controls {
+    grid-template-columns: 1fr !important;
+  }
+  .ship-vector-panel {
+    width: 146px;
+    min-width: 146px;
+    bottom: 282px;
+  }
+  .time-button {
+    min-width: 0 !important;
+    padding-left: 3px !important;
+    padding-right: 3px !important;
+  }
+}
+
+@media (max-height: 650px) and (orientation: landscape) {
+  .bottom-controls {
+    grid-template-columns: 1fr 1fr auto !important;
+  }
+  .time-control {
+    grid-column: auto !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .ship-vector-panel {
+    right: 10px;
+    bottom: 105px;
+    width: 150px;
+    min-width: 150px;
   }
 }
