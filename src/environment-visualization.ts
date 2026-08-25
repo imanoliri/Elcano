@@ -1,6 +1,6 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
-import { project } from './world/coordinates';
+import { project, unproject } from './world/coordinates';
 import { isLand } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
@@ -44,7 +44,6 @@ if (ocean && shell) {
       desktopSpacing: 28,
       mobileSpacing: 42,
       vectorAt: windAt,
-      // Keep the established wind-arrow visual style unchanged.
       strokeStyle: 'rgba(255,255,255,.82)',
       baseLength: 18,
       width: 1.35,
@@ -100,21 +99,40 @@ if (ocean && shell) {
     return field.nativeStep * multiple;
   }
 
-  function drawArrow(x: number, y: number, vector: Vec2, field: Field) {
-    if (!ctx) return;
+  function arrowGeometry(x: number, y: number, vector: Vec2, field: Field) {
     const magnitude = Math.hypot(vector.x, vector.y);
-    if (!Number.isFinite(magnitude) || magnitude < 0.0001) return;
-
+    if (!Number.isFinite(magnitude) || magnitude < 0.0001) return null;
     const length = field.baseLength * Math.max(0.75, Math.min(1.35, 0.7 + Math.log2(1 + magnitude) * 0.25));
     const dx = vector.x / magnitude * length;
     const dy = -vector.y / magnitude * length;
-    const ex = x + dx;
-    const ey = y + dy;
+    return { magnitude, dx, dy, sx: x - dx * 0.35, sy: y - dy * 0.35, ex: x + dx, ey: y + dy };
+  }
+
+  function screenPointIsLand(x: number, y: number, camera: Camera) {
+    const world = { x: (x - camera.x) / camera.scale, y: (y - camera.y) / camera.scale };
+    return isLand(unproject(world));
+  }
+
+  function arrowStaysOverWater(geometry: NonNullable<ReturnType<typeof arrowGeometry>>, camera: Camera) {
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const x = geometry.sx + (geometry.ex - geometry.sx) * t;
+      const y = geometry.sy + (geometry.ey - geometry.sy) * t;
+      if (screenPointIsLand(x, y, camera)) return false;
+    }
+    return true;
+  }
+
+  function drawArrow(x: number, y: number, vector: Vec2, field: Field, camera: Camera) {
+    if (!ctx) return;
+    const geometry = arrowGeometry(x, y, vector, field);
+    if (!geometry || !arrowStaysOverWater(geometry, camera)) return;
+
+    const { dx, dy, sx, sy, ex, ey } = geometry;
     const angle = Math.atan2(dy, dx);
     const head = 4.5;
 
     ctx.beginPath();
-    ctx.moveTo(x - dx * 0.35, y - dy * 0.35);
+    ctx.moveTo(sx, sy);
     ctx.lineTo(ex, ey);
     ctx.moveTo(ex, ey);
     ctx.lineTo(ex - head * Math.cos(angle - 0.55), ey - head * Math.sin(angle - 0.55));
@@ -146,7 +164,7 @@ if (ocean && shell) {
         const x = camera.x + world.x * camera.scale;
         const y = camera.y + world.y * camera.scale;
         if (x < -30 || x > width + 30 || y < -30 || y > height + 30) continue;
-        drawArrow(x, y, field.vectorAt(position, time), field);
+        drawArrow(x, y, field.vectorAt(position, time), field, camera);
       }
     }
   }
