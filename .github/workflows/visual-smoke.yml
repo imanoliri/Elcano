@@ -30,8 +30,8 @@ jobs:
           done
           cat /tmp/elcano-vite.log
           exit 1
-      - name: Capture mobile render
-        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 http://127.0.0.1:4173 elcano-mobile.png
+      - name: Capture mobile gameplay render
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=1" elcano-mobile.png
       - uses: actions/upload-artifact@v4
         with:
           name: visual-smoke-mobile
