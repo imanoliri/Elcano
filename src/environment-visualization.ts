@@ -1,3 +1,4 @@
+import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
 import { project } from './world/coordinates';
 
