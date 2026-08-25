@@ -11,18 +11,18 @@ const windVector = document.querySelector<SVGLineElement>('#relative-wind-vector
 const shipSilhouette = document.querySelector<SVGGElement>('.ship-silhouette');
 const shipDiagram = document.querySelector<SVGSVGElement>('#ship-diagram');
 
-// Keep the earlier, slimmer carrack/nao hull proportions. The sails remain the
-// newer wider and thinner version for better readability at small size.
+// Keep the earlier, slimmer carrack/nao hull proportions. The smaller fore sail
+// sits toward the bow, while the wider main sail sits aft toward the stern.
 if (shipSilhouette) {
   shipSilhouette.innerHTML = `
     <path d="M75 24 C80 31 84 42 85 55 C86 69 84 82 80 92 L75 98 L70 92 C66 82 64 69 65 55 C66 42 70 31 75 24 Z"
       fill="rgba(235,208,152,.12)" stroke="#ead098" stroke-width="1.6" />
     <path d="M68 86 Q75 90 82 86" fill="none" stroke="rgba(234,208,152,.72)" stroke-width="1" />
     <path d="M75 31 L75 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
-    <path d="M61 43 Q75 40.5 89 43 L88 49 Q75 47 62 49 Z"
-      fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".6" />
-    <path d="M63 59 Q75 57 87 59 L86 64 Q75 62.5 64 64 Z"
+    <path d="M64 43 Q75 41 86 43 L85 48 Q75 46.5 65 48 Z"
       fill="rgba(244,239,230,.58)" stroke="rgba(244,239,230,.88)" stroke-width=".55" />
+    <path d="M60 59 Q75 56.5 90 59 L89 65 Q75 63 61 65 Z"
+      fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".6" />
   `;
 }
 
