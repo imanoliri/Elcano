@@ -8,6 +8,23 @@ const slipStack = document.querySelector<HTMLElement>('.slip-stack');
 const windStack = document.querySelector<HTMLElement>('.wind-stack');
 const windReadout = document.querySelector<HTMLElement>('#apparent-wind-readout');
 const windVector = document.querySelector<SVGLineElement>('#relative-wind-vector');
+const shipSilhouette = document.querySelector<SVGGElement>('.ship-silhouette');
+
+// Replace the tiny ship drawing with a cleaner carrack/nao silhouette. Keep the
+// historical fuller hull, but use two compact square-ish sails that stay inside
+// the hull footprint so the icon remains readable at mobile size.
+if (shipSilhouette) {
+  shipSilhouette.innerHTML = `
+    <path d="M75 24 C80 31 84 42 85 55 C86 69 84 82 80 92 L75 98 L70 92 C66 82 64 69 65 55 C66 42 70 31 75 24 Z"
+      fill="rgba(235,208,152,.12)" stroke="#ead098" stroke-width="1.6" />
+    <path d="M75 31 L75 87" fill="none" stroke="rgba(234,208,152,.78)" stroke-width="1.15" />
+    <path d="M66 43 Q75 39 84 43 L83 54 Q75 51 67 54 Z"
+      fill="rgba(244,239,230,.72)" stroke="rgba(244,239,230,.94)" stroke-width=".65" />
+    <path d="M68 58 Q75 55 82 58 L81 68 Q75 65 69 68 Z"
+      fill="rgba(244,239,230,.58)" stroke="rgba(244,239,230,.88)" stroke-width=".6" />
+    <path d="M68 86 Q75 90 82 86" fill="none" stroke="rgba(234,208,152,.72)" stroke-width="1" />
+  `;
+}
 
 if (rudder) {
   rudder.min = '-20';
