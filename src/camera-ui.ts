@@ -1,9 +1,5 @@
 import './camera-ui.css';
 
-const WORLD_WIDTH = 1000;
-const WORLD_HEIGHT = 650;
-const TARGET = { x: 650, y: 245 };
-
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
 
@@ -13,6 +9,7 @@ if (canvas && viewport) {
   indicator.setAttribute('aria-hidden', 'true');
   viewport.append(indicator);
 
+  let target = { x: canvas.width / 2, y: canvas.height / 2 };
   let scale = 1;
   let minScale = 1;
   let offsetX = 0;
@@ -30,20 +27,11 @@ if (canvas && viewport) {
 
   function clampCamera() {
     const { width, height } = viewportSize();
-    const mapWidth = WORLD_WIDTH * scale;
-    const mapHeight = WORLD_HEIGHT * scale;
+    const mapWidth = canvas.width * scale;
+    const mapHeight = canvas.height * scale;
 
-    if (mapWidth <= width) {
-      offsetX = (width - mapWidth) / 2;
-    } else {
-      offsetX = Math.min(0, Math.max(width - mapWidth, offsetX));
-    }
-
-    if (mapHeight <= height) {
-      offsetY = (height - mapHeight) / 2;
-    } else {
-      offsetY = Math.min(0, Math.max(height - mapHeight, offsetY));
-    }
+    offsetX = mapWidth <= width ? (width - mapWidth) / 2 : Math.min(0, Math.max(width - mapWidth, offsetX));
+    offsetY = mapHeight <= height ? (height - mapHeight) / 2 : Math.min(0, Math.max(height - mapHeight, offsetY));
   }
 
   function applyCamera() {
@@ -54,7 +42,7 @@ if (canvas && viewport) {
 
   function resetCamera() {
     const { width } = viewportSize();
-    minScale = width / WORLD_WIDTH;
+    minScale = width / canvas.width;
     scale = minScale;
     offsetX = 0;
     offsetY = 0;
@@ -62,7 +50,7 @@ if (canvas && viewport) {
   }
 
   function zoomAround(screenX: number, screenY: number, nextScale: number) {
-    const clampedScale = Math.max(minScale, Math.min(minScale * 5, nextScale));
+    const clampedScale = Math.max(minScale, Math.min(minScale * 8, nextScale));
     const worldX = (screenX - offsetX) / scale;
     const worldY = (screenY - offsetY) / scale;
     scale = clampedScale;
@@ -73,8 +61,8 @@ if (canvas && viewport) {
 
   function updateTargetIndicator() {
     const { width, height } = viewportSize();
-    const x = offsetX + TARGET.x * scale;
-    const y = offsetY + TARGET.y * scale;
+    const x = offsetX + target.x * scale;
+    const y = offsetY + target.y * scale;
     const margin = 22;
     const inside = x >= margin && x <= width - margin && y >= margin && y <= height - margin;
 
@@ -107,6 +95,13 @@ if (canvas && viewport) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
+  window.addEventListener('elcano:camera-target', (event) => {
+    const detail = (event as CustomEvent<{ x: number; y: number }>).detail;
+    if (!detail) return;
+    target = detail;
+    updateTargetIndicator();
+  });
+
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
@@ -137,10 +132,7 @@ if (canvas && viewport) {
       pinchStartScale = scale;
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      pinchWorldAnchor = {
-        x: (midX - offsetX) / scale,
-        y: (midY - offsetY) / scale,
-      };
+      pinchWorldAnchor = { x: (midX - offsetX) / scale, y: (midY - offsetY) / scale };
     }
   });
 
@@ -162,7 +154,7 @@ if (canvas && viewport) {
       const distance = Math.hypot(b.x - a.x, b.y - a.y);
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      scale = Math.max(minScale, Math.min(minScale * 5, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
+      scale = Math.max(minScale, Math.min(minScale * 8, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
       offsetX = midX - pinchWorldAnchor.x * scale;
       offsetY = midY - pinchWorldAnchor.y * scale;
       applyCamera();
@@ -189,7 +181,7 @@ if (canvas && viewport) {
   window.addEventListener('resize', () => {
     const oldMin = minScale;
     const { width } = viewportSize();
-    minScale = width / WORLD_WIDTH;
+    minScale = width / canvas.width;
     if (Math.abs(scale - oldMin) < 0.001) scale = minScale;
     else scale = Math.max(minScale, scale);
     applyCamera();
@@ -197,6 +189,5 @@ if (canvas && viewport) {
 
   const observer = new ResizeObserver(() => applyCamera());
   observer.observe(viewport);
-
   resetCamera();
 }
