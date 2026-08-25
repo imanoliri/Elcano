@@ -10,15 +10,29 @@ const SCALE = 100;
 const MISSING = -32768;
 const MS_TO_KNOTS = 1.9438444924406;
 
-// Tutorial-region coverage with margin around San Sebastián → A Coruña.
 const REGION = { minLat: 41, maxLat: 46.5, minLon: -11.5, maxLon: 1 };
 
-function toKnots(value) {
-  return typeof value === 'number' && Number.isFinite(value) ? value * MS_TO_KNOTS : Number.NaN;
+function toWindKnots(value) {
+  return typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 100 ? value * MS_TO_KNOTS : Number.NaN;
+}
+
+function toCurrentKnots(value) {
+  return typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 10 ? value * MS_TO_KNOTS : Number.NaN;
 }
 
 function normalizeLon(lon) {
   return lon > 180 ? lon - 360 : lon;
+}
+
+function flattenNumbers(values) {
+  const result = [];
+  const visit = (value) => {
+    if (Array.isArray(value) || ArrayBuffer.isView(value)) {
+      for (const item of value) visit(item);
+    } else if (typeof value === 'number') result.push(value);
+  };
+  visit(values);
+  return result;
 }
 
 function createGrid(minLat, maxLat, minLon, maxLon, stepDeg, components = 2) {
@@ -75,19 +89,16 @@ async function fetchJsonRows(url, query) {
 }
 
 async function buildWindGrid() {
-  // CCMP monthly means are native 0.25° vector winds. Use all available years
-  // and accumulate them by calendar month to form a monthly climatology.
   const step = 0.25;
   const grid = createGrid(41.125, 46.375, -11.375, 0.875, step);
   const latStart = 478;
   const latEnd = 499;
-  // CCMP longitudes are 0.125, 0.375, ... 359.875. Split around Greenwich.
   const westRows = await fetchJsonRows(WIND_URL, `uwnd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439],vwnd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439]`);
   const eastRows = await fetchJsonRows(WIND_URL, `uwnd[0:1:381][${latStart}:1:${latEnd}][0:1:3],vwnd[0:1:381][${latStart}:1:${latEnd}][0:1:3]`);
   for (const row of [...westRows, ...eastRows]) {
     const month = new Date(row.time).getUTCMonth();
-    addSample(grid, month, row.latitude, row.longitude, 0, toKnots(row.uwnd));
-    addSample(grid, month, row.latitude, row.longitude, 1, toKnots(row.vwnd));
+    addSample(grid, month, row.latitude, row.longitude, 0, toWindKnots(row.uwnd));
+    addSample(grid, month, row.latitude, row.longitude, 1, toWindKnots(row.vwnd));
   }
   return grid;
 }
@@ -111,37 +122,34 @@ async function fetchHycomSnapshot(date) {
   });
   const response = await fetch(`${CURRENT_URL}?${params}`);
   if (!response.ok) throw new Error(`${response.status} ${response.statusText} fetching HYCOM ${date}`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  const reader = new NetCDFReader(bytes);
+  const reader = new NetCDFReader(new Uint8Array(await response.arrayBuffer()));
   const latName = findVariable(reader, ['lat', 'latitude']);
   const lonName = findVariable(reader, ['lon', 'longitude']);
-  const lats = Array.from(reader.getDataVariable(latName));
-  const lons = Array.from(reader.getDataVariable(lonName));
-  const u = Array.from(reader.getDataVariable('water_u'));
-  const v = Array.from(reader.getDataVariable('water_v'));
+  const lats = flattenNumbers(reader.getDataVariable(latName));
+  const lons = flattenNumbers(reader.getDataVariable(lonName));
+  const u = flattenNumbers(reader.getDataVariable('water_u'));
+  const v = flattenNumbers(reader.getDataVariable('water_v'));
+  if (u.length !== lats.length * lons.length || v.length !== u.length) {
+    throw new Error(`Unexpected HYCOM shape for ${date}: ${lats.length}×${lons.length}, u=${u.length}, v=${v.length}`);
+  }
   return { lats, lons, u, v };
 }
 
 async function buildCurrentGrid() {
-  // HYCOM GLBu0.08 is a freely available global 1/12° reanalysis on a uniform
-  // 0.08° grid. Three representative years are composited by calendar month;
-  // this preserves native spatial detail without shipping the global archive.
   const step = 0.08;
-  const minLat = 41.04;
-  const minLon = -11.44;
-  const grid = createGrid(minLat, 46.48, minLon, 0.96, step);
+  const grid = createGrid(41.04, 46.48, -11.44, 0.96, step);
   const years = [2000, 2006, 2012];
 
   for (let month = 0; month < 12; month += 1) {
     for (const year of years) {
       const date = `${year}-${String(month + 1).padStart(2, '0')}-15`;
       const { lats, lons, u, v } = await fetchHycomSnapshot(date);
-      const lonCount = lons.length;
+      const sourceLonCount = lons.length;
       for (let y = 0; y < lats.length; y += 1) {
         for (let x = 0; x < lons.length; x += 1) {
-          const sourceIndex = y * lonCount + x;
-          addSample(grid, month, lats[y], lons[x], 0, toKnots(u[sourceIndex]));
-          addSample(grid, month, lats[y], lons[x], 1, toKnots(v[sourceIndex]));
+          const sourceIndex = y * sourceLonCount + x;
+          addSample(grid, month, lats[y], lons[x], 0, toCurrentKnots(u[sourceIndex]));
+          addSample(grid, month, lats[y], lons[x], 1, toCurrentKnots(v[sourceIndex]));
         }
       }
     }
