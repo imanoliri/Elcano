@@ -4,8 +4,8 @@ const WORLD_WIDTH = 1000;
 const WORLD_HEIGHT = 650;
 const TARGET = { x: 650, y: 245 };
 
-const canvas = document.querySelector<HTMLCanvasElement>('#ocean');
-const viewport = document.querySelector<HTMLElement>('.game-shell');
+const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
+const viewport = document.querySelector<HTMLElement>('.game-shell')!;
 
 if (canvas && viewport) {
   const indicator = document.createElement('div');
