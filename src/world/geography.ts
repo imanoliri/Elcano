@@ -7,12 +7,15 @@ type GeoJsonGeometry = {
   coordinates: number[][][] | number[][][][];
 };
 
-type GeoJsonFeature = { geometry: GeoJsonGeometry };
+type GeoJsonFeature = { geometry: GeoJsonGeometry | null };
+type GeoJsonFeatureCollection = { type: 'FeatureCollection'; features: GeoJsonFeature[] };
+
+type LandGeoJson = GeoJsonFeature | GeoJsonFeatureCollection;
 
 const land = feature(
   landTopology as never,
   (landTopology as { objects: { land: unknown } }).objects.land as never,
-) as unknown as GeoJsonFeature;
+) as unknown as LandGeoJson;
 
 function ring(ctx: CanvasRenderingContext2D, coordinates: number[][]) {
   coordinates.forEach(([lon, lat], index) => {
@@ -23,16 +26,27 @@ function ring(ctx: CanvasRenderingContext2D, coordinates: number[][]) {
   ctx.closePath();
 }
 
+function geometry(ctx: CanvasRenderingContext2D, value: GeoJsonGeometry | null) {
+  if (!value) return;
+
+  if (value.type === 'Polygon') {
+    for (const polygonRing of value.coordinates as number[][][]) ring(ctx, polygonRing);
+    return;
+  }
+
+  for (const polygon of value.coordinates as number[][][][]) {
+    for (const polygonRing of polygon) ring(ctx, polygonRing);
+  }
+}
+
 export function drawLand(ctx: CanvasRenderingContext2D) {
   ctx.save();
   ctx.beginPath();
 
-  if (land.geometry.type === 'Polygon') {
-    for (const polygonRing of land.geometry.coordinates as number[][][]) ring(ctx, polygonRing);
+  if ('features' in land) {
+    for (const item of land.features) geometry(ctx, item.geometry);
   } else {
-    for (const polygon of land.geometry.coordinates as number[][][][]) {
-      for (const polygonRing of polygon) ring(ctx, polygonRing);
-    }
+    geometry(ctx, land.geometry);
   }
 
   ctx.fillStyle = '#7f7253';
