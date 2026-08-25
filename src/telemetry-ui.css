@@ -1,0 +1,105 @@
+.geo-feedback-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.geo-signed-meter,
+.geo-fill-meter {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(255,255,255,.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035);
+}
+
+.geo-zero-line {
+  position: absolute;
+  z-index: 2;
+  top: -1px;
+  bottom: -1px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-1px);
+  background: rgba(232,185,79,.82);
+}
+
+.geo-signed-bar,
+.geo-fill-bar {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  width: 0;
+  border-radius: 1px;
+  transition: left .08s linear, width .08s linear;
+}
+
+.geo-signed-bar[data-side="port"] {
+  background: #68c8ff;
+}
+
+.geo-signed-bar[data-side="starboard"] {
+  background: #e8b94f;
+}
+
+.geo-signed-bar[data-side="center"] {
+  width: 0 !important;
+}
+
+.geo-signed-bar.wind-angle[data-side="port"],
+.geo-signed-bar.wind-angle[data-side="starboard"] {
+  background: rgba(244,239,230,.92);
+}
+
+.geo-fill-bar {
+  background: linear-gradient(90deg, rgba(244,239,230,.38), rgba(244,239,230,.95));
+}
+
+.geo-value {
+  min-width: 72px;
+  text-align: right;
+  white-space: nowrap;
+  font-size: .62rem;
+  font-variant-numeric: tabular-nums;
+  opacity: .9;
+}
+
+/* De-emphasize the older standalone telemetry labels now that the values live
+   immediately beside their physical indicators. */
+.dynamic-value-row {
+  opacity: .48;
+  font-size: .62rem;
+  margin-bottom: 1px;
+}
+
+/* Make the dynamic backgrounds behind the actual sliders read more like
+   instruments: a firm zero for helm and a physical wind-energy fill for sails. */
+.dynamic-track {
+  border-radius: 2px !important;
+}
+
+.slip-track .track-center {
+  width: 2px !important;
+  background: rgba(232,185,79,.72) !important;
+}
+
+@media (max-width: 760px) {
+  .geo-feedback-row {
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .geo-signed-meter,
+  .geo-fill-meter {
+    height: 10px;
+  }
+
+  .geo-value {
+    min-width: 64px;
+    font-size: .58rem;
+  }
+}
