@@ -3,8 +3,8 @@ if (new URLSearchParams(window.location.search).has('visual-smoke')) {
     document.querySelector<HTMLElement>('#modal')?.classList.remove('open');
   });
 
-  // Exercise the close-zoom rendering path so CI captures the high-detail
-  // coastline LOD rather than only the default tutorial zoom.
+  // Exercise a much deeper zoom so CI verifies the 10m coastline and
+  // zoom-aware marker layers well beyond the default tutorial scale.
   window.setTimeout(() => {
     const canvas = document.querySelector<HTMLCanvasElement>('#ocean');
     const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -13,7 +13,7 @@ if (new URLSearchParams(window.location.search).has('visual-smoke')) {
     canvas.dispatchEvent(new WheelEvent('wheel', {
       clientX: rect.left + rect.width * 0.5,
       clientY: rect.top + rect.height * 0.5,
-      deltaY: -350,
+      deltaY: -1600,
       bubbles: true,
       cancelable: true,
     }));
