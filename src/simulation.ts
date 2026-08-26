@@ -33,6 +33,13 @@ export type RigPolar = {
   speedScale: number;
 };
 
+export type VesselType = {
+  id: string;
+  name: string;
+  /** Maximum vessel speed through the water in knots, before current is added. */
+  maxThroughWaterSpeedKn: number;
+};
+
 export type PointOfSail =
   | 'In irons'
   | 'Close-hauled'
@@ -42,6 +49,18 @@ export type PointOfSail =
   | 'Running';
 
 const DEG = Math.PI / 180;
+
+/**
+ * Baseline hull for the current playable nao/carrack. The cap represents the
+ * rapidly increasing hydrodynamic resistance of a heavy displacement hull; it
+ * limits speed through the water, while ocean current can still increase (or
+ * decrease) speed over the ground.
+ */
+export const DEFAULT_VESSEL: VesselType = {
+  id: 'nao-carrack-baseline',
+  name: 'Nao / carrack',
+  maxThroughWaterSpeedKn: 5.5,
+};
 
 /**
  * A deliberately simple carrack/nao-style baseline polar. Angle is measured
@@ -130,6 +149,7 @@ export function sailingVelocity(
   wind: Vec2,
   sailTrim = 1,
   rig: RigPolar = DEFAULT_RIG_POLAR,
+  vessel: VesselType = DEFAULT_VESSEL,
 ): Vec2 {
   const heading = headingDeg * DEG;
   const hx = Math.sin(heading); // east; nautical 0° is north
@@ -141,7 +161,8 @@ export function sailingVelocity(
   const angle = relativeWindAngleDeg(headingDeg, wind);
   const efficiency = polarEfficiency(angle, rig);
   const trim = Math.max(0, Math.min(1, sailTrim));
-  const speed = windSpeed * efficiency * rig.speedScale * trim;
+  const unconstrainedSpeed = windSpeed * efficiency * rig.speedScale * trim;
+  const speed = Math.min(unconstrainedSpeed, vessel.maxThroughWaterSpeedKn);
 
   return { x: hx * speed, y: hy * speed };
 }
