@@ -1,0 +1,17 @@
+.vector-panel-heading {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  text-align: center;
+}
+
+.vector-panel-heading span,
+.vector-panel-heading small {
+  width: 100%;
+  text-align: center;
+}
+
+.vector-legend {
+  display: none !important;
+}
