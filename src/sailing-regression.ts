@@ -54,7 +54,7 @@ export const BISCAY_SAILING_CASES: readonly BiscaySailingCase[] = [
     id: 'santander-close-reach',
     place: 'Santander',
     position: { lat: 43.55, lon: -3.8 },
-    headingDeg: 330,
+    headingDeg: 335,
     windFromDeg: 270,
     windSpeedKn: 12,
     currentTowardDeg: 90,
