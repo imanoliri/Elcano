@@ -25,6 +25,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      # Regenerate the static regional climatology whenever its builder changes.
       - run: npm run world:data
       - name: Commit generated regional data
         run: |
