@@ -1,5 +1,6 @@
 import './camera-ui.css';
-import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
+import { missionFromUrl } from './missions';
+import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
 import { isPolarRow, virtualWorldPoint, visibleWorldRange } from './world-wrap';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
@@ -31,10 +32,10 @@ if (canvas && viewport) {
   let cameraDirty = true;
   let lastSourceRefresh = 0;
 
-  // Bay of Biscay framing for the San Sebastián → A Coruña tutorial.
-  // Same geographic center as before (43.3513°N, 5.2°W), reprojected for
-  // the pole-complete equirectangular chart.
-  const tutorialCenter = { x: 699.2, y: 186.595 };
+  // Each mission opens over its own starting position. Previously this was a
+  // hard-coded Bay of Biscay point, so every mission visually opened at the
+  // tutorial even though the ship state had correctly moved elsewhere.
+  const initialCenter = project(missionFromUrl().start);
   const INITIAL_ZOOM_MULTIPLIER = 50;
   const MAX_ZOOM_MULTIPLIER = 256;
   const MAX_WRAP_DPR = 2;
@@ -60,9 +61,6 @@ if (canvas && viewport) {
   }
 
   function resizeWrapLayer() {
-    // Very high phone DPRs make the full-screen mirror canvas disproportionately
-    // expensive, while the source world canvas does not contain matching extra
-    // detail. Capping this layer at 2x preserves sharpness and cuts fill work.
     const dpr = Math.min(MAX_WRAP_DPR, Math.max(1, window.devicePixelRatio || 1));
     const { width, height } = viewportSize();
     const pixelWidth = Math.max(1, Math.round(width * dpr));
@@ -87,9 +85,6 @@ if (canvas && viewport) {
       return;
     }
 
-    // On a pole-complete equirectangular chart, crossing either pole reflects
-    // latitude and rotates longitude by 180°. Split at the antimeridian so the
-    // half-world longitude shift stays continuous inside the reflected row.
     wrapCtx.save();
     wrapCtx.translate(dx, dy + dh);
     wrapCtx.scale(1, -1);
@@ -122,9 +117,6 @@ if (canvas && viewport) {
   function applyCamera() {
     normalizeCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    // Pointer/wheel events can arrive faster than the screen refresh rate.
-    // Mark the mirror dirty and let the single RAF loop paint only the newest
-    // camera state, instead of redrawing once per input event plus once per RAF.
     cameraDirty = true;
     announceCamera();
     updateTargetIndicator();
@@ -134,8 +126,8 @@ if (canvas && viewport) {
     const { width } = viewportSize();
     minScale = width / WORLD_MAP_WIDTH;
     scale = Math.max(minScale, minScale * INITIAL_ZOOM_MULTIPLIER);
-    offsetX = width / 2 - tutorialCenter.x * scale;
-    offsetY = viewport.clientHeight / 2 - tutorialCenter.y * scale;
+    offsetX = width / 2 - initialCenter.x * scale;
+    offsetY = viewport.clientHeight / 2 - initialCenter.y * scale;
     applyCamera();
   }
 
@@ -307,9 +299,6 @@ if (canvas && viewport) {
   observer.observe(viewport);
 
   function mirrorFrame(timestamp: number) {
-    // The source canvas contains dynamic sailing/environment visuals, but it
-    // does not need to be recopied at 60+ Hz while the camera is idle. During
-    // interaction, cameraDirty still gives one fresh render every display RAF.
     const sourceDue = timestamp - lastSourceRefresh >= SOURCE_REFRESH_INTERVAL_MS;
     if (cameraDirty || sourceDue) {
       renderWrappedWorld();
