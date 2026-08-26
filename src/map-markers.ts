@@ -20,6 +20,7 @@ if (ocean && shell) {
 
   let camera: Camera | null = null;
   let markers: MarkerState | null = null;
+  let scheduled = false;
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -80,6 +81,7 @@ if (ocean && shell) {
   }
 
   function render() {
+    scheduled = false;
     if (!ctx) return;
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -91,23 +93,36 @@ if (ocean && shell) {
     drawShip(screenPoint(markers.ship), markers.headingDeg, scale);
   }
 
+  function scheduleRender() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(render);
+  }
+
+  function sameMarkers(a: MarkerState | null, b: MarkerState) {
+    return !!a &&
+      a.target.x === b.target.x && a.target.y === b.target.y &&
+      a.ship.x === b.ship.x && a.ship.y === b.ship.y &&
+      a.headingDeg === b.headingDeg;
+  }
+
   window.addEventListener('elcano:camera-change', (event) => {
     const detail = (event as CustomEvent<Camera>).detail;
     if (!detail) return;
     camera = detail;
-    render();
+    scheduleRender();
   });
 
   window.addEventListener('elcano:map-markers', (event) => {
     const detail = (event as CustomEvent<MarkerState>).detail;
-    if (!detail) return;
+    if (!detail || sameMarkers(markers, detail)) return;
     markers = detail;
-    render();
+    scheduleRender();
   });
 
   const resizeObserver = new ResizeObserver(() => {
     resize();
-    render();
+    scheduleRender();
   });
   resizeObserver.observe(viewport);
   resize();
