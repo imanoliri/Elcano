@@ -30,7 +30,9 @@ if (canvas && viewport) {
   let pinchWorldAnchor = { x: 0, y: 0 };
 
   // Bay of Biscay framing for the San Sebastián → A Coruña tutorial.
-  const tutorialCenter = { x: 699.2, y: 263.6 };
+  // Same geographic center as before (43.3513°N, 5.2°W), reprojected for
+  // the pole-complete equirectangular chart.
+  const tutorialCenter = { x: 699.2, y: 186.595 };
   const INITIAL_ZOOM_MULTIPLIER = 50;
   const MAX_ZOOM_MULTIPLIER = 256;
 
@@ -78,9 +80,9 @@ if (canvas && viewport) {
       return;
     }
 
-    // Crossing a pole reflects latitude and rotates longitude by 180°.
-    // Split the source horizontally so the half-world longitude shift wraps
-    // cleanly inside each reflected row.
+    // On a pole-complete equirectangular chart, crossing either pole reflects
+    // latitude and rotates longitude by 180°. Split at the antimeridian so the
+    // half-world longitude shift stays continuous inside the reflected row.
     wrapCtx.save();
     wrapCtx.translate(dx, dy + dh);
     wrapCtx.scale(1, -1);
