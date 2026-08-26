@@ -26,8 +26,7 @@ export function nearestLand(position: GeoPosition, maxDistanceNm = COASTAL_WATER
 }
 
 export function waterStateAt(position: GeoPosition): WaterState {
-  if (isLand(position)) return 'aground';
-  return nearestLand(position, COASTAL_WATER_NM) ? 'coastal' : 'deep';
+  return nearestLand(position, COASTAL_WATER_NM) || isLand(position) ? 'coastal' : 'deep';
 }
 
 export function isAnchored() { return anchored; }
@@ -46,7 +45,11 @@ export function reportCoastalState(position: GeoPosition, collided = false) {
 
 export function resolveLandCollision(from: GeoPosition, to: GeoPosition) {
   if (!isLand(to)) return { position: to, collided: false };
-  if (isLand(from)) return { position: from, collided: true };
+
+  // The Natural Earth coastline is intentionally coarse. Some valid coastal
+  // starting points can fall just inside a land polygon. Allow those positions
+  // to move toward water rather than trapping the vessel immediately.
+  if (isLand(from)) return { position: to, collided: false };
 
   let safe = from;
   let blocked = to;
@@ -85,6 +88,7 @@ function installControls() {
   panel.innerHTML = `<div class="coastal-status"><span>Water</span><strong data-coastal-status>Coastal water</strong></div><button class="anchor-button" data-anchor aria-label="Drop anchor" aria-pressed="false" title="Drop anchor">⚓</button>`;
   shell.append(panel);
   panel.querySelector<HTMLButtonElement>('[data-anchor]')!.addEventListener('click', () => setAnchored(!anchored));
+  document.querySelector('#reset')?.addEventListener('click', () => setAnchored(false));
   updateControls();
 }
 
