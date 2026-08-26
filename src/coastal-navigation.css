@@ -1,0 +1,57 @@
+.coastal-controls {
+  position: absolute;
+  right: 1rem;
+  top: 7.4rem;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .5rem .6rem;
+  border: 1px solid rgba(235, 208, 152, .28);
+  border-radius: 12px;
+  background: rgba(5, 21, 31, .82);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.22);
+}
+
+.coastal-status {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.coastal-status span {
+  font-size: .62rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .62;
+}
+
+.coastal-status strong {
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.anchor-button {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid rgba(235, 208, 152, .35);
+  background: rgba(255,255,255,.06);
+  color: #f4efe6;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.anchor-button.active {
+  background: rgba(232, 185, 79, .24);
+  border-color: rgba(232, 185, 79, .8);
+}
+
+@media (max-width: 720px) {
+  .coastal-controls {
+    top: 6.8rem;
+    right: .6rem;
+    padding: .42rem .5rem;
+  }
+}
