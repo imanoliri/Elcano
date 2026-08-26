@@ -12,6 +12,104 @@
   text-align: center;
 }
 
+/* Replace the four duplicated top navigation boxes with the compact
+   Ship Forces readouts below. Voyage progress remains available on larger
+   screens; mobile already hides it. */
+.instrument-strip .instrument:not(.progress-instrument) {
+  display: none !important;
+}
+
+.instrument-strip {
+  grid-template-columns: minmax(120px, 180px) !important;
+  justify-content: end;
+}
+
 .vector-legend {
   display: none !important;
+}
+
+.ship-heading-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  margin: -2px 0 5px;
+  text-align: center;
+}
+
+.ship-heading-readout span {
+  font-size: .5rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  opacity: .42;
+}
+
+.ship-heading-readout strong {
+  font-size: .64rem;
+  font-variant-numeric: tabular-nums;
+  opacity: .9;
+}
+
+.force-readouts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin-top: 1px;
+}
+
+.force-readout {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: 2px auto auto;
+  justify-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.force-line {
+  width: 72%;
+  min-width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.force-label {
+  font-size: .46rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  opacity: .55;
+}
+
+.force-readout strong {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .5rem;
+  font-variant-numeric: tabular-nums;
+  color: #f4efe6;
+}
+
+.wind-force-readout { color: #f4efe6; }
+.current-force-readout { color: #4bd4ff; }
+.track-force-readout { color: #e8b94f; }
+
+@media (max-width: 760px) {
+  .instrument-strip {
+    display: none !important;
+  }
+
+  .ship-heading-readout {
+    margin-top: -5px;
+    margin-bottom: 3px;
+  }
+
+  .force-readouts {
+    gap: 3px;
+  }
+
+  .force-readout strong {
+    font-size: .46rem;
+  }
 }
