@@ -90,15 +90,19 @@ async function fetchJsonRows(url, query) {
 
 async function buildWindGrid() {
   const step = 0.25;
-  const grid = createGrid(41.125, 46.375, -11.375, 0.875, step);
+  // Components: mean eastward wind, mean northward wind, mean scalar wind speed.
+  // Keeping scalar speed avoids artificial weakening when multi-year monthly
+  // winds vary in direction and u/v components cancel during averaging.
+  const grid = createGrid(41.125, 46.375, -11.375, 0.875, step, 3);
   const latStart = 478;
   const latEnd = 499;
-  const westRows = await fetchJsonRows(WIND_URL, `uwnd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439],vwnd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439]`);
-  const eastRows = await fetchJsonRows(WIND_URL, `uwnd[0:1:381][${latStart}:1:${latEnd}][0:1:3],vwnd[0:1:381][${latStart}:1:${latEnd}][0:1:3]`);
+  const westRows = await fetchJsonRows(WIND_URL, `uwnd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439],vwnd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439],wspd[0:1:381][${latStart}:1:${latEnd}][1394:1:1439]`);
+  const eastRows = await fetchJsonRows(WIND_URL, `uwnd[0:1:381][${latStart}:1:${latEnd}][0:1:3],vwnd[0:1:381][${latStart}:1:${latEnd}][0:1:3],wspd[0:1:381][${latStart}:1:${latEnd}][0:1:3]`);
   for (const row of [...westRows, ...eastRows]) {
     const month = new Date(row.time).getUTCMonth();
     addSample(grid, month, row.latitude, row.longitude, 0, toWindKnots(row.uwnd));
     addSample(grid, month, row.latitude, row.longitude, 1, toWindKnots(row.vwnd));
+    addSample(grid, month, row.latitude, row.longitude, 2, toWindKnots(row.wspd));
   }
   return grid;
 }
@@ -133,8 +137,6 @@ async function fetchHycomSnapshot(date) {
   if (u.length < expected || v.length < expected) {
     throw new Error(`Unexpected HYCOM shape for ${date}: ${lats.length}×${lons.length}, u=${u.length}, v=${v.length}`);
   }
-  // netcdfjs can expose one trailing scalar from this HYCOM NCSS response;
-  // the actual spatial field is exactly latitude × longitude.
   if (u.length !== expected || v.length !== expected) {
     u = u.slice(0, expected);
     v = v.slice(0, expected);
@@ -145,9 +147,6 @@ async function fetchHycomSnapshot(date) {
 async function buildCurrentGrid() {
   const step = 0.08;
   const grid = createGrid(41.04, 46.48, -11.44, 0.96, step);
-
-  // One representative monthly field keeps the data-generation job compact.
-  // The native HYCOM 0.08° spatial resolution is preserved in the checked-in data.
   const year = 2012;
   for (let month = 0; month < 12; month += 1) {
     const date = `${year}-${String(month + 1).padStart(2, '0')}-15`;
@@ -186,7 +185,7 @@ async function main() {
   const wind = await buildWindGrid();
   const current = await buildCurrentGrid();
   const data = {
-    source: 'CCMP v2 monthly winds + HYCOM GLBu0.08 expt_19.1 2012 monthly current fields',
+    source: 'CCMP v2 monthly winds (u/v direction + scalar wspd magnitude) + HYCOM GLBu0.08 expt_19.1 2012 monthly current fields',
     generatedAt: 'deterministic-build',
     wind: serializableGrid(wind, pack(wind)),
     current: serializableGrid(current, pack(current)),
