@@ -64,15 +64,11 @@ function normalizeLon(lon: number) {
   return value;
 }
 
-function windSourceLon(lon: number) {
-  const normalized = normalizeLon(lon);
-  return normalized < 0 ? normalized + 360 : normalized;
-}
-
-function currentSourceLon(lon: number) {
-  const normalized = normalizeLon(lon);
-  const positive = normalized < 0 ? normalized + 360 : normalized;
-  return positive < 20 ? positive + 360 : positive;
+function sourceLonBounds(spec: ReturnType<typeof tileSpec>, seam: 0 | 20) {
+  const min = normalizeLon(spec.minLon);
+  const max = spec.maxLon === 180 ? 179.999 : normalizeLon(spec.maxLon);
+  if (max <= seam) return { min: min + 360, max: max + 360 };
+  return { min, max };
 }
 
 function tileOrigin(value: number, minimum: number) {
@@ -170,23 +166,20 @@ function sampleGrid(grid: SampleGrid | null, position: GeoPosition): EastNorthVe
 }
 
 async function fetchWind(spec: ReturnType<typeof tileSpec>) {
+  const minLat = Math.max(-78.375, spec.minLat);
+  const maxLat = Math.min(78.375, spec.maxLat);
+  if (minLat > maxLat) return null;
   const date = representativeDate(spec.month);
-  const west = windSourceLon(spec.minLon);
-  const east = windSourceLon(spec.maxLon === 180 ? 179.999 : spec.maxLon);
-  const startLon = Math.min(west, east);
-  const endLon = Math.max(west, east);
-  const dimensions = `[( ${date} )][(${spec.minLat}):4:(${spec.maxLat})][(${startLon}):4:(${endLon})]`.replaceAll(' ', '');
+  const lon = sourceLonBounds(spec, 0);
+  const dimensions = `[(${date})][(${minLat}):4:(${maxLat})][(${lon.min}):4:(${lon.max})]`;
   const rows = await fetchRows(WIND_URL, `uwnd${dimensions},vwnd${dimensions}`);
   return buildGrid(rows, 'uwnd', 'vwnd');
 }
 
 async function fetchCurrent(spec: ReturnType<typeof tileSpec>) {
   const date = representativeDate(spec.month);
-  const west = currentSourceLon(spec.minLon);
-  const east = currentSourceLon(spec.maxLon === 180 ? 179.999 : spec.maxLon);
-  const startLon = Math.min(west, east);
-  const endLon = Math.max(west, east);
-  const dimensions = `[(${date})][(15)][(${spec.maxLat}):3:(${spec.minLat})][(${startLon}):3:(${endLon})]`;
+  const lon = sourceLonBounds(spec, 20);
+  const dimensions = `[(${date})][(15)][(${spec.maxLat}):3:(${spec.minLat})][(${lon.min}):3:(${lon.max})]`;
   const rows = await fetchRows(CURRENT_URL, `u${dimensions},v${dimensions}`);
   return buildGrid(rows, 'u', 'v');
 }
