@@ -1,6 +1,7 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
 import { project, unproject } from './world/coordinates';
+import { prefetchEnvironmentBounds } from './world/environment';
 import { drawLandMask } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
@@ -32,10 +33,10 @@ if (ocean && shell) {
 
   const fields: Field[] = [
     {
-      minLat: 41.125,
-      maxLat: 46.375,
-      minLon: -11.375,
-      maxLon: 0.875,
+      minLat: -80,
+      maxLat: 80,
+      minLon: -180,
+      maxLon: 180,
       nativeStep: 0.25,
       desktopSpacing: 28,
       mobileSpacing: 42,
@@ -45,10 +46,10 @@ if (ocean && shell) {
       width: 1.35,
     },
     {
-      minLat: 41.04,
-      maxLat: 46.48,
-      minLon: -11.44,
-      maxLon: 0.96,
+      minLat: -80,
+      maxLat: 80,
+      minLon: -180,
+      maxLon: 180,
       nativeStep: 0.08,
       desktopSpacing: 24,
       mobileSpacing: 34,
@@ -62,6 +63,7 @@ if (ocean && shell) {
   type Camera = { x: number; y: number; scale: number };
   type GeoBounds = { minLat: number; maxLat: number; minLon: number; maxLon: number };
   let camera: Camera | null = null;
+  let prefetchTimer = 0;
 
   function resizeOverlay() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -104,6 +106,13 @@ if (ocean && shell) {
       minLon: Math.min(a.lon, b.lon),
       maxLon: Math.max(a.lon, b.lon),
     };
+  }
+
+  function scheduleTilePrefetch(value: Camera) {
+    window.clearTimeout(prefetchTimer);
+    prefetchTimer = window.setTimeout(() => {
+      void prefetchEnvironmentBounds(visibleGeoBounds(value), simulationTime());
+    }, 140);
   }
 
   function drawArrow(x: number, y: number, vector: Vec2, field: Field) {
@@ -192,11 +201,15 @@ if (ocean && shell) {
     if (!detail) return;
     camera = detail;
     scheduleRender();
+    scheduleTilePrefetch(detail);
   });
+
+  window.addEventListener('elcano:environment-data-change', scheduleRender);
 
   const resizeObserver = new ResizeObserver(() => {
     resizeOverlay();
     scheduleRender();
+    if (camera) scheduleTilePrefetch(camera);
   });
   resizeObserver.observe(viewport);
 
