@@ -15,7 +15,7 @@ if (canvas && viewport) {
   wrapLayer.className = 'world-wrap-layer';
   wrapLayer.setAttribute('aria-hidden', 'true');
   canvas.insertAdjacentElement('afterend', wrapLayer);
-  const wrapCtx = wrapLayer.getContext('2d')!;
+  const wrapCtx = wrapLayer.getContext('2d', { alpha: false })!;
 
   let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
@@ -28,6 +28,8 @@ if (canvas && viewport) {
   let pinchStartDistance = 0;
   let pinchStartScale = 1;
   let pinchWorldAnchor = { x: 0, y: 0 };
+  let cameraDirty = true;
+  let lastSourceRefresh = 0;
 
   // Bay of Biscay framing for the San Sebastián → A Coruña tutorial.
   // Same geographic center as before (43.3513°N, 5.2°W), reprojected for
@@ -35,6 +37,8 @@ if (canvas && viewport) {
   const tutorialCenter = { x: 699.2, y: 186.595 };
   const INITIAL_ZOOM_MULTIPLIER = 50;
   const MAX_ZOOM_MULTIPLIER = 256;
+  const MAX_WRAP_DPR = 2;
+  const SOURCE_REFRESH_INTERVAL_MS = 50;
 
   canvas.style.width = `${WORLD_MAP_WIDTH}px`;
   canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
@@ -56,7 +60,10 @@ if (canvas && viewport) {
   }
 
   function resizeWrapLayer() {
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    // Very high phone DPRs make the full-screen mirror canvas disproportionately
+    // expensive, while the source world canvas does not contain matching extra
+    // detail. Capping this layer at 2x preserves sharpness and cuts fill work.
+    const dpr = Math.min(MAX_WRAP_DPR, Math.max(1, window.devicePixelRatio || 1));
     const { width, height } = viewportSize();
     const pixelWidth = Math.max(1, Math.round(width * dpr));
     const pixelHeight = Math.max(1, Math.round(height * dpr));
@@ -115,7 +122,10 @@ if (canvas && viewport) {
   function applyCamera() {
     normalizeCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    renderWrappedWorld();
+    // Pointer/wheel events can arrive faster than the screen refresh rate.
+    // Mark the mirror dirty and let the single RAF loop paint only the newest
+    // camera state, instead of redrawing once per input event plus once per RAF.
+    cameraDirty = true;
     announceCamera();
     updateTargetIndicator();
   }
@@ -296,8 +306,16 @@ if (canvas && viewport) {
   const observer = new ResizeObserver(() => applyCamera());
   observer.observe(viewport);
 
-  function mirrorFrame() {
-    renderWrappedWorld();
+  function mirrorFrame(timestamp: number) {
+    // The source canvas contains dynamic sailing/environment visuals, but it
+    // does not need to be recopied at 60+ Hz while the camera is idle. During
+    // interaction, cameraDirty still gives one fresh render every display RAF.
+    const sourceDue = timestamp - lastSourceRefresh >= SOURCE_REFRESH_INTERVAL_MS;
+    if (cameraDirty || sourceDue) {
+      renderWrappedWorld();
+      cameraDirty = false;
+      if (sourceDue) lastSourceRefresh = timestamp;
+    }
     requestAnimationFrame(mirrorFrame);
   }
 
