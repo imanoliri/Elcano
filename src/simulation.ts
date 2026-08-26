@@ -71,10 +71,12 @@ export const DEFAULT_VESSEL: VesselType = {
  * Carrack/nao-style baseline polar. Angle is measured from the direction the
  * wind comes FROM: 0° is directly into the wind and 180° is directly downwind.
  *
- * The scale is tuned so ordinary usable winds put the vessel in the historical
- * passage-speed range rather than at drifting pace. In a 16 kn wind at 75%
- * sail it produces roughly 1.9 kn close-hauled, 3.5 kn on a close reach,
- * 5.4 kn on a beam reach, and 3.9 kn running, with the hull capped at 6 kn.
+ * Calibration goal: Victoria-like passage speeds should normally sit in the
+ * 2.5–4 kn range in usable wind, while a well-sailed vessel can approach the
+ * 6 kn hull cap on favorable reaches. Close-hauled performance is deliberately
+ * stronger than the first MVP polar so leaving the no-go zone produces useful
+ * headway rather than drift-level speeds that ordinary Biscay currents can
+ * cancel almost completely.
  */
 export const DEFAULT_RIG_POLAR: RigPolar = {
   id: 'carrack-square-baseline',
@@ -83,8 +85,9 @@ export const DEFAULT_RIG_POLAR: RigPolar = {
   points: [
     { angleDeg: 0, efficiency: 0 },
     { angleDeg: 35, efficiency: 0 },
-    { angleDeg: 45, efficiency: 0.35 },
-    { angleDeg: 60, efficiency: 0.65 },
+    { angleDeg: 40, efficiency: 0.42 },
+    { angleDeg: 45, efficiency: 0.55 },
+    { angleDeg: 60, efficiency: 0.72 },
     { angleDeg: 90, efficiency: 1 },
     { angleDeg: 120, efficiency: 0.95 },
     { angleDeg: 150, efficiency: 0.85 },
