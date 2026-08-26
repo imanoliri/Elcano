@@ -30,10 +30,14 @@ jobs:
           done
           cat /tmp/elcano-vite.log
           exit 1
-      - name: Capture mobile gameplay render
-        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=1" elcano-mobile.png
+      - name: Capture tutorial start view
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=start" elcano-mobile-start.png
+      - name: Capture deep zoom render
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=deep" elcano-mobile-deep.png
       - uses: actions/upload-artifact@v4
         with:
           name: visual-smoke-mobile
-          path: elcano-mobile.png
+          path: |
+            elcano-mobile-start.png
+            elcano-mobile-deep.png
           retention-days: 7
