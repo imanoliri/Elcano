@@ -1,7 +1,7 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
-import { project, unproject } from './world/coordinates';
-import { isLand } from './world/geography';
+import { project } from './world/coordinates';
+import { drawLandMask } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -99,35 +99,17 @@ if (ocean && shell) {
     return field.nativeStep * multiple;
   }
 
-  function arrowGeometry(x: number, y: number, vector: Vec2, field: Field) {
+  function drawArrow(x: number, y: number, vector: Vec2, field: Field) {
+    if (!ctx) return;
     const magnitude = Math.hypot(vector.x, vector.y);
-    if (!Number.isFinite(magnitude) || magnitude < 0.0001) return null;
+    if (!Number.isFinite(magnitude) || magnitude < 0.0001) return;
     const length = field.baseLength * Math.max(0.75, Math.min(1.35, 0.7 + Math.log2(1 + magnitude) * 0.25));
     const dx = vector.x / magnitude * length;
     const dy = -vector.y / magnitude * length;
-    return { magnitude, dx, dy, sx: x - dx * 0.35, sy: y - dy * 0.35, ex: x + dx, ey: y + dy };
-  }
-
-  function screenPointIsLand(x: number, y: number, camera: Camera) {
-    const world = { x: (x - camera.x) / camera.scale, y: (y - camera.y) / camera.scale };
-    return isLand(unproject(world));
-  }
-
-  function arrowStaysOverWater(geometry: NonNullable<ReturnType<typeof arrowGeometry>>, camera: Camera) {
-    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
-      const x = geometry.sx + (geometry.ex - geometry.sx) * t;
-      const y = geometry.sy + (geometry.ey - geometry.sy) * t;
-      if (screenPointIsLand(x, y, camera)) return false;
-    }
-    return true;
-  }
-
-  function drawArrow(x: number, y: number, vector: Vec2, field: Field, camera: Camera) {
-    if (!ctx) return;
-    const geometry = arrowGeometry(x, y, vector, field);
-    if (!geometry || !arrowStaysOverWater(geometry, camera)) return;
-
-    const { dx, dy, sx, sy, ex, ey } = geometry;
+    const sx = x - dx * 0.35;
+    const sy = y - dy * 0.35;
+    const ex = x + dx;
+    const ey = y + dy;
     const angle = Math.atan2(dy, dx);
     const head = 4.5;
 
@@ -158,15 +140,23 @@ if (ocean && shell) {
     for (let lat = startLat; lat <= field.maxLat + step * 0.25; lat += step) {
       for (let lon = startLon; lon <= field.maxLon + step * 0.25; lon += step) {
         const position = { lat, lon };
-        if (isLand(position)) continue;
-
         const world = project(position);
         const x = camera.x + world.x * camera.scale;
         const y = camera.y + world.y * camera.scale;
         if (x < -30 || x > width + 30 || y < -30 || y > height + 30) continue;
-        drawArrow(x, y, field.vectorAt(position, time), field, camera);
+        drawArrow(x, y, field.vectorAt(position, time), field);
       }
     }
+  }
+
+  function eraseLand(camera: Camera) {
+    if (!ctx) return;
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.translate(camera.x, camera.y);
+    ctx.scale(camera.scale, camera.scale);
+    drawLandMask(ctx);
+    ctx.restore();
   }
 
   let scheduled = false;
@@ -179,6 +169,7 @@ if (ocean && shell) {
     const camera = cameraFromMap();
     const time = simulationTime();
     for (const field of fields) drawField(field, time, camera);
+    eraseLand(camera);
   }
 
   function scheduleRender() {
