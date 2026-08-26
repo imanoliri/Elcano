@@ -22,9 +22,9 @@ if (canvas && viewport) {
   let pinchStartScale = 1;
   let pinchWorldAnchor = { x: 0, y: 0 };
 
-  // Midpoint of the San Sebastián → A Coruña tutorial in logical world pixels.
+  // Bay of Biscay overview framing for the San Sebastián → A Coruña tutorial.
   const tutorialCenter = { x: 699.2, y: 263.6 };
-  const INITIAL_ZOOM_MULTIPLIER = 12;
+  const INITIAL_ZOOM_MULTIPLIER = 6.25;
   const MAX_ZOOM_MULTIPLIER = 256;
 
   canvas.style.width = `${WORLD_MAP_WIDTH}px`;
