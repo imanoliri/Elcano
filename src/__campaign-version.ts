@@ -1,0 +1,1 @@
+export const CAMPAIGN_FEATURE_VERSION = 1;
