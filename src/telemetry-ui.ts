@@ -1,4 +1,5 @@
 import './telemetry-ui.css';
+import './point-of-sail.css';
 import { pointOfSailFromAngle } from './simulation';
 
 const rudder = document.querySelector<HTMLInputElement>('#rudder');
