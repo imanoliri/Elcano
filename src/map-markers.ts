@@ -1,5 +1,5 @@
 import './map-markers.css';
-import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
+import { virtualWorldPoint, visibleWorldRange } from './world-wrap';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -41,12 +41,14 @@ if (ocean && shell) {
 
   function screenPoints(point: { x: number; y: number }) {
     if (!camera) return [point];
+    const range = visibleWorldRange(camera.x, camera.y, camera.scale, viewport.clientWidth, viewport.clientHeight);
     const copies: { x: number; y: number }[] = [];
-    for (let tileY = -1; tileY <= 1; tileY += 1) {
-      for (let tileX = -1; tileX <= 1; tileX += 1) {
+    for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
+      for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
+        const virtual = virtualWorldPoint(point, column, row);
         copies.push({
-          x: camera.x + (point.x + tileX * WORLD_MAP_WIDTH) * camera.scale,
-          y: camera.y + (point.y + tileY * WORLD_MAP_HEIGHT) * camera.scale,
+          x: camera.x + virtual.x * camera.scale,
+          y: camera.y + virtual.y * camera.scale,
         });
       }
     }
