@@ -1,6 +1,6 @@
 import landTopology from 'world-atlas/land-50m.json';
 import { feature } from 'topojson-client';
-import { project, type GeoPosition } from './coordinates';
+import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH, type GeoPosition } from './coordinates';
 
 type GeoJsonGeometry = {
   type: 'Polygon' | 'MultiPolygon';
@@ -17,6 +17,8 @@ type IndexedPolygon = {
   minLon: number;
   maxLon: number;
 };
+
+type UnwrappedPoint = { x: number; y: number };
 
 const land = feature(
   landTopology as never,
@@ -52,13 +54,60 @@ const indexedPolygons: IndexedPolygon[] = allPolygons().map((rings) => {
 
 let cachedLandPath: Path2D | null = null;
 
-function appendRing(path: Path2D, coordinates: number[][]) {
-  coordinates.forEach(([lon, lat], index) => {
-    const point = project({ lat, lon } satisfies GeoPosition);
-    if (index === 0) path.moveTo(point.x, point.y);
-    else path.lineTo(point.x, point.y);
+function unwrapRing(coordinates: number[][]): UnwrappedPoint[] {
+  if (coordinates.length === 0) return [];
+
+  const points: UnwrappedPoint[] = [];
+  let previousLon = coordinates[0][0];
+
+  for (let index = 0; index < coordinates.length; index += 1) {
+    const [rawLon, lat] = coordinates[index];
+    let lon = rawLon;
+
+    if (index > 0) {
+      while (lon - previousLon > 180) lon -= 360;
+      while (lon - previousLon < -180) lon += 360;
+    }
+
+    previousLon = lon;
+    points.push({
+      x: (lon + 180) / 360 * WORLD_MAP_WIDTH,
+      y: (90 - lat) / 180 * WORLD_MAP_HEIGHT,
+    });
+  }
+
+  return points;
+}
+
+function appendShiftedRing(path: Path2D, points: UnwrappedPoint[], shiftX: number) {
+  points.forEach((point, index) => {
+    const x = point.x + shiftX;
+    if (index === 0) path.moveTo(x, point.y);
+    else path.lineTo(x, point.y);
   });
   path.closePath();
+}
+
+function appendRing(path: Path2D, coordinates: number[][]) {
+  const points = unwrapRing(coordinates);
+  if (points.length === 0) return;
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  for (const point of points) {
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+  }
+
+  // A ring that crosses ±180° is kept locally continuous by unwrapping its
+  // longitudes outside the canonical chart. Draw each shifted copy that
+  // intersects [0, WORLD_MAP_WIDTH], rather than joining the two seam points
+  // with a line across the entire world.
+  const minShift = Math.ceil(-maxX / WORLD_MAP_WIDTH);
+  const maxShift = Math.floor((WORLD_MAP_WIDTH - minX) / WORLD_MAP_WIDTH);
+  for (let shift = minShift; shift <= maxShift; shift += 1) {
+    appendShiftedRing(path, points, shift * WORLD_MAP_WIDTH);
+  }
 }
 
 function landPath() {
