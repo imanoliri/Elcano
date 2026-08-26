@@ -52,7 +52,11 @@ const DEG = Math.PI / 180;
 export const DEFAULT_RIG_POLAR: RigPolar = {
   id: 'carrack-square-baseline',
   name: 'Carrack · square-rig baseline',
-  speedScale: 0.115,
+  // Calibrated so a 16 kn wind at 75% sail produces roughly 1.3 kn close-hauled,
+  // 2.3 kn on a close reach, 3.6 kn on a beam reach, and 2.6 kn running. This
+  // keeps sub-knot ocean currents tactically important without overpowering a
+  // correctly sailed vessel.
+  speedScale: 0.3,
   points: [
     { angleDeg: 0, efficiency: 0 },
     { angleDeg: 35, efficiency: 0 },
