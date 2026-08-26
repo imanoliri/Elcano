@@ -18,3 +18,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Check Biscay wind climatology
+        run: node scripts/check-biscay-wind.mjs
