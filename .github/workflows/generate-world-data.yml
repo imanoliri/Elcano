@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/real-world-map
+      - feature/sailing-polars
     paths:
       - '.github/workflows/generate-world-data.yml'
       - 'scripts/build-world-data.mjs'
@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/real-world-map
+          ref: feature/sailing-polars
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -35,5 +35,5 @@ jobs:
             echo "No generated changes"
             exit 0
           fi
-          git commit -m "Generate high-resolution regional world data"
-          git push origin HEAD:feature/real-world-map
+          git commit -m "Generate corrected regional wind climatology"
+          git push origin HEAD:feature/sailing-polars
