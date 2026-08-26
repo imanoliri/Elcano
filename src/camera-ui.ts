@@ -1,6 +1,6 @@
 import './camera-ui.css';
 import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
-import { WRAP_TILE_OFFSETS, wrappedTileTransform } from './world-wrap';
+import { isPolarRow, virtualWorldPoint, visibleWorldRange } from './world-wrap';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
@@ -11,18 +11,11 @@ if (canvas && viewport) {
   indicator.setAttribute('aria-hidden', 'true');
   viewport.append(indicator);
 
-  const wrapTiles = WRAP_TILE_OFFSETS.map(([tileX, tileY]) => {
-    const tile = document.createElement('canvas');
-    tile.width = canvas.width;
-    tile.height = canvas.height;
-    tile.className = `${canvas.className} world-wrap-tile`;
-    tile.setAttribute('aria-hidden', 'true');
-    tile.dataset.wrapX = String(tileX);
-    tile.dataset.wrapY = String(tileY);
-    tile.style.pointerEvents = 'none';
-    canvas.insertAdjacentElement('afterend', tile);
-    return { tile, tileX, tileY, ctx: tile.getContext('2d')! };
-  });
+  const wrapLayer = document.createElement('canvas');
+  wrapLayer.className = 'world-wrap-layer';
+  wrapLayer.setAttribute('aria-hidden', 'true');
+  canvas.insertAdjacentElement('afterend', wrapLayer);
+  const wrapCtx = wrapLayer.getContext('2d')!;
 
   let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
@@ -43,10 +36,7 @@ if (canvas && viewport) {
 
   canvas.style.width = `${WORLD_MAP_WIDTH}px`;
   canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
-  wrapTiles.forEach(({ tile }) => {
-    tile.style.width = `${WORLD_MAP_WIDTH}px`;
-    tile.style.height = `${WORLD_MAP_HEIGHT}px`;
-  });
+  canvas.style.opacity = '0';
 
   function viewportSize() {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
@@ -58,17 +48,56 @@ if (canvas && viewport) {
 
   function normalizeCamera() {
     const mapWidth = WORLD_MAP_WIDTH * scale;
-    const mapHeight = WORLD_MAP_HEIGHT * scale;
-    // Keep the canonical tile near the viewport while the eight copies around
-    // it make crossing any edge continuous instead of exposing empty space.
+    const globeHeightPeriod = WORLD_MAP_HEIGHT * scale * 2;
     offsetX = -positiveModulo(-offsetX, mapWidth);
-    offsetY = -positiveModulo(-offsetY, mapHeight);
+    offsetY = -positiveModulo(-offsetY, globeHeightPeriod);
   }
 
-  function syncWrapTiles() {
-    for (const { tile, ctx } of wrapTiles) {
-      ctx.clearRect(0, 0, tile.width, tile.height);
-      ctx.drawImage(canvas, 0, 0);
+  function resizeWrapLayer() {
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const { width, height } = viewportSize();
+    const pixelWidth = Math.max(1, Math.round(width * dpr));
+    const pixelHeight = Math.max(1, Math.round(height * dpr));
+    if (wrapLayer.width !== pixelWidth || wrapLayer.height !== pixelHeight) {
+      wrapLayer.width = pixelWidth;
+      wrapLayer.height = pixelHeight;
+      wrapLayer.style.width = `${width}px`;
+      wrapLayer.style.height = `${height}px`;
+    }
+    wrapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawWorldTile(column: number, row: number) {
+    const dx = offsetX + column * WORLD_MAP_WIDTH * scale;
+    const dy = offsetY + row * WORLD_MAP_HEIGHT * scale;
+    const dw = WORLD_MAP_WIDTH * scale;
+    const dh = WORLD_MAP_HEIGHT * scale;
+
+    if (!isPolarRow(row)) {
+      wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT, dx, dy, dw, dh);
+      return;
+    }
+
+    // Crossing a pole reflects latitude and rotates longitude by 180°.
+    // Split the source horizontally so the half-world longitude shift wraps
+    // cleanly inside each reflected row.
+    wrapCtx.save();
+    wrapCtx.translate(dx, dy + dh);
+    wrapCtx.scale(1, -1);
+    wrapCtx.drawImage(canvas, WORLD_MAP_WIDTH / 2, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, 0, 0, dw / 2, dh);
+    wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, dw / 2, 0, dw / 2, dh);
+    wrapCtx.restore();
+  }
+
+  function renderWrappedWorld() {
+    resizeWrapLayer();
+    const { width, height } = viewportSize();
+    wrapCtx.clearRect(0, 0, width, height);
+    const range = visibleWorldRange(offsetX, offsetY, scale, width, height);
+    for (let row = range.minRow; row <= range.maxRow; row += 1) {
+      for (let column = range.minColumn; column <= range.maxColumn; column += 1) {
+        drawWorldTile(column, row);
+      }
     }
   }
 
@@ -84,9 +113,7 @@ if (canvas && viewport) {
   function applyCamera() {
     normalizeCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    for (const { tile, tileX, tileY } of wrapTiles) {
-      tile.style.transform = wrappedTileTransform(offsetX, offsetY, scale, tileX, tileY);
-    }
+    renderWrappedWorld();
     announceCamera();
     updateTargetIndicator();
   }
@@ -112,11 +139,13 @@ if (canvas && viewport) {
 
   function nearestWrappedScreenPoint(point: { x: number; y: number }) {
     const { width, height } = viewportSize();
+    const range = visibleWorldRange(offsetX, offsetY, scale, width, height);
     let best = { x: 0, y: 0, distance: Infinity };
-    for (let tileY = -1; tileY <= 1; tileY += 1) {
-      for (let tileX = -1; tileX <= 1; tileX += 1) {
-        const x = offsetX + (point.x + tileX * WORLD_MAP_WIDTH) * scale;
-        const y = offsetY + (point.y + tileY * WORLD_MAP_HEIGHT) * scale;
+    for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
+      for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
+        const virtual = virtualWorldPoint(point, column, row);
+        const x = offsetX + virtual.x * scale;
+        const y = offsetY + virtual.y * scale;
         const distance = Math.hypot(x - width / 2, y - height / 2);
         if (distance < best.distance) best = { x, y, distance };
       }
@@ -161,10 +190,10 @@ if (canvas && viewport) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
-  function screenPointToWrappedWorld(screenX: number, screenY: number) {
+  function screenPointToVirtualWorld(screenX: number, screenY: number) {
     return {
-      x: positiveModulo((screenX - offsetX) / scale, WORLD_MAP_WIDTH),
-      y: positiveModulo((screenY - offsetY) / scale, WORLD_MAP_HEIGHT),
+      x: (screenX - offsetX) / scale,
+      y: (screenY - offsetY) / scale,
     };
   }
 
@@ -207,7 +236,7 @@ if (canvas && viewport) {
       pinchStartScale = scale;
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      pinchWorldAnchor = screenPointToWrappedWorld(midX, midY);
+      pinchWorldAnchor = screenPointToVirtualWorld(midX, midY);
     }
   });
 
@@ -266,7 +295,7 @@ if (canvas && viewport) {
   observer.observe(viewport);
 
   function mirrorFrame() {
-    syncWrapTiles();
+    renderWrappedWorld();
     requestAnimationFrame(mirrorFrame);
   }
 
