@@ -51,31 +51,35 @@ export type PointOfSail =
 const DEG = Math.PI / 180;
 
 /**
- * Baseline hull for the current playable nao/carrack. The cap represents the
- * rapidly increasing hydrodynamic resistance of a heavy displacement hull; it
- * limits speed through the water, while ocean current can still increase (or
- * decrease) speed over the ground.
+ * Baseline hull for the current playable nao/carrack.
+ *
+ * Historical anchors:
+ * - Deutsches Historisches Museum: representative c.1490 nao ≈ 6 kn.
+ * - Fundación Nao Victoria: reconstructed Victoria average ≈ 3.5 kn.
+ *
+ * The cap represents rapidly increasing hydrodynamic resistance of a heavy
+ * displacement hull. It limits speed through the water; current is added
+ * afterwards and can increase or decrease speed over the ground.
  */
 export const DEFAULT_VESSEL: VesselType = {
   id: 'nao-carrack-baseline',
   name: 'Nao / carrack',
-  maxThroughWaterSpeedKn: 5.5,
+  maxThroughWaterSpeedKn: 6,
 };
 
 /**
- * A deliberately simple carrack/nao-style baseline polar. Angle is measured
- * from the direction the wind comes FROM: 0° is directly into the wind and
- * 180° is directly downwind. Efficiencies are gameplay abstractions, not a
- * claim of measured performance for a specific historical vessel.
+ * Carrack/nao-style baseline polar. Angle is measured from the direction the
+ * wind comes FROM: 0° is directly into the wind and 180° is directly downwind.
+ *
+ * The scale is tuned so ordinary usable winds put the vessel in the historical
+ * passage-speed range rather than at drifting pace. In a 16 kn wind at 75%
+ * sail it produces roughly 1.9 kn close-hauled, 3.5 kn on a close reach,
+ * 5.4 kn on a beam reach, and 3.9 kn running, with the hull capped at 6 kn.
  */
 export const DEFAULT_RIG_POLAR: RigPolar = {
   id: 'carrack-square-baseline',
   name: 'Carrack · square-rig baseline',
-  // Calibrated so a 16 kn wind at 75% sail produces roughly 1.3 kn close-hauled,
-  // 2.3 kn on a close reach, 3.6 kn on a beam reach, and 2.6 kn running. This
-  // keeps sub-knot ocean currents tactically important without overpowering a
-  // correctly sailed vessel.
-  speedScale: 0.3,
+  speedScale: 0.45,
   points: [
     { angleDeg: 0, efficiency: 0 },
     { angleDeg: 35, efficiency: 0 },
