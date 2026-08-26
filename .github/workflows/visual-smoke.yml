@@ -34,6 +34,8 @@ jobs:
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=start" elcano-mobile-start.png
       - name: Capture deep zoom render
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=deep" elcano-mobile-deep.png
+      - name: Capture South Pole wrap
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=south-pole" elcano-mobile-south-pole.png
       - name: Capture Biscay sailing regression
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=sailing" elcano-mobile-sailing.png
       - uses: actions/upload-artifact@v4
@@ -43,5 +45,6 @@ jobs:
           path: |
             elcano-mobile-start.png
             elcano-mobile-deep.png
+            elcano-mobile-south-pole.png
             elcano-mobile-sailing.png
           retention-days: 7
