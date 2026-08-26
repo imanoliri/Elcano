@@ -4,8 +4,16 @@
   transform-origin: 0 0;
   will-change: transform;
   cursor: grab;
-  touch-action: none;
   user-select: none;
+}
+
+/* Camera gestures belong to the game, not to the browser page. The wrapped
+   render layer is pointer-transparent, so touches frequently target the shell
+   rather than #ocean itself. Keeping touch-action only on #ocean therefore let
+   two-finger gestures leak through as browser/page zoom, scaling the HUD too. */
+.game-shell {
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 #ocean.camera-dragging {
