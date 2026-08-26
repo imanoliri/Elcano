@@ -35,6 +35,15 @@ if (panel && diagram) {
 
   const text = (selector: string) => document.querySelector<HTMLElement>(selector)?.textContent?.trim() ?? '';
   const normalizeDegrees = (value: number) => ((value % 360) + 360) % 360;
+  const signedAngleDifference = (target: number, reference: number) => {
+    const difference = ((target - reference + 540) % 360) - 180;
+    return Math.abs(difference + 180) < 0.0001 ? 180 : difference;
+  };
+  const formatSignedAngle = (angle: number) => {
+    const rounded = Math.round(angle);
+    if (rounded === 0) return '0°';
+    return `${rounded > 0 ? '+' : ''}${rounded}°`;
+  };
 
   function trackBearing() {
     const line = document.querySelector<SVGLineElement>('#track-vector');
@@ -51,10 +60,12 @@ if (panel && diagram) {
 
   function update() {
     const heading = text('#heading') || '0°';
+    const headingDeg = Number.parseFloat(heading) || 0;
     const speed = text('#speed') || '0.00 kn';
     const windSpeed = text('#wind') || '0.0';
     const windTowardBearing = Number.parseFloat(text('#wind-bearing')) || 0;
     const windFromBearing = normalizeDegrees(windTowardBearing + 180);
+    const windRelativeAngle = signedAngleDifference(windFromBearing, headingDeg);
     const currentSpeed = text('#current') || '0.00';
     const currentBearing = text('#current-bearing') || '0°';
 
@@ -65,7 +76,7 @@ if (panel && diagram) {
 
     set('#forces-heading', heading);
     set('#forces-wind-speed', `${windSpeed} kn`);
-    set('#forces-wind-angle', `${windFromBearing.toFixed(0)}°`);
+    set('#forces-wind-angle', formatSignedAngle(windRelativeAngle));
     set('#forces-current-speed', `${currentSpeed} kn`);
     set('#forces-current-angle', currentBearing);
     set('#forces-track-speed', speed);
