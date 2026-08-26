@@ -25,6 +25,24 @@ if (smokeMode) {
     }, 700);
   }
 
+  if (smokeMode === 'south-pole') {
+    // Zoom all the way out around the lower half of the viewport. This exposes
+    // the Antarctica/South-Pole wrap seam and guards against artificial ocean
+    // strips appearing where the continent should continue through the pole.
+    window.setTimeout(() => {
+      const shell = document.querySelector<HTMLElement>('.game-shell');
+      if (!shell) return;
+      const rect = shell.getBoundingClientRect();
+      shell.dispatchEvent(new WheelEvent('wheel', {
+        clientX: rect.left + rect.width * 0.5,
+        clientY: rect.top + rect.height * 0.72,
+        deltaY: 10000,
+        bubbles: true,
+        cancelable: true,
+      }));
+    }, 700);
+  }
+
   if (smokeMode === 'sailing') {
     window.setTimeout(() => {
       const sails = document.querySelector<HTMLInputElement>('#sails');
