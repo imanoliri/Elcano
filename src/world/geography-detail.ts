@@ -9,48 +9,71 @@ type GeoJsonGeometry = {
 type GeoJsonFeature = { geometry: GeoJsonGeometry | null };
 type GeoJsonFeatureCollection = { type: 'FeatureCollection'; features: GeoJsonFeature[] };
 type LandGeoJson = GeoJsonFeature | GeoJsonFeatureCollection;
+export type WorldBounds = { minX: number; minY: number; maxX: number; maxY: number };
+type DetailChunk = WorldBounds & { path: Path2D };
 
 const land = feature(
   landTopology as never,
   (landTopology as { objects: { land: unknown } }).objects.land as never,
 ) as unknown as LandGeoJson;
 
-function ring(ctx: CanvasRenderingContext2D, coordinates: number[][]) {
-  coordinates.forEach(([lon, lat], index) => {
-    const point = project({ lat, lon } satisfies GeoPosition);
-    if (index === 0) ctx.moveTo(point.x, point.y);
-    else ctx.lineTo(point.x, point.y);
-  });
-  ctx.closePath();
+function polygons(value: GeoJsonGeometry | null): number[][][][] {
+  if (!value) return [];
+  if (value.type === 'Polygon') return [value.coordinates as number[][][]];
+  return value.coordinates as number[][][][];
 }
 
-function geometry(ctx: CanvasRenderingContext2D, value: GeoJsonGeometry | null) {
-  if (!value) return;
-  if (value.type === 'Polygon') {
-    for (const polygonRing of value.coordinates as number[][][]) ring(ctx, polygonRing);
-    return;
+function allPolygons() {
+  if ('features' in land) return land.features.flatMap((item) => polygons(item.geometry));
+  return polygons(land.geometry);
+}
+
+function buildChunk(rings: number[][][]): DetailChunk {
+  const path = new Path2D();
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  for (const coordinates of rings) {
+    coordinates.forEach(([lon, lat], index) => {
+      const point = project({ lat, lon } satisfies GeoPosition);
+      minX = Math.min(minX, point.x);
+      minY = Math.min(minY, point.y);
+      maxX = Math.max(maxX, point.x);
+      maxY = Math.max(maxY, point.y);
+      if (index === 0) path.moveTo(point.x, point.y);
+      else path.lineTo(point.x, point.y);
+    });
+    path.closePath();
   }
-  for (const polygon of value.coordinates as number[][][][]) {
-    for (const polygonRing of polygon) ring(ctx, polygonRing);
-  }
+
+  return { path, minX, minY, maxX, maxY };
+}
+
+// Projection and Path2D construction happen once when the detail module is
+// lazily loaded, never again during a pan/zoom gesture.
+const chunks = allPolygons().map(buildChunk);
+
+function intersects(a: WorldBounds, b: WorldBounds) {
+  return a.maxX >= b.minX && a.minX <= b.maxX && a.maxY >= b.minY && a.minY <= b.maxY;
 }
 
 /** High-detail land layer. Loaded lazily for close zoom levels. */
-export function drawDetailedCoastline(ctx: CanvasRenderingContext2D, screenScale: number) {
+export function drawDetailedCoastline(
+  ctx: CanvasRenderingContext2D,
+  screenScale: number,
+  visibleBounds: WorldBounds,
+) {
   ctx.save();
-  ctx.beginPath();
-  if ('features' in land) {
-    for (const item of land.features) geometry(ctx, item.geometry);
-  } else {
-    geometry(ctx, land.geometry);
-  }
-
-  // At close zoom the detailed layer must replace the visibly pixelated land
-  // fill, not merely trace a thin line over it.
   ctx.fillStyle = '#7f7253';
-  ctx.fill('evenodd');
   ctx.strokeStyle = 'rgba(224, 211, 170, .72)';
   ctx.lineWidth = 1.15 / Math.max(0.01, screenScale);
-  ctx.stroke();
+
+  for (const chunk of chunks) {
+    if (!intersects(chunk, visibleBounds)) continue;
+    ctx.fill(chunk.path, 'evenodd');
+    ctx.stroke(chunk.path);
+  }
   ctx.restore();
 }
