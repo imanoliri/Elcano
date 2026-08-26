@@ -15,10 +15,6 @@ if (ocean && shell) {
   mapCanvas.insertAdjacentElement('afterend', overlay);
 
   const ctx = overlay.getContext('2d');
-  const badge = document.createElement('div');
-  badge.className = 'environment-resolution-badge';
-  badge.textContent = 'Data: Wind 0.25° · Current 0.08° · Ocean only';
-  viewport.append(badge);
 
   type Field = {
     minLat: number;
