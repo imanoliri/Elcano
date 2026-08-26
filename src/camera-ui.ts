@@ -1,5 +1,6 @@
 import './camera-ui.css';
 import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
+import { isPolarRow, virtualWorldPoint, visibleWorldRange } from './world-wrap';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
@@ -9,6 +10,12 @@ if (canvas && viewport) {
   indicator.className = 'target-edge-indicator';
   indicator.setAttribute('aria-hidden', 'true');
   viewport.append(indicator);
+
+  const wrapLayer = document.createElement('canvas');
+  wrapLayer.className = 'world-wrap-layer';
+  wrapLayer.setAttribute('aria-hidden', 'true');
+  canvas.insertAdjacentElement('afterend', wrapLayer);
+  const wrapCtx = wrapLayer.getContext('2d', { alpha: false })!;
 
   let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
@@ -21,26 +28,86 @@ if (canvas && viewport) {
   let pinchStartDistance = 0;
   let pinchStartScale = 1;
   let pinchWorldAnchor = { x: 0, y: 0 };
+  let cameraDirty = true;
+  let lastSourceRefresh = 0;
 
   // Bay of Biscay framing for the San Sebastián → A Coruña tutorial.
-  const tutorialCenter = { x: 699.2, y: 263.6 };
+  // Same geographic center as before (43.3513°N, 5.2°W), reprojected for
+  // the pole-complete equirectangular chart.
+  const tutorialCenter = { x: 699.2, y: 186.595 };
   const INITIAL_ZOOM_MULTIPLIER = 50;
   const MAX_ZOOM_MULTIPLIER = 256;
+  const MAX_WRAP_DPR = 2;
+  const SOURCE_REFRESH_INTERVAL_MS = 50;
 
   canvas.style.width = `${WORLD_MAP_WIDTH}px`;
   canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
+  canvas.style.opacity = '0';
 
   function viewportSize() {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
   }
 
-  function clampCamera() {
-    const { width, height } = viewportSize();
-    const mapWidth = WORLD_MAP_WIDTH * scale;
-    const mapHeight = WORLD_MAP_HEIGHT * scale;
+  function positiveModulo(value: number, modulus: number) {
+    return ((value % modulus) + modulus) % modulus;
+  }
 
-    offsetX = mapWidth <= width ? (width - mapWidth) / 2 : Math.min(0, Math.max(width - mapWidth, offsetX));
-    offsetY = mapHeight <= height ? (height - mapHeight) / 2 : Math.min(0, Math.max(height - mapHeight, offsetY));
+  function normalizeCamera() {
+    const mapWidth = WORLD_MAP_WIDTH * scale;
+    const globeHeightPeriod = WORLD_MAP_HEIGHT * scale * 2;
+    offsetX = -positiveModulo(-offsetX, mapWidth);
+    offsetY = -positiveModulo(-offsetY, globeHeightPeriod);
+  }
+
+  function resizeWrapLayer() {
+    // Very high phone DPRs make the full-screen mirror canvas disproportionately
+    // expensive, while the source world canvas does not contain matching extra
+    // detail. Capping this layer at 2x preserves sharpness and cuts fill work.
+    const dpr = Math.min(MAX_WRAP_DPR, Math.max(1, window.devicePixelRatio || 1));
+    const { width, height } = viewportSize();
+    const pixelWidth = Math.max(1, Math.round(width * dpr));
+    const pixelHeight = Math.max(1, Math.round(height * dpr));
+    if (wrapLayer.width !== pixelWidth || wrapLayer.height !== pixelHeight) {
+      wrapLayer.width = pixelWidth;
+      wrapLayer.height = pixelHeight;
+      wrapLayer.style.width = `${width}px`;
+      wrapLayer.style.height = `${height}px`;
+    }
+    wrapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function drawWorldTile(column: number, row: number) {
+    const dx = offsetX + column * WORLD_MAP_WIDTH * scale;
+    const dy = offsetY + row * WORLD_MAP_HEIGHT * scale;
+    const dw = WORLD_MAP_WIDTH * scale;
+    const dh = WORLD_MAP_HEIGHT * scale;
+
+    if (!isPolarRow(row)) {
+      wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT, dx, dy, dw, dh);
+      return;
+    }
+
+    // On a pole-complete equirectangular chart, crossing either pole reflects
+    // latitude and rotates longitude by 180°. Split at the antimeridian so the
+    // half-world longitude shift stays continuous inside the reflected row.
+    wrapCtx.save();
+    wrapCtx.translate(dx, dy + dh);
+    wrapCtx.scale(1, -1);
+    wrapCtx.drawImage(canvas, WORLD_MAP_WIDTH / 2, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, 0, 0, dw / 2, dh);
+    wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, dw / 2, 0, dw / 2, dh);
+    wrapCtx.restore();
+  }
+
+  function renderWrappedWorld() {
+    resizeWrapLayer();
+    const { width, height } = viewportSize();
+    wrapCtx.clearRect(0, 0, width, height);
+    const range = visibleWorldRange(offsetX, offsetY, scale, width, height);
+    for (let row = range.minRow; row <= range.maxRow; row += 1) {
+      for (let column = range.minColumn; column <= range.maxColumn; column += 1) {
+        drawWorldTile(column, row);
+      }
+    }
   }
 
   function announceCamera() {
@@ -48,13 +115,17 @@ if (canvas && viewport) {
     canvas.dataset.cameraScale = String(scale);
     canvas.dataset.zoomMultiplier = String(zoomMultiplier);
     window.dispatchEvent(new CustomEvent('elcano:camera-change', {
-      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier },
+      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier, wrapped: true },
     }));
   }
 
   function applyCamera() {
-    clampCamera();
+    normalizeCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    // Pointer/wheel events can arrive faster than the screen refresh rate.
+    // Mark the mirror dirty and let the single RAF loop paint only the newest
+    // camera state, instead of redrawing once per input event plus once per RAF.
+    cameraDirty = true;
     announceCamera();
     updateTargetIndicator();
   }
@@ -78,10 +149,27 @@ if (canvas && viewport) {
     applyCamera();
   }
 
+  function nearestWrappedScreenPoint(point: { x: number; y: number }) {
+    const { width, height } = viewportSize();
+    const range = visibleWorldRange(offsetX, offsetY, scale, width, height);
+    let best = { x: 0, y: 0, distance: Infinity };
+    for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
+      for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
+        const virtual = virtualWorldPoint(point, column, row);
+        const x = offsetX + virtual.x * scale;
+        const y = offsetY + virtual.y * scale;
+        const distance = Math.hypot(x - width / 2, y - height / 2);
+        if (distance < best.distance) best = { x, y, distance };
+      }
+    }
+    return best;
+  }
+
   function updateTargetIndicator() {
     const { width, height } = viewportSize();
-    const x = offsetX + target.x * scale;
-    const y = offsetY + target.y * scale;
+    const wrapped = nearestWrappedScreenPoint(target);
+    const x = wrapped.x;
+    const y = wrapped.y;
     const margin = 22;
     const inside = x >= margin && x <= width - margin && y >= margin && y <= height - margin;
 
@@ -114,6 +202,13 @@ if (canvas && viewport) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
+  function screenPointToVirtualWorld(screenX: number, screenY: number) {
+    return {
+      x: (screenX - offsetX) / scale,
+      y: (screenY - offsetY) / scale,
+    };
+  }
+
   window.addEventListener('elcano:camera-target', (event) => {
     const detail = (event as CustomEvent<{ x: number; y: number }>).detail;
     if (!detail) return;
@@ -121,7 +216,7 @@ if (canvas && viewport) {
     updateTargetIndicator();
   });
 
-  canvas.addEventListener('wheel', (event) => {
+  viewport.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -130,15 +225,17 @@ if (canvas && viewport) {
     zoomAround(x, y, scale * factor);
   }, { passive: false });
 
-  canvas.addEventListener('dblclick', (event) => {
+  viewport.addEventListener('dblclick', (event) => {
+    if ((event.target as Element | null)?.closest('button, input, .modal, .bottom-controls, .hud-top')) return;
     const rect = viewport.getBoundingClientRect();
     zoomAround(event.clientX - rect.left, event.clientY - rect.top, scale * 1.5);
   });
 
-  canvas.addEventListener('pointerdown', (event) => {
+  viewport.addEventListener('pointerdown', (event) => {
+    if ((event.target as Element | null)?.closest('button, input, .modal, .bottom-controls, .hud-top')) return;
     const point = pointFromEvent(event);
     pointers.set(event.pointerId, point);
-    canvas.setPointerCapture(event.pointerId);
+    viewport.setPointerCapture(event.pointerId);
 
     if (pointers.size === 1) {
       draggingPointer = event.pointerId;
@@ -151,11 +248,11 @@ if (canvas && viewport) {
       pinchStartScale = scale;
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      pinchWorldAnchor = { x: (midX - offsetX) / scale, y: (midY - offsetY) / scale };
+      pinchWorldAnchor = screenPointToVirtualWorld(midX, midY);
     }
   });
 
-  canvas.addEventListener('pointermove', (event) => {
+  viewport.addEventListener('pointermove', (event) => {
     if (!pointers.has(event.pointerId)) return;
     const point = pointFromEvent(event);
     pointers.set(event.pointerId, point);
@@ -194,8 +291,8 @@ if (canvas && viewport) {
     }
   }
 
-  canvas.addEventListener('pointerup', endPointer);
-  canvas.addEventListener('pointercancel', endPointer);
+  viewport.addEventListener('pointerup', endPointer);
+  viewport.addEventListener('pointercancel', endPointer);
 
   window.addEventListener('resize', () => {
     const oldMin = minScale;
@@ -208,5 +305,20 @@ if (canvas && viewport) {
 
   const observer = new ResizeObserver(() => applyCamera());
   observer.observe(viewport);
+
+  function mirrorFrame(timestamp: number) {
+    // The source canvas contains dynamic sailing/environment visuals, but it
+    // does not need to be recopied at 60+ Hz while the camera is idle. During
+    // interaction, cameraDirty still gives one fresh render every display RAF.
+    const sourceDue = timestamp - lastSourceRefresh >= SOURCE_REFRESH_INTERVAL_MS;
+    if (cameraDirty || sourceDue) {
+      renderWrappedWorld();
+      cameraDirty = false;
+      if (sourceDue) lastSourceRefresh = timestamp;
+    }
+    requestAnimationFrame(mirrorFrame);
+  }
+
   resetCamera();
+  requestAnimationFrame(mirrorFrame);
 }

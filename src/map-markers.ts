@@ -1,4 +1,5 @@
 import './map-markers.css';
+import { virtualWorldPoint, visibleWorldRange } from './world-wrap';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -11,7 +12,7 @@ if (ocean && shell) {
   ocean.insertAdjacentElement('afterend', overlay);
 
   const ctx = overlay.getContext('2d');
-  type Camera = { x: number; y: number; scale: number; zoomMultiplier: number };
+  type Camera = { x: number; y: number; scale: number; zoomMultiplier: number; wrapped?: boolean };
   type MarkerState = {
     target: { x: number; y: number };
     ship: { x: number; y: number };
@@ -38,12 +39,24 @@ if (ocean && shell) {
     return Math.max(1, Math.min(2.1, Math.sqrt(camera.zoomMultiplier / 12)));
   }
 
-  function screenPoint(point: { x: number; y: number }) {
-    if (!camera) return point;
-    return {
-      x: camera.x + point.x * camera.scale,
-      y: camera.y + point.y * camera.scale,
-    };
+  function screenPoints(point: { x: number; y: number }) {
+    if (!camera) return [point];
+    const range = visibleWorldRange(camera.x, camera.y, camera.scale, viewport.clientWidth, viewport.clientHeight);
+    const copies: { x: number; y: number }[] = [];
+    for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
+      for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
+        const virtual = virtualWorldPoint(point, column, row);
+        copies.push({
+          x: camera.x + virtual.x * camera.scale,
+          y: camera.y + virtual.y * camera.scale,
+        });
+      }
+    }
+    return copies;
+  }
+
+  function visible(point: { x: number; y: number }, margin = 40) {
+    return point.x >= -margin && point.x <= viewport.clientWidth + margin && point.y >= -margin && point.y <= viewport.clientHeight + margin;
   }
 
   function drawTarget(point: { x: number; y: number }, scale: number) {
@@ -89,8 +102,8 @@ if (ocean && shell) {
     if (!camera || !markers) return;
 
     const scale = markerScale();
-    drawTarget(screenPoint(markers.target), scale);
-    drawShip(screenPoint(markers.ship), markers.headingDeg, scale);
+    for (const point of screenPoints(markers.target)) if (visible(point)) drawTarget(point, scale);
+    for (const point of screenPoints(markers.ship)) if (visible(point)) drawShip(point, markers.headingDeg, scale);
   }
 
   function scheduleRender() {

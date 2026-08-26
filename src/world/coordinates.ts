@@ -4,32 +4,41 @@ export type EastNorthVector = { x: number; y: number };
 
 export const WORLD_MAP_WIDTH = 1440;
 export const WORLD_MAP_HEIGHT = 720;
-const MAX_MERCATOR_LAT = 85.05112878;
 const DEG = Math.PI / 180;
 
 export function clampLatitude(lat: number) {
-  return Math.max(-MAX_MERCATOR_LAT, Math.min(MAX_MERCATOR_LAT, lat));
+  return Math.max(-90, Math.min(90, lat));
 }
 
 export function normalizeLongitude(lon: number) {
   return ((lon + 540) % 360) - 180;
 }
 
-/** Web Mercator projection used only for chart rendering/camera coordinates. */
+/**
+ * Pole-complete equirectangular projection used only for chart rendering and
+ * camera coordinates.
+ *
+ * Elcano previously rendered through Web Mercator, whose vertical edges stop
+ * at ±85.051°. Those edges cannot be crossed as if they were geographic poles.
+ * A 2:1 equirectangular chart includes the real ±90° poles, so the camera can
+ * continue across them by reflecting latitude and rotating longitude 180°.
+ * Simulation state remains ordinary latitude/longitude and is independent of
+ * this rendering projection.
+ */
 export function project(position: GeoPosition): MapPoint {
   const lon = normalizeLongitude(position.lon);
   const lat = clampLatitude(position.lat);
-  const x = (lon + 180) / 360 * WORLD_MAP_WIDTH;
-  const mercatorY = Math.log(Math.tan(Math.PI / 4 + lat * DEG / 2));
-  const y = (1 - mercatorY / Math.PI) / 2 * WORLD_MAP_HEIGHT;
-  return { x, y };
+  return {
+    x: (lon + 180) / 360 * WORLD_MAP_WIDTH,
+    y: (90 - lat) / 180 * WORLD_MAP_HEIGHT,
+  };
 }
 
 export function unproject(point: MapPoint): GeoPosition {
-  const lon = point.x / WORLD_MAP_WIDTH * 360 - 180;
-  const n = Math.PI - 2 * Math.PI * point.y / WORLD_MAP_HEIGHT;
-  const lat = Math.atan(Math.sinh(n)) / DEG;
-  return { lat: clampLatitude(lat), lon: normalizeLongitude(lon) };
+  return {
+    lat: clampLatitude(90 - point.y / WORLD_MAP_HEIGHT * 180),
+    lon: normalizeLongitude(point.x / WORLD_MAP_WIDTH * 360 - 180),
+  };
 }
 
 /** Move by east/north nautical miles using a local tangent-plane approximation. */
