@@ -34,10 +34,15 @@ jobs:
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=start" elcano-mobile-start.png
       - name: Capture deep zoom render
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=deep" elcano-mobile-deep.png
+      - name: Capture Biscay sailing regression
+        run: |
+          npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=sailing" elcano-mobile-sailing.png
+          node -e "const { chromium } = require('playwright'); (async()=>{const b=await chromium.launch({headless:true}); const p=await b.newPage(); await p.goto('http://127.0.0.1:4173/?visual-smoke=sailing'); await p.waitForTimeout(1800); const status=await p.evaluate(()=>document.documentElement.dataset.sailingRegression); await b.close(); if(status!=='pass') process.exit(1);})();"
       - uses: actions/upload-artifact@v4
         with:
           name: visual-smoke-mobile
           path: |
             elcano-mobile-start.png
             elcano-mobile-deep.png
+            elcano-mobile-sailing.png
           retention-days: 7
