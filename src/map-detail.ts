@@ -18,8 +18,9 @@ if (ocean && shell) {
   let camera: CameraDetail | null = null;
   let detailedRenderer: DetailedRenderer | null = null;
   let loading = false;
-  let scheduled = false;
+  let settleTimer = 0;
   const DETAIL_ZOOM = 10;
+  const CAMERA_SETTLE_MS = 70;
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -32,6 +33,13 @@ if (ocean && shell) {
     if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
+  function clear() {
+    if (!ctx) return;
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, viewport.clientWidth, viewport.clientHeight);
+  }
+
   async function ensureDetailedRenderer() {
     if (detailedRenderer || loading) return;
     loading = true;
@@ -41,7 +49,7 @@ if (ocean && shell) {
     } finally {
       loading = false;
     }
-    scheduleRender();
+    scheduleSettledRender(0);
   }
 
   function visibleWorldBounds(value: CameraDetail): WorldBounds {
@@ -55,12 +63,8 @@ if (ocean && shell) {
   }
 
   function render() {
-    scheduled = false;
-    if (!ctx) return;
-    const dpr = Math.max(1, window.devicePixelRatio || 1);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, viewport.clientWidth, viewport.clientHeight);
-    if (!camera || camera.zoomMultiplier < DETAIL_ZOOM) return;
+    clear();
+    if (!ctx || !camera || camera.zoomMultiplier < DETAIL_ZOOM) return;
 
     if (!detailedRenderer) {
       void ensureDetailedRenderer();
@@ -74,22 +78,27 @@ if (ocean && shell) {
     ctx.restore();
   }
 
-  function scheduleRender() {
-    if (scheduled) return;
-    scheduled = true;
-    requestAnimationFrame(render);
+  function scheduleSettledRender(delay = CAMERA_SETTLE_MS) {
+    window.clearTimeout(settleTimer);
+    settleTimer = window.setTimeout(() => requestAnimationFrame(render), delay);
   }
 
   window.addEventListener('elcano:camera-change', (event) => {
     const detail = (event as CustomEvent<CameraDetail>).detail;
     if (!detail) return;
     camera = detail;
-    scheduleRender();
+
+    // Keep gesture frames cheap: the 50m base map is already being transformed
+    // by the browser. Hide stale detail while moving, then redraw the 10m LOD
+    // once the camera settles instead of rebuilding it on every pointer frame.
+    clear();
+    if (camera.zoomMultiplier >= DETAIL_ZOOM && !detailedRenderer) void ensureDetailedRenderer();
+    scheduleSettledRender();
   });
 
   const resizeObserver = new ResizeObserver(() => {
     resize();
-    scheduleRender();
+    scheduleSettledRender(0);
   });
   resizeObserver.observe(viewport);
   resize();
