@@ -20,6 +20,9 @@ type IndexedPolygon = {
 
 type UnwrappedPoint = { x: number; y: number };
 
+const SOUTH_POLAR_CAP_LAT = -85;
+const SOUTH_POLAR_CAP_Y = (90 - SOUTH_POLAR_CAP_LAT) / 180 * WORLD_MAP_HEIGHT;
+
 const land = feature(
   landTopology as never,
   (landTopology as { objects: { land: unknown } }).objects.land as never,
@@ -120,6 +123,15 @@ function landPath() {
   return path;
 }
 
+function fillSouthPolarCap(ctx: CanvasRenderingContext2D) {
+  // Natural Earth/world-atlas coastline geometry follows Antarctica's coast,
+  // but a flat equirectangular raster needs the poleward interior closed
+  // explicitly. Everything poleward of 85°S is continental Antarctica, so
+  // filling this cap prevents an artificial ocean strip at the South Pole and
+  // keeps the reflected pole-crossing row continuous.
+  ctx.fillRect(0, SOUTH_POLAR_CAP_Y, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT - SOUTH_POLAR_CAP_Y);
+}
+
 function pointInRing(position: GeoPosition, coordinates: number[][]) {
   let inside = false;
   const x = position.lon;
@@ -145,6 +157,8 @@ function pointInPolygon(position: GeoPosition, polygon: number[][][]) {
 }
 
 export function isLand(position: GeoPosition) {
+  if (position.lat <= SOUTH_POLAR_CAP_LAT) return true;
+
   for (const polygon of indexedPolygons) {
     if (
       position.lat < polygon.minLat || position.lat > polygon.maxLat ||
@@ -159,6 +173,7 @@ export function drawLandMask(ctx: CanvasRenderingContext2D) {
   ctx.save();
   ctx.fillStyle = '#000';
   ctx.fill(landPath(), 'evenodd');
+  fillSouthPolarCap(ctx);
   ctx.restore();
 }
 
@@ -169,6 +184,7 @@ export function drawLand(ctx: CanvasRenderingContext2D) {
   ctx.strokeStyle = 'rgba(224, 211, 170, .62)';
   ctx.lineWidth = 0.9;
   ctx.fill(path, 'evenodd');
+  fillSouthPolarCap(ctx);
   ctx.stroke(path);
   ctx.restore();
 }
