@@ -102,10 +102,6 @@ function appendRing(path: Path2D, coordinates: number[][]) {
     maxX = Math.max(maxX, point.x);
   }
 
-  // A ring that crosses ±180° is kept locally continuous by unwrapping its
-  // longitudes outside the canonical chart. Draw each shifted copy that
-  // intersects [0, WORLD_MAP_WIDTH], rather than joining the two seam points
-  // with a line across the entire world.
   const minShift = Math.ceil(-maxX / WORLD_MAP_WIDTH);
   const maxShift = Math.floor((WORLD_MAP_WIDTH - minX) / WORLD_MAP_WIDTH);
   for (let shift = minShift; shift <= maxShift; shift += 1) {
@@ -124,11 +120,6 @@ function landPath() {
 }
 
 function fillSouthPolarCap(ctx: CanvasRenderingContext2D) {
-  // Natural Earth/world-atlas coastline geometry follows Antarctica's coast,
-  // but a flat equirectangular raster needs the poleward interior closed
-  // explicitly. Everything poleward of 85°S is continental Antarctica, so
-  // filling this cap prevents an artificial ocean strip at the South Pole and
-  // keeps the reflected pole-crossing row continuous.
   ctx.fillRect(0, SOUTH_POLAR_CAP_Y, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT - SOUTH_POLAR_CAP_Y);
 }
 
@@ -179,12 +170,8 @@ export function drawLandMask(ctx: CanvasRenderingContext2D) {
 
 export function drawLand(ctx: CanvasRenderingContext2D) {
   ctx.save();
-  const path = landPath();
   ctx.fillStyle = '#7f7253';
-  ctx.strokeStyle = 'rgba(224, 211, 170, .62)';
-  ctx.lineWidth = 0.9;
-  ctx.fill(path, 'evenodd');
+  ctx.fill(landPath(), 'evenodd');
   fillSouthPolarCap(ctx);
-  ctx.stroke(path);
   ctx.restore();
 }
