@@ -9,34 +9,66 @@ type GeoJsonGeometry = {
 
 type GeoJsonFeature = { geometry: GeoJsonGeometry | null };
 type GeoJsonFeatureCollection = { type: 'FeatureCollection'; features: GeoJsonFeature[] };
-
 type LandGeoJson = GeoJsonFeature | GeoJsonFeatureCollection;
+type IndexedPolygon = {
+  rings: number[][][];
+  minLat: number;
+  maxLat: number;
+  minLon: number;
+  maxLon: number;
+};
 
 const land = feature(
   landTopology as never,
   (landTopology as { objects: { land: unknown } }).objects.land as never,
 ) as unknown as LandGeoJson;
 
-function ring(ctx: CanvasRenderingContext2D, coordinates: number[][]) {
-  coordinates.forEach(([lon, lat], index) => {
-    const point = project({ lat, lon } satisfies GeoPosition);
-    if (index === 0) ctx.moveTo(point.x, point.y);
-    else ctx.lineTo(point.x, point.y);
-  });
-  ctx.closePath();
+function polygonsFromGeometry(value: GeoJsonGeometry | null): number[][][][] {
+  if (!value) return [];
+  if (value.type === 'Polygon') return [value.coordinates as number[][][]];
+  return value.coordinates as number[][][][];
 }
 
-function geometry(ctx: CanvasRenderingContext2D, value: GeoJsonGeometry | null) {
-  if (!value) return;
+function allPolygons() {
+  if ('features' in land) return land.features.flatMap((item) => polygonsFromGeometry(item.geometry));
+  return polygonsFromGeometry(land.geometry);
+}
 
-  if (value.type === 'Polygon') {
-    for (const polygonRing of value.coordinates as number[][][]) ring(ctx, polygonRing);
-    return;
+const indexedPolygons: IndexedPolygon[] = allPolygons().map((rings) => {
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLon = Infinity;
+  let maxLon = -Infinity;
+  for (const ring of rings) {
+    for (const [lon, lat] of ring) {
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+      minLon = Math.min(minLon, lon);
+      maxLon = Math.max(maxLon, lon);
+    }
   }
+  return { rings, minLat, maxLat, minLon, maxLon };
+});
 
-  for (const polygon of value.coordinates as number[][][][]) {
-    for (const polygonRing of polygon) ring(ctx, polygonRing);
+let cachedLandPath: Path2D | null = null;
+
+function appendRing(path: Path2D, coordinates: number[][]) {
+  coordinates.forEach(([lon, lat], index) => {
+    const point = project({ lat, lon } satisfies GeoPosition);
+    if (index === 0) path.moveTo(point.x, point.y);
+    else path.lineTo(point.x, point.y);
+  });
+  path.closePath();
+}
+
+function landPath() {
+  if (cachedLandPath) return cachedLandPath;
+  const path = new Path2D();
+  for (const polygon of indexedPolygons) {
+    for (const ring of polygon.rings) appendRing(path, ring);
   }
+  cachedLandPath = path;
+  return path;
 }
 
 function pointInRing(position: GeoPosition, coordinates: number[][]) {
@@ -52,7 +84,6 @@ function pointInRing(position: GeoPosition, coordinates: number[][]) {
     const edgeX = ((xj - xi) * (y - yi)) / (yj - yi) + xi;
     if (x < edgeX) inside = !inside;
   }
-
   return inside;
 }
 
@@ -64,37 +95,31 @@ function pointInPolygon(position: GeoPosition, polygon: number[][][]) {
   return true;
 }
 
-function geometryContains(position: GeoPosition, value: GeoJsonGeometry | null) {
-  if (!value) return false;
-
-  if (value.type === 'Polygon') {
-    return pointInPolygon(position, value.coordinates as number[][][]);
+export function isLand(position: GeoPosition) {
+  for (const polygon of indexedPolygons) {
+    if (
+      position.lat < polygon.minLat || position.lat > polygon.maxLat ||
+      position.lon < polygon.minLon || position.lon > polygon.maxLon
+    ) continue;
+    if (pointInPolygon(position, polygon.rings)) return true;
   }
-
-  return (value.coordinates as number[][][][]).some((polygon) => pointInPolygon(position, polygon));
+  return false;
 }
 
-export function isLand(position: GeoPosition) {
-  if ('features' in land) {
-    return land.features.some((item) => geometryContains(position, item.geometry));
-  }
-  return geometryContains(position, land.geometry);
+export function drawLandMask(ctx: CanvasRenderingContext2D) {
+  ctx.save();
+  ctx.fillStyle = '#000';
+  ctx.fill(landPath(), 'evenodd');
+  ctx.restore();
 }
 
 export function drawLand(ctx: CanvasRenderingContext2D) {
   ctx.save();
-  ctx.beginPath();
-
-  if ('features' in land) {
-    for (const item of land.features) geometry(ctx, item.geometry);
-  } else {
-    geometry(ctx, land.geometry);
-  }
-
+  const path = landPath();
   ctx.fillStyle = '#7f7253';
   ctx.strokeStyle = 'rgba(224, 211, 170, .62)';
   ctx.lineWidth = 0.9;
-  ctx.fill('evenodd');
-  ctx.stroke();
+  ctx.fill(path, 'evenodd');
+  ctx.stroke(path);
   ctx.restore();
 }
