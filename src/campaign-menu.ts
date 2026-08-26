@@ -12,6 +12,7 @@ function mountCampaignMenu() {
   button.className = 'campaign-menu-button';
   button.type = 'button';
   button.textContent = 'Missions';
+  button.style.pointerEvents = 'auto';
   button.setAttribute('aria-label', 'Select campaign and mission');
   topActions.prepend(button);
 
@@ -54,7 +55,7 @@ function mountCampaignMenu() {
 
   const style = document.createElement('style');
   style.textContent = `
-    .campaign-menu-button{border:1px solid rgba(235,208,152,.32);background:rgba(7,24,34,.82);color:#f4efe6;border-radius:999px;padding:.55rem .9rem;font:600 12px/1 system-ui,sans-serif;letter-spacing:.02em;cursor:pointer}
+    .campaign-menu-button{pointer-events:auto;border:1px solid rgba(235,208,152,.32);background:rgba(7,24,34,.82);color:#f4efe6;border-radius:999px;padding:.55rem .9rem;font:600 12px/1 system-ui,sans-serif;letter-spacing:.02em;cursor:pointer}
     .campaign-menu-overlay{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px}.campaign-menu-overlay.open{display:flex}.campaign-menu-backdrop{position:absolute;inset:0;background:rgba(2,8,12,.76);backdrop-filter:blur(7px)}
     .campaign-menu-card{position:relative;width:min(900px,96vw);max-height:min(820px,92vh);overflow:hidden;display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(16,45,58,.98),rgba(6,24,34,.99));border:1px solid rgba(234,208,152,.28);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.5);color:#f4efe6}
     .campaign-menu-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:24px 26px 18px;border-bottom:1px solid rgba(255,255,255,.1)}.campaign-menu-header h2{margin:2px 0 0;font:700 clamp(24px,4vw,38px)/1.05 Georgia,serif}.campaign-menu-eyebrow{margin:0;text-transform:uppercase;letter-spacing:.16em;font:700 10px/1.2 system-ui;color:#d7bc7f}.campaign-menu-close{border:0;background:transparent;color:#f4efe6;font-size:30px;line-height:1;cursor:pointer}
