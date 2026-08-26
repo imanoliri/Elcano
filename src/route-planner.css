@@ -3,9 +3,16 @@
   gap: 8px;
 }
 
+.route-actions .icon-button {
+  box-shadow: none;
+  backdrop-filter: none;
+  border-color: rgba(255,255,255,.16);
+  background: rgba(5,18,27,.82);
+}
+
 .route-button.active {
   border-color: rgba(255,255,255,.42);
-  background: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.12);
 }
 
 .route-clear[hidden] {
