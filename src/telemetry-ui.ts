@@ -1,4 +1,6 @@
 import './telemetry-ui.css';
+import './point-of-sail.css';
+import { pointOfSailFromAngle } from './simulation';
 
 const rudder = document.querySelector<HTMLInputElement>('#rudder');
 const sails = document.querySelector<HTMLInputElement>('#sails');
@@ -10,6 +12,9 @@ const windReadout = document.querySelector<HTMLElement>('#apparent-wind-readout'
 const windVector = document.querySelector<SVGLineElement>('#relative-wind-vector');
 const shipSilhouette = document.querySelector<SVGGElement>('.ship-silhouette');
 const shipDiagram = document.querySelector<SVGSVGElement>('#ship-diagram');
+const shipVectorPanel = document.querySelector<HTMLElement>('.ship-vector-panel');
+const headingReadout = document.querySelector<HTMLElement>('#heading');
+const trueWindBearingReadout = document.querySelector<HTMLElement>('#wind-bearing');
 
 // Keep the earlier, slimmer carrack/nao hull proportions. The smaller fore sail
 // sits toward the bow, while the wider main sail sits aft toward the stern.
@@ -60,6 +65,14 @@ if (shipDiagram) {
 
     shipDiagram.append(label);
   }
+}
+
+let pointOfSailReadout: HTMLElement | null = null;
+if (shipVectorPanel && shipDiagram) {
+  pointOfSailReadout = document.createElement('div');
+  pointOfSailReadout.className = 'point-of-sail-readout';
+  pointOfSailReadout.innerHTML = `<span>Point of sail</span><strong>Running</strong>`;
+  shipVectorPanel.insertBefore(pointOfSailReadout, shipDiagram);
 }
 
 if (rudder) {
@@ -147,6 +160,27 @@ function parseNumber(text: string | undefined) {
   return match ? Number(match[0]) : 0;
 }
 
+function normalizeDegrees(value: number) {
+  return ((value % 360) + 360) % 360;
+}
+
+function smallestAngleDifference(a: number, b: number) {
+  return Math.abs(((a - b + 540) % 360) - 180);
+}
+
+function updatePointOfSail() {
+  if (!pointOfSailReadout) return;
+  const heading = parseNumber(headingReadout?.textContent);
+  const windTowardBearing = parseNumber(trueWindBearingReadout?.textContent);
+  const windFromBearing = normalizeDegrees(windTowardBearing + 180);
+  const relativeAngle = smallestAngleDifference(heading, windFromBearing);
+  const state = pointOfSailFromAngle(relativeAngle);
+  const strong = pointOfSailReadout.querySelector('strong');
+  if (strong) strong.textContent = state;
+  pointOfSailReadout.dataset.state = state === 'In irons' ? 'no-go' : 'sailing';
+  pointOfSailReadout.title = `${relativeAngle.toFixed(0)}° to true wind`;
+}
+
 function update() {
   if (slipIndicator) {
     const left = parseFloat(slipIndicator.style.left || '50');
@@ -169,6 +203,7 @@ function update() {
       windAngleValue.textContent = `${Math.abs(angle).toFixed(0)}°${side}`;
     }
   }
+  updatePointOfSail();
   requestAnimationFrame(update);
 }
 

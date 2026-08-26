@@ -24,6 +24,7 @@ The player should eventually be able to navigate the real Atlantic and the wider
 - Add separate wind/current visibility toggles.
 - Add a thin course trail showing the ship's actual travelled path.
 - Add an optional bearing-to-target reference line so desired bearing can be compared with heading and track.
+- Add deterministic day-to-day wind variation around the monthly climatology so voyages encounter plausible calms, stronger winds and directional shifts while remaining reproducible and static-first. Preserve the climatological mean direction and scalar wind-speed distribution rather than simply adding random noise.
 - Keep historical missions explicit that modern observed/reanalysis data represents plausible prevailing conditions, not literal weather from the 16th century.
 
 ## 3. Small ship roster

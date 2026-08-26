@@ -20,6 +20,7 @@ type SampleGrid = {
   lons: number[];
   east: Float32Array;
   north: Float32Array;
+  speed?: Float32Array;
 };
 
 type EnvironmentTile = {
@@ -113,15 +114,22 @@ function asNumber(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
-function buildGrid(rows: Record<string, unknown>[], eastName: string, northName: string): SampleGrid | null {
-  const points: Array<{ lat: number; lon: number; east: number; north: number }> = [];
+function buildGrid(rows: Record<string, unknown>[], eastName: string, northName: string, speedName?: string): SampleGrid | null {
+  const points: Array<{ lat: number; lon: number; east: number; north: number; speed: number | null }> = [];
   for (const row of rows) {
     const lat = asNumber(row.latitude);
     const rawLon = asNumber(row.longitude);
     const east = asNumber(row[eastName]);
     const north = asNumber(row[northName]);
+    const speed = speedName ? asNumber(row[speedName]) : null;
     if (lat === null || rawLon === null || east === null || north === null) continue;
-    points.push({ lat, lon: normalizeLon(rawLon), east: east * MS_TO_KNOTS, north: north * MS_TO_KNOTS });
+    points.push({
+      lat,
+      lon: normalizeLon(rawLon),
+      east: east * MS_TO_KNOTS,
+      north: north * MS_TO_KNOTS,
+      speed: speed === null ? null : speed * MS_TO_KNOTS,
+    });
   }
   if (!points.length) return null;
 
@@ -129,6 +137,7 @@ function buildGrid(rows: Record<string, unknown>[], eastName: string, northName:
   const lons = [...new Set(points.map((point) => Number(point.lon.toFixed(5))))].sort((a, b) => a - b);
   const east = new Float32Array(lats.length * lons.length).fill(Number.NaN);
   const north = new Float32Array(lats.length * lons.length).fill(Number.NaN);
+  const speed = speedName ? new Float32Array(lats.length * lons.length).fill(Number.NaN) : undefined;
   const latIndex = new Map(lats.map((value, index) => [value, index]));
   const lonIndex = new Map(lons.map((value, index) => [value, index]));
 
@@ -139,8 +148,9 @@ function buildGrid(rows: Record<string, unknown>[], eastName: string, northName:
     const index = y * lons.length + x;
     east[index] = point.east;
     north[index] = point.north;
+    if (speed && point.speed !== null) speed[index] = point.speed;
   }
-  return { lats, lons, east, north };
+  return { lats, lons, east, north, speed };
 }
 
 function nearestIndex(values: number[], value: number) {
@@ -162,7 +172,20 @@ function sampleGrid(grid: SampleGrid | null, position: GeoPosition): EastNorthVe
   const index = y * grid.lons.length + x;
   const east = grid.east[index];
   const north = grid.north[index];
-  return Number.isFinite(east) && Number.isFinite(north) ? { x: east, y: north } : null;
+  if (!Number.isFinite(east) || !Number.isFinite(north)) return null;
+
+  if (grid.speed) {
+    const scalarSpeed = grid.speed[index];
+    const directionMagnitude = Math.hypot(east, north);
+    if (Number.isFinite(scalarSpeed) && scalarSpeed >= 0 && directionMagnitude >= 0.05) {
+      return {
+        x: east / directionMagnitude * scalarSpeed,
+        y: north / directionMagnitude * scalarSpeed,
+      };
+    }
+  }
+
+  return { x: east, y: north };
 }
 
 async function fetchWind(spec: ReturnType<typeof tileSpec>) {
@@ -172,8 +195,8 @@ async function fetchWind(spec: ReturnType<typeof tileSpec>) {
   const date = representativeDate(spec.month);
   const lon = sourceLonBounds(spec, 0);
   const dimensions = `[(${date})][(${minLat}):4:(${maxLat})][(${lon.min}):4:(${lon.max})]`;
-  const rows = await fetchRows(WIND_URL, `uwnd${dimensions},vwnd${dimensions}`);
-  return buildGrid(rows, 'uwnd', 'vwnd');
+  const rows = await fetchRows(WIND_URL, `uwnd${dimensions},vwnd${dimensions},wspd${dimensions}`);
+  return buildGrid(rows, 'uwnd', 'vwnd', 'wspd');
 }
 
 async function fetchCurrent(spec: ReturnType<typeof tileSpec>) {
@@ -235,7 +258,7 @@ function cachedTile(position: GeoPosition, time: Date) {
 
 export function createGlobalTiledEnvironment(fallback: EnvironmentProvider): EnvironmentProvider {
   return {
-    id: 'lazy-global-observed-environment-v1',
+    id: 'lazy-global-observed-environment-v2',
     label: 'Regional climatology + lazy global observed tiles',
     windAt(position, time) {
       if (inside(REGIONAL_WIND, position)) return fallback.windAt(position, time);

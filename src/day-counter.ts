@@ -16,8 +16,11 @@ if (missionTitle && elapsed) {
   row.append(missionTitle, day);
 
   const updateDay = () => {
-    const elapsedHours = Number.parseFloat(elapsed.textContent ?? '0') || 0;
-    day.textContent = `Day ${Math.floor(elapsedHours / 24) + 1}`;
+    // #elapsed is already rendered in days (for example "5.0 d"). Do not
+    // divide by 24 again here. Day 1 covers elapsed time [0, 1 day), Day 2
+    // covers [1, 2 days), and so on.
+    const elapsedDays = Number.parseFloat(elapsed.textContent ?? '0') || 0;
+    day.textContent = `Day ${Math.floor(elapsedDays) + 1}`;
   };
 
   new MutationObserver(updateDay).observe(elapsed, { childList: true, characterData: true, subtree: true });

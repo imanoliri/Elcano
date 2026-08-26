@@ -1,0 +1,75 @@
+#sailing-info {
+  font-style: italic;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+}
+
+.sailing-guide-card {
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: 20px;
+}
+
+.sailing-guide-card h1 {
+  margin-bottom: 14px;
+}
+
+.sailing-guide-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.sailing-guide-grid > div {
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+}
+
+.sailing-guide-grid strong,
+.sailing-guide-grid span {
+  display: block;
+}
+
+.sailing-guide-grid strong {
+  margin-bottom: 4px;
+  font-size: .8rem;
+}
+
+.sailing-guide-grid span,
+.sailing-guide-rule,
+.sailing-guide-tip {
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
+.sailing-guide-rule {
+  margin: 12px 0 5px;
+}
+
+.sailing-guide-tip {
+  margin: 0;
+  opacity: .72;
+}
+
+@media (max-width: 520px) {
+  .sailing-guide-card {
+    padding: 16px;
+  }
+
+  .sailing-guide-grid {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .sailing-guide-grid > div {
+    padding: 8px;
+  }
+
+  .sailing-guide-card h1 {
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+  }
+}

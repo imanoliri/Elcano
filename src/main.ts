@@ -33,7 +33,7 @@ app.innerHTML = `
       <div class="instrument"><span class="instrument-label">Speed</span><strong id="speed">0.0 kn</strong><div class="meter"><span id="speed-bar" class="meter-fill"></span></div></div>
       <div class="instrument"><span class="instrument-label">Wind</span><strong id="wind">0.0</strong><div class="meter"><span id="wind-bar" class="meter-fill wind-fill"></span></div><small id="wind-bearing">0°</small></div>
       <div class="instrument"><span class="instrument-label">Current</span><strong id="current">0.0</strong><div class="meter"><span id="current-bar" class="meter-fill current-fill"></span></div><small id="current-bearing">0°</small></div>
-      <div class="instrument progress-instrument"><span class="instrument-label">Voyage</span><strong id="distance">0 nm</strong><div class="meter"><span id="progress-bar" class="meter-fill progress-fill"></span></div><small id="elapsed">0.0 h</small></div>
+      <div class="instrument progress-instrument"><span class="instrument-label">Voyage</span><strong id="distance">0 nm</strong><div class="meter"><span id="progress-bar" class="meter-fill progress-fill"></span></div><small id="elapsed">0.0 d</small></div>
     </section>
 
     <section class="bottom-controls" aria-label="Ship controls">
@@ -49,9 +49,9 @@ app.innerHTML = `
       </div>
 
       <div class="control-block sail-control">
-        <div class="control-heading"><span>Sails</span><strong id="sail-readout">75%</strong></div>
+        <div class="control-heading"><span>Sails</span><strong id="sail-readout">100%</strong></div>
         <div class="dynamic-value-row"><span>Apparent wind</span><strong id="apparent-wind-readout">0.0 kn</strong></div>
-        <div class="sail-row"><span class="sail-icon" aria-hidden="true">◢</span><div class="slider-stack wind-stack"><div class="dynamic-track apparent-wind-track" aria-hidden="true"><span id="apparent-wind-fill" class="apparent-wind-fill"></span></div><input id="sails" type="range" min="0" max="100" step="1" value="75" aria-label="Sail area"></div></div>
+        <div class="sail-row"><span class="sail-icon" aria-hidden="true">◢</span><div class="slider-stack wind-stack"><div class="dynamic-track apparent-wind-track" aria-hidden="true"><span id="apparent-wind-fill" class="apparent-wind-fill"></span></div><input id="sails" type="range" min="0" max="100" step="1" value="100" aria-label="Sail area"></div></div>
         <div class="range-labels"><span>Furled</span><span>Full sail</span></div>
       </div>
 
@@ -98,7 +98,7 @@ const timeButtons = [...document.querySelectorAll<HTMLButtonElement>('.time-butt
 const START: WorldState = {
   time: new Date('1525-07-01T12:00:00Z'),
   elapsedHours: 0,
-  ship: { position: { lat: 43.3183, lon: -1.9812 }, headingDeg: 275, speed: 0 },
+  ship: { position: { lat: 43.3183, lon: -1.9812 }, headingDeg: 285, speed: 0 },
   destination: { lat: 43.3623, lon: -8.4115 },
 };
 const START_DISTANCE = distanceToDestination(START);
@@ -137,15 +137,27 @@ window.addEventListener('keydown', (event) => {
   updateControlReadouts();
 });
 
+function formatElapsedDays(hours: number) {
+  return `${(hours / 24).toFixed(1)} ${Math.abs(hours - 24) < 0.05 ? 'day' : 'days'}`;
+}
+
+function formatSignedHeading(degrees: number) {
+  const normalized = ((degrees % 360) + 360) % 360;
+  const signed = normalized > 180 ? normalized - 360 : normalized;
+  const rounded = Math.round(signed);
+  if (rounded === 0) return '0°';
+  return `${rounded > 0 ? '+' : ''}${rounded}°`;
+}
+
 function openHelp() {
   const step = tutorial[Math.min(tutorialStage, tutorial.length - 1)];
   modalTitle.textContent = reached ? 'A Coruña reached' : step.title;
-  modalText.textContent = reached ? `Reached A Coruña after ${state.elapsedHours.toFixed(1)} simulated hours. Elcano's next voyage will depart from this port for the Moluccas.` : step.text;
+  modalText.textContent = reached ? `Reached A Coruña after ${formatElapsedDays(state.elapsedHours)}. Elcano's next voyage will depart from this port for the Moluccas.` : step.text;
   modal.classList.add('open');
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; explored.clear(); rudder.value = '0'; sails.value = '75'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); showToast('Mission restarted');
+  state = structuredClone(START); reached = false; tutorialStage = 0; explored.clear(); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); showToast('Mission restarted');
 }
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
@@ -195,14 +207,14 @@ function draw() {
   }));
   updateInstruments();
 
-  if (!reached && distanceToDestination(state) < 20) { reached = true; setTimeScale(0); missionTitle.textContent = 'Mission complete'; showToast(`A Coruña · ${state.elapsedHours.toFixed(1)} hours`); openHelp(); }
+  if (!reached && distanceToDestination(state) < 20) { reached = true; setTimeScale(0); missionTitle.textContent = 'Mission complete'; showToast(`A Coruña · ${formatElapsedDays(state.elapsedHours)}`); openHelp(); }
 }
 
 function updateInstruments() {
   const wind = windAt(state.ship.position, state.time); const current = currentAt(state.ship.position, state.time); const sail = sailingVelocity(state.ship.headingDeg, wind, Number(sails.value) / 100);
   const ground = { x: sail.x + current.x, y: sail.y + current.y }; const apparent = { x: wind.x - ground.x, y: wind.y - ground.y };
   const speed = Math.hypot(ground.x, ground.y); const windSpeed = Math.hypot(wind.x, wind.y); const currentSpeed = Math.hypot(current.x, current.y); const distance = distanceToDestination(state); const progress = Math.max(0, Math.min(1, 1 - distance / START_DISTANCE));
-  setText('heading', `${state.ship.headingDeg.toFixed(0)}°`); setText('speed', `${speed.toFixed(2)} kn`); setText('wind', windSpeed.toFixed(1)); setText('wind-bearing', bearing(wind)); setText('current', currentSpeed.toFixed(2)); setText('current-bearing', bearing(current)); setText('distance', `${distance.toFixed(0)} nm`); setText('elapsed', `${state.elapsedHours.toFixed(1)} h`);
+  setText('heading', formatSignedHeading(state.ship.headingDeg)); setText('speed', `${speed.toFixed(2)} kn`); setText('wind', windSpeed.toFixed(1)); setText('wind-bearing', bearing(wind)); setText('current', currentSpeed.toFixed(2)); setText('current-bearing', bearing(current)); setText('distance', `${distance.toFixed(0)} nm`); setText('elapsed', `${(state.elapsedHours / 24).toFixed(1)} d`);
   setWidth('speed-bar', speed / 10 * 100); setWidth('wind-bar', windSpeed / 25 * 100); setWidth('current-bar', currentSpeed / 1.5 * 100); setWidth('progress-bar', progress * 100); document.querySelector<HTMLElement>('#compass-needle')!.style.transform = `rotate(${state.ship.headingDeg}deg)`;
   const course = vectorBearing(ground); const slip = signedAngleDifference(course, state.ship.headingDeg); setText('slip-readout', `${Math.abs(slip).toFixed(1)}°${Math.abs(slip) < .5 ? '' : slip < 0 ? ' port' : ' starboard'}`); const indicator = document.querySelector<HTMLElement>('#slip-indicator')!; indicator.style.left = `${50 + Math.max(-45, Math.min(45, slip)) / 90 * 100}%`;
   setText('apparent-wind-readout', `${Math.hypot(apparent.x, apparent.y).toFixed(2)} kn`); setWidth('apparent-wind-fill', Math.hypot(apparent.x, apparent.y) / 25 * 100); updateShipDiagram(apparent, current, ground);

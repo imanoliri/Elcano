@@ -13,7 +13,7 @@ if (panel && diagram) {
   readouts.className = 'force-readouts';
   readouts.innerHTML = `
     <div class="force-readout wind-force-readout">
-      <span class="force-label">Wind</span>
+      <span class="force-label">Wind from</span>
       <span class="force-line"></span>
       <span class="force-speed" id="forces-wind-speed">0.0 kn</span>
       <span class="force-angle" id="forces-wind-angle">0°</span>
@@ -34,6 +34,16 @@ if (panel && diagram) {
   panel.append(readouts);
 
   const text = (selector: string) => document.querySelector<HTMLElement>(selector)?.textContent?.trim() ?? '';
+  const normalizeDegrees = (value: number) => ((value % 360) + 360) % 360;
+  const signedAngleDifference = (target: number, reference: number) => {
+    const difference = ((target - reference + 540) % 360) - 180;
+    return Math.abs(difference + 180) < 0.0001 ? 180 : difference;
+  };
+  const formatSignedAngle = (angle: number) => {
+    const rounded = Math.round(angle);
+    if (rounded === 0) return '0°';
+    return `${rounded > 0 ? '+' : ''}${rounded}°`;
+  };
 
   function trackBearing() {
     const line = document.querySelector<SVGLineElement>('#track-vector');
@@ -45,14 +55,17 @@ if (panel && diagram) {
     if (Math.hypot(dx, dy) < 0.001) return heading;
 
     const relative = Math.atan2(dx, dy) * 180 / Math.PI;
-    return (heading + relative + 360) % 360;
+    return normalizeDegrees(heading + relative);
   }
 
   function update() {
     const heading = text('#heading') || '0°';
+    const headingDeg = Number.parseFloat(heading) || 0;
     const speed = text('#speed') || '0.00 kn';
     const windSpeed = text('#wind') || '0.0';
-    const windBearing = text('#wind-bearing') || '0°';
+    const windTowardBearing = Number.parseFloat(text('#wind-bearing')) || 0;
+    const windFromBearing = normalizeDegrees(windTowardBearing + 180);
+    const windRelativeAngle = signedAngleDifference(windFromBearing, headingDeg);
     const currentSpeed = text('#current') || '0.00';
     const currentBearing = text('#current-bearing') || '0°';
 
@@ -63,7 +76,7 @@ if (panel && diagram) {
 
     set('#forces-heading', heading);
     set('#forces-wind-speed', `${windSpeed} kn`);
-    set('#forces-wind-angle', windBearing);
+    set('#forces-wind-angle', formatSignedAngle(windRelativeAngle));
     set('#forces-current-speed', `${currentSpeed} kn`);
     set('#forces-current-angle', currentBearing);
     set('#forces-track-speed', speed);

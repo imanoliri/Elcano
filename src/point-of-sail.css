@@ -1,0 +1,42 @@
+.point-of-sail-readout {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 3px 4px 2px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: .48rem;
+  line-height: 1.15;
+  letter-spacing: .02em;
+}
+
+.point-of-sail-readout span {
+  opacity: .62;
+  text-transform: uppercase;
+}
+
+.point-of-sail-readout strong {
+  font-size: .56rem;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.point-of-sail-readout[data-state="no-go"] strong {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 470px) {
+  .point-of-sail-readout {
+    gap: 4px;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .point-of-sail-readout span { font-size: .43rem; }
+  .point-of-sail-readout strong { font-size: .51rem; }
+}

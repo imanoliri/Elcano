@@ -31,6 +31,7 @@ function decodePacked(grid: PackedGrid) {
 }
 
 function sampleComponent(grid: PackedGrid, position: GeoPosition, month: number, component: number): number | null {
+  if (component >= grid.components) return null;
   const data = decodePacked(grid);
   if (!data) return null;
   if (position.lat < grid.minLat || position.lat > grid.maxLat || position.lon < grid.minLon || position.lon > grid.maxLon) return null;
@@ -71,16 +72,36 @@ function vectorAt(grid: PackedGrid, position: GeoPosition, time: Date): EastNort
   return x === null || y === null ? null : { x, y };
 }
 
+function windVectorAt(grid: PackedGrid, position: GeoPosition, time: Date): EastNorthVector | null {
+  const month = time.getUTCMonth();
+  const x = sampleComponent(grid, position, month, 0);
+  const y = sampleComponent(grid, position, month, 1);
+  if (x === null || y === null) return null;
+
+  // New generated grids store CCMP mean scalar wind speed as component 2.
+  // Use mean u/v only for prevailing direction; using hypot(mean u, mean v)
+  // as the speed artificially weakens climatology when directions vary.
+  const scalarSpeed = sampleComponent(grid, position, month, 2);
+  if (scalarSpeed === null) return { x, y }; // backward compatibility
+
+  const directionMagnitude = Math.hypot(x, y);
+  if (directionMagnitude < 0.05 || scalarSpeed <= 0) return { x, y };
+  return {
+    x: x / directionMagnitude * scalarSpeed,
+    y: y / directionMagnitude * scalarSpeed,
+  };
+}
+
 export function hasPackedAtlanticClimatology() {
   return Boolean(ATLANTIC_CLIMATOLOGY.wind.packed || ATLANTIC_CLIMATOLOGY.current.packed);
 }
 
 export function createAtlanticClimatologyProvider(fallback: EnvironmentProvider): EnvironmentProvider {
   return {
-    id: 'regional-observed-environment-v2',
+    id: 'regional-observed-environment-v3',
     label: 'Regional observed environment',
     windAt(position, time) {
-      return vectorAt(ATLANTIC_CLIMATOLOGY.wind, position, time) ?? fallback.windAt(position, time);
+      return windVectorAt(ATLANTIC_CLIMATOLOGY.wind, position, time) ?? fallback.windAt(position, time);
     },
     currentAt(position, time) {
       return vectorAt(ATLANTIC_CLIMATOLOGY.current, position, time) ?? fallback.currentAt(position, time);
