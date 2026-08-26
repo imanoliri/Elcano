@@ -10,30 +10,103 @@ jobs:
   benchmark:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout benchmark harness
+        uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - name: Install Chromium benchmark runtime
+      - name: Install benchmark runtime
         run: |
+          npm ci
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Start preview
+
+      - name: Checkout pre-optimization app
+        uses: actions/checkout@v4
+        with:
+          ref: 7ecef00ab48ca0b73708e90fa9d5a769bf98fc6f
+          path: baseline
+      - name: Build pre-optimization app
+        working-directory: baseline
         run: |
-          npm run preview -- --host 127.0.0.1 > /tmp/elcano-vite.log 2>&1 &
+          npm ci
+          npm run build
+      - name: Start pre-optimization preview
+        working-directory: baseline
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/elcano-baseline.log 2>&1 &
+          echo $! > /tmp/elcano-baseline.pid
           for i in {1..30}; do
             if curl -fsS http://127.0.0.1:4173 >/dev/null; then exit 0; fi
             sleep 1
           done
-          cat /tmp/elcano-vite.log
+          cat /tmp/elcano-baseline.log
           exit 1
-      - name: Run mobile camera benchmark
-        run: node scripts/perf-benchmark.mjs | tee perf-result.txt
+      - name: Benchmark pre-optimization app
+        env:
+          PERF_URL: http://127.0.0.1:4173/?visual-smoke=1
+        run: node scripts/perf-benchmark.mjs | tee perf-baseline.txt
+      - name: Stop pre-optimization preview
+        if: always()
+        run: kill $(cat /tmp/elcano-baseline.pid) 2>/dev/null || true
+
+      - name: Checkout optimized app
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: optimized
+      - name: Build optimized app
+        working-directory: optimized
+        run: |
+          npm ci
+          npm run build
+      - name: Start optimized preview
+        working-directory: optimized
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4174 > /tmp/elcano-optimized.log 2>&1 &
+          echo $! > /tmp/elcano-optimized.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4174 >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/elcano-optimized.log
+          exit 1
+      - name: Benchmark optimized app
+        env:
+          PERF_URL: http://127.0.0.1:4174/?visual-smoke=1
+        run: node scripts/perf-benchmark.mjs | tee perf-optimized.txt
+      - name: Stop optimized preview
+        if: always()
+        run: kill $(cat /tmp/elcano-optimized.pid) 2>/dev/null || true
+
+      - name: Summarize comparison
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          function read(path) {
+            const line = fs.readFileSync(path, 'utf8').split('\n').find(v => v.startsWith('PERF_RESULT '));
+            if (!line) throw new Error(`No PERF_RESULT in ${path}`);
+            return JSON.parse(line.slice('PERF_RESULT '.length));
+          }
+          const before = read('perf-baseline.txt');
+          const after = read('perf-optimized.txt');
+          const pct = (a, b) => ((a - b) / a * 100);
+          const comparison = {
+            before,
+            after,
+            avgFrameTimeImprovementPct: pct(before.avgFrameMs, after.avgFrameMs),
+            p95FrameTimeImprovementPct: pct(before.p95FrameMs, after.p95FrameMs),
+            fpsIncreasePct: (after.approxFps - before.approxFps) / before.approxFps * 100,
+            longFrameReductionPct: before.longFrames33ms ? (before.longFrames33ms - after.longFrames33ms) / before.longFrames33ms * 100 : 0,
+          };
+          fs.writeFileSync('perf-comparison.json', JSON.stringify(comparison, null, 2));
+          console.log('PERF_COMPARISON ' + JSON.stringify(comparison));
+          NODE
       - uses: actions/upload-artifact@v4
         with:
-          name: performance-result
-          path: perf-result.txt
+          name: performance-comparison
+          path: |
+            perf-baseline.txt
+            perf-optimized.txt
+            perf-comparison.json
           retention-days: 14
