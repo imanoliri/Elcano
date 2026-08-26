@@ -1,5 +1,6 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
+import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
 
 export type EnvironmentalSample = EastNorthVector;
 
@@ -19,7 +20,7 @@ function vectorFromTowardBearing(speed: number, bearingDeg: number): Environment
 
 /**
  * Lightweight analytic approximation retained as an offline fallback and for
- * positions outside the packed Atlantic dataset. It is not historical truth.
+ * positions whose remote/global tile has not loaded. It is not historical truth.
  */
 export const climatologyEnvironment: EnvironmentProvider = {
   id: 'baked-climatology-v1',
@@ -54,10 +55,15 @@ export const climatologyEnvironment: EnvironmentProvider = {
 };
 
 export const observedAtlanticEnvironment = createAtlanticClimatologyProvider(climatologyEnvironment);
-let activeEnvironment: EnvironmentProvider = observedAtlanticEnvironment;
+export const globalObservedEnvironment = createGlobalTiledEnvironment(observedAtlanticEnvironment);
+let activeEnvironment: EnvironmentProvider = globalObservedEnvironment;
 
 export function setEnvironmentProvider(provider: EnvironmentProvider) {
   activeEnvironment = provider;
+}
+
+export function prefetchEnvironmentBounds(bounds: EnvironmentBounds, time: Date) {
+  return prefetchGlobalEnvironment(bounds, time);
 }
 
 export function windAt(position: GeoPosition, time: Date) {
