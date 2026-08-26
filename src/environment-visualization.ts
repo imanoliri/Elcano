@@ -1,6 +1,6 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
-import { project } from './world/coordinates';
+import { project, unproject } from './world/coordinates';
 import { drawLandMask } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
@@ -64,13 +64,8 @@ if (ocean && shell) {
   ];
 
   type Camera = { x: number; y: number; scale: number };
-
-  function cameraFromMap(): Camera {
-    const transform = mapCanvas.style.transform;
-    const match = transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([-\d.]+)\)/);
-    if (!match) return { x: 0, y: 0, scale: 1 };
-    return { x: Number(match[1]), y: Number(match[2]), scale: Number(match[3]) };
-  }
+  type GeoBounds = { minLat: number; maxLat: number; minLon: number; maxLon: number };
+  let camera: Camera | null = null;
 
   function resizeOverlay() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -89,14 +84,30 @@ if (ocean && shell) {
     return new Date(Date.UTC(1525, 6, 1, 12) + elapsedHours * 3_600_000);
   }
 
-  function displayStep(field: Field, camera: Camera) {
+  function displayStep(field: Field, value: Camera) {
     const center = project({ lat: 43.5, lon: -5 });
     const east = project({ lat: 43.5, lon: -4 });
-    const pixelsPerDegree = Math.max(0.1, Math.abs(east.x - center.x) * camera.scale);
+    const pixelsPerDegree = Math.max(0.1, Math.abs(east.x - center.x) * value.scale);
     const nativePixels = pixelsPerDegree * field.nativeStep;
     const targetSpacing = viewport.clientWidth <= 720 ? field.mobileSpacing : field.desktopSpacing;
     const multiple = Math.max(1, Math.ceil(targetSpacing / nativePixels));
     return field.nativeStep * multiple;
+  }
+
+  function visibleGeoBounds(value: Camera): GeoBounds {
+    const pad = 32;
+    const left = (-pad - value.x) / value.scale;
+    const right = (viewport.clientWidth + pad - value.x) / value.scale;
+    const top = (-pad - value.y) / value.scale;
+    const bottom = (viewport.clientHeight + pad - value.y) / value.scale;
+    const a = unproject({ x: left, y: top });
+    const b = unproject({ x: right, y: bottom });
+    return {
+      minLat: Math.min(a.lat, b.lat),
+      maxLat: Math.max(a.lat, b.lat),
+      minLon: Math.min(a.lon, b.lon),
+      maxLon: Math.max(a.lon, b.lon),
+    };
   }
 
   function drawArrow(x: number, y: number, vector: Vec2, field: Field) {
@@ -123,38 +134,40 @@ if (ocean && shell) {
     ctx.stroke();
   }
 
-  function drawField(field: Field, time: Date, camera: Camera) {
+  function drawField(field: Field, time: Date, value: Camera, visible: GeoBounds) {
     if (!ctx) return;
-    const step = displayStep(field, camera);
-    const width = viewport.clientWidth;
-    const height = viewport.clientHeight;
+    const minLat = Math.max(field.minLat, visible.minLat);
+    const maxLat = Math.min(field.maxLat, visible.maxLat);
+    const minLon = Math.max(field.minLon, visible.minLon);
+    const maxLon = Math.min(field.maxLon, visible.maxLon);
+    if (minLat > maxLat || minLon > maxLon) return;
 
+    const step = displayStep(field, value);
     ctx.strokeStyle = field.strokeStyle;
     ctx.lineWidth = field.width;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    const startLat = Math.ceil(field.minLat / step) * step;
-    const startLon = Math.ceil(field.minLon / step) * step;
+    const startLat = Math.ceil(minLat / step) * step;
+    const startLon = Math.ceil(minLon / step) * step;
 
-    for (let lat = startLat; lat <= field.maxLat + step * 0.25; lat += step) {
-      for (let lon = startLon; lon <= field.maxLon + step * 0.25; lon += step) {
+    for (let lat = startLat; lat <= maxLat + step * 0.25; lat += step) {
+      for (let lon = startLon; lon <= maxLon + step * 0.25; lon += step) {
         const position = { lat, lon };
         const world = project(position);
-        const x = camera.x + world.x * camera.scale;
-        const y = camera.y + world.y * camera.scale;
-        if (x < -30 || x > width + 30 || y < -30 || y > height + 30) continue;
+        const x = value.x + world.x * value.scale;
+        const y = value.y + world.y * value.scale;
         drawArrow(x, y, field.vectorAt(position, time), field);
       }
     }
   }
 
-  function eraseLand(camera: Camera) {
+  function eraseLand(value: Camera) {
     if (!ctx) return;
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
-    ctx.translate(camera.x, camera.y);
-    ctx.scale(camera.scale, camera.scale);
+    ctx.translate(value.x, value.y);
+    ctx.scale(value.scale, value.scale);
     drawLandMask(ctx);
     ctx.restore();
   }
@@ -162,13 +175,13 @@ if (ocean && shell) {
   let scheduled = false;
   function render() {
     scheduled = false;
-    if (!ctx) return;
+    if (!ctx || !camera) return;
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, viewport.clientWidth, viewport.clientHeight);
-    const camera = cameraFromMap();
     const time = simulationTime();
-    for (const field of fields) drawField(field, time, camera);
+    const visible = visibleGeoBounds(camera);
+    for (const field of fields) drawField(field, time, camera, visible);
     eraseLand(camera);
   }
 
@@ -178,8 +191,12 @@ if (ocean && shell) {
     requestAnimationFrame(render);
   }
 
-  const cameraObserver = new MutationObserver(scheduleRender);
-  cameraObserver.observe(mapCanvas, { attributes: true, attributeFilter: ['style'] });
+  window.addEventListener('elcano:camera-change', (event) => {
+    const detail = (event as CustomEvent<Camera>).detail;
+    if (!detail) return;
+    camera = detail;
+    scheduleRender();
+  });
 
   const resizeObserver = new ResizeObserver(() => {
     resizeOverlay();
@@ -188,6 +205,5 @@ if (ocean && shell) {
   resizeObserver.observe(viewport);
 
   resizeOverlay();
-  scheduleRender();
   window.setInterval(scheduleRender, 1000);
 }
