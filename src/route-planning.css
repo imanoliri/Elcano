@@ -1,0 +1,46 @@
+.route-plan-button {
+  font-size: 1.12rem;
+}
+
+.route-plan-button.active {
+  border-color: rgba(255,255,255,.38);
+  background: rgba(255,255,255,.12);
+}
+
+.route-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.route-overlay .route-line {
+  fill: none;
+  stroke: rgba(244,239,230,.82);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-overlay .route-waypoint {
+  fill: #f4efe6;
+  stroke: rgba(5,18,27,.9);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-overlay .route-waypoint-label {
+  fill: #f4efe6;
+  stroke: rgba(5,18,27,.95);
+  stroke-width: 3;
+  paint-order: stroke;
+  font: 700 11px Inter, system-ui, sans-serif;
+  text-anchor: middle;
+}
+
+.game-shell.route-planning {
+  cursor: crosshair;
+}
