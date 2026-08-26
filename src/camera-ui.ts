@@ -1,5 +1,6 @@
 import './camera-ui.css';
 import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
+import { WRAP_TILE_OFFSETS, wrappedTileTransform } from './world-wrap';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
@@ -9,6 +10,19 @@ if (canvas && viewport) {
   indicator.className = 'target-edge-indicator';
   indicator.setAttribute('aria-hidden', 'true');
   viewport.append(indicator);
+
+  const wrapTiles = WRAP_TILE_OFFSETS.map(([tileX, tileY]) => {
+    const tile = document.createElement('canvas');
+    tile.width = canvas.width;
+    tile.height = canvas.height;
+    tile.className = `${canvas.className} world-wrap-tile`;
+    tile.setAttribute('aria-hidden', 'true');
+    tile.dataset.wrapX = String(tileX);
+    tile.dataset.wrapY = String(tileY);
+    tile.style.pointerEvents = 'none';
+    canvas.insertAdjacentElement('afterend', tile);
+    return { tile, tileX, tileY, ctx: tile.getContext('2d')! };
+  });
 
   let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
@@ -29,18 +43,33 @@ if (canvas && viewport) {
 
   canvas.style.width = `${WORLD_MAP_WIDTH}px`;
   canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
+  wrapTiles.forEach(({ tile }) => {
+    tile.style.width = `${WORLD_MAP_WIDTH}px`;
+    tile.style.height = `${WORLD_MAP_HEIGHT}px`;
+  });
 
   function viewportSize() {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
   }
 
-  function clampCamera() {
-    const { width, height } = viewportSize();
+  function positiveModulo(value: number, modulus: number) {
+    return ((value % modulus) + modulus) % modulus;
+  }
+
+  function normalizeCamera() {
     const mapWidth = WORLD_MAP_WIDTH * scale;
     const mapHeight = WORLD_MAP_HEIGHT * scale;
+    // Keep the canonical tile near the viewport while the eight copies around
+    // it make crossing any edge continuous instead of exposing empty space.
+    offsetX = -positiveModulo(-offsetX, mapWidth);
+    offsetY = -positiveModulo(-offsetY, mapHeight);
+  }
 
-    offsetX = mapWidth <= width ? (width - mapWidth) / 2 : Math.min(0, Math.max(width - mapWidth, offsetX));
-    offsetY = mapHeight <= height ? (height - mapHeight) / 2 : Math.min(0, Math.max(height - mapHeight, offsetY));
+  function syncWrapTiles() {
+    for (const { tile, ctx } of wrapTiles) {
+      ctx.clearRect(0, 0, tile.width, tile.height);
+      ctx.drawImage(canvas, 0, 0);
+    }
   }
 
   function announceCamera() {
@@ -48,13 +77,16 @@ if (canvas && viewport) {
     canvas.dataset.cameraScale = String(scale);
     canvas.dataset.zoomMultiplier = String(zoomMultiplier);
     window.dispatchEvent(new CustomEvent('elcano:camera-change', {
-      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier },
+      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier, wrapped: true },
     }));
   }
 
   function applyCamera() {
-    clampCamera();
+    normalizeCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    for (const { tile, tileX, tileY } of wrapTiles) {
+      tile.style.transform = wrappedTileTransform(offsetX, offsetY, scale, tileX, tileY);
+    }
     announceCamera();
     updateTargetIndicator();
   }
@@ -78,10 +110,25 @@ if (canvas && viewport) {
     applyCamera();
   }
 
+  function nearestWrappedScreenPoint(point: { x: number; y: number }) {
+    const { width, height } = viewportSize();
+    let best = { x: 0, y: 0, distance: Infinity };
+    for (let tileY = -1; tileY <= 1; tileY += 1) {
+      for (let tileX = -1; tileX <= 1; tileX += 1) {
+        const x = offsetX + (point.x + tileX * WORLD_MAP_WIDTH) * scale;
+        const y = offsetY + (point.y + tileY * WORLD_MAP_HEIGHT) * scale;
+        const distance = Math.hypot(x - width / 2, y - height / 2);
+        if (distance < best.distance) best = { x, y, distance };
+      }
+    }
+    return best;
+  }
+
   function updateTargetIndicator() {
     const { width, height } = viewportSize();
-    const x = offsetX + target.x * scale;
-    const y = offsetY + target.y * scale;
+    const wrapped = nearestWrappedScreenPoint(target);
+    const x = wrapped.x;
+    const y = wrapped.y;
     const margin = 22;
     const inside = x >= margin && x <= width - margin && y >= margin && y <= height - margin;
 
@@ -114,6 +161,13 @@ if (canvas && viewport) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
+  function screenPointToWrappedWorld(screenX: number, screenY: number) {
+    return {
+      x: positiveModulo((screenX - offsetX) / scale, WORLD_MAP_WIDTH),
+      y: positiveModulo((screenY - offsetY) / scale, WORLD_MAP_HEIGHT),
+    };
+  }
+
   window.addEventListener('elcano:camera-target', (event) => {
     const detail = (event as CustomEvent<{ x: number; y: number }>).detail;
     if (!detail) return;
@@ -121,7 +175,7 @@ if (canvas && viewport) {
     updateTargetIndicator();
   });
 
-  canvas.addEventListener('wheel', (event) => {
+  viewport.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
     const x = event.clientX - rect.left;
@@ -130,15 +184,17 @@ if (canvas && viewport) {
     zoomAround(x, y, scale * factor);
   }, { passive: false });
 
-  canvas.addEventListener('dblclick', (event) => {
+  viewport.addEventListener('dblclick', (event) => {
+    if ((event.target as Element | null)?.closest('button, input, .modal, .bottom-controls, .hud-top')) return;
     const rect = viewport.getBoundingClientRect();
     zoomAround(event.clientX - rect.left, event.clientY - rect.top, scale * 1.5);
   });
 
-  canvas.addEventListener('pointerdown', (event) => {
+  viewport.addEventListener('pointerdown', (event) => {
+    if ((event.target as Element | null)?.closest('button, input, .modal, .bottom-controls, .hud-top')) return;
     const point = pointFromEvent(event);
     pointers.set(event.pointerId, point);
-    canvas.setPointerCapture(event.pointerId);
+    viewport.setPointerCapture(event.pointerId);
 
     if (pointers.size === 1) {
       draggingPointer = event.pointerId;
@@ -151,11 +207,11 @@ if (canvas && viewport) {
       pinchStartScale = scale;
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      pinchWorldAnchor = { x: (midX - offsetX) / scale, y: (midY - offsetY) / scale };
+      pinchWorldAnchor = screenPointToWrappedWorld(midX, midY);
     }
   });
 
-  canvas.addEventListener('pointermove', (event) => {
+  viewport.addEventListener('pointermove', (event) => {
     if (!pointers.has(event.pointerId)) return;
     const point = pointFromEvent(event);
     pointers.set(event.pointerId, point);
@@ -194,8 +250,8 @@ if (canvas && viewport) {
     }
   }
 
-  canvas.addEventListener('pointerup', endPointer);
-  canvas.addEventListener('pointercancel', endPointer);
+  viewport.addEventListener('pointerup', endPointer);
+  viewport.addEventListener('pointercancel', endPointer);
 
   window.addEventListener('resize', () => {
     const oldMin = minScale;
@@ -208,5 +264,12 @@ if (canvas && viewport) {
 
   const observer = new ResizeObserver(() => applyCamera());
   observer.observe(viewport);
+
+  function mirrorFrame() {
+    syncWrapTiles();
+    requestAnimationFrame(mirrorFrame);
+  }
+
   resetCamera();
+  requestAnimationFrame(mirrorFrame);
 }
