@@ -13,19 +13,22 @@ if (panel && diagram) {
   readouts.className = 'force-readouts';
   readouts.innerHTML = `
     <div class="force-readout wind-force-readout">
-      <span class="force-line"></span>
       <span class="force-label">Wind</span>
-      <strong id="forces-wind">0.0 kn · 0°</strong>
+      <span class="force-line"></span>
+      <span class="force-speed" id="forces-wind-speed">0.0 kn</span>
+      <span class="force-angle" id="forces-wind-angle">0°</span>
     </div>
     <div class="force-readout current-force-readout">
-      <span class="force-line"></span>
       <span class="force-label">Current</span>
-      <strong id="forces-current">0.00 kn · 0°</strong>
+      <span class="force-line"></span>
+      <span class="force-speed" id="forces-current-speed">0.00 kn</span>
+      <span class="force-angle" id="forces-current-angle">0°</span>
     </div>
     <div class="force-readout track-force-readout">
-      <span class="force-line"></span>
       <span class="force-label">Track</span>
-      <strong id="forces-track">0.00 kn · 0°</strong>
+      <span class="force-line"></span>
+      <span class="force-speed" id="forces-track-speed">0.00 kn</span>
+      <span class="force-angle" id="forces-track-angle">0°</span>
     </div>
   `;
   panel.append(readouts);
@@ -53,15 +56,18 @@ if (panel && diagram) {
     const currentSpeed = text('#current') || '0.00';
     const currentBearing = text('#current-bearing') || '0°';
 
-    const headingTarget = document.querySelector<HTMLElement>('#forces-heading');
-    const windTarget = document.querySelector<HTMLElement>('#forces-wind');
-    const currentTarget = document.querySelector<HTMLElement>('#forces-current');
-    const trackTarget = document.querySelector<HTMLElement>('#forces-track');
+    const set = (selector: string, value: string) => {
+      const target = document.querySelector<HTMLElement>(selector);
+      if (target) target.textContent = value;
+    };
 
-    if (headingTarget) headingTarget.textContent = heading;
-    if (windTarget) windTarget.textContent = `${windSpeed} kn · ${windBearing}`;
-    if (currentTarget) currentTarget.textContent = `${currentSpeed} kn · ${currentBearing}`;
-    if (trackTarget) trackTarget.textContent = `${speed} · ${trackBearing().toFixed(0)}°`;
+    set('#forces-heading', heading);
+    set('#forces-wind-speed', `${windSpeed} kn`);
+    set('#forces-wind-angle', windBearing);
+    set('#forces-current-speed', `${currentSpeed} kn`);
+    set('#forces-current-angle', currentBearing);
+    set('#forces-track-speed', speed);
+    set('#forces-track-angle', `${trackBearing().toFixed(0)}°`);
   }
 
   const observer = new MutationObserver(update);
