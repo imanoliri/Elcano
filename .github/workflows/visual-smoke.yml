@@ -1,0 +1,43 @@
+name: Visual smoke
+
+on:
+  push:
+    branches:
+      - feature/real-world-map
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Install Chromium
+        run: npx --yes playwright@1.55.0 install --with-deps chromium
+      - name: Start preview
+        run: |
+          npm run preview -- --host 127.0.0.1 > /tmp/elcano-vite.log 2>&1 &
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173 >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/elcano-vite.log
+          exit 1
+      - name: Capture tutorial start view
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=start" elcano-mobile-start.png
+      - name: Capture deep zoom render
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=deep" elcano-mobile-deep.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: visual-smoke-mobile
+          path: |
+            elcano-mobile-start.png
+            elcano-mobile-deep.png
+          retention-days: 7

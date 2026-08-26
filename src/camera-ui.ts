@@ -1,8 +1,5 @@
 import './camera-ui.css';
-
-const WORLD_WIDTH = 1000;
-const WORLD_HEIGHT = 650;
-const TARGET = { x: 650, y: 245 };
+import { WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
@@ -13,6 +10,7 @@ if (canvas && viewport) {
   indicator.setAttribute('aria-hidden', 'true');
   viewport.append(indicator);
 
+  let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
   let minScale = 1;
   let offsetX = 0;
@@ -24,45 +22,54 @@ if (canvas && viewport) {
   let pinchStartScale = 1;
   let pinchWorldAnchor = { x: 0, y: 0 };
 
+  // Bay of Biscay framing for the San Sebastián → A Coruña tutorial.
+  const tutorialCenter = { x: 699.2, y: 263.6 };
+  const INITIAL_ZOOM_MULTIPLIER = 50;
+  const MAX_ZOOM_MULTIPLIER = 256;
+
+  canvas.style.width = `${WORLD_MAP_WIDTH}px`;
+  canvas.style.height = `${WORLD_MAP_HEIGHT}px`;
+
   function viewportSize() {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
   }
 
   function clampCamera() {
     const { width, height } = viewportSize();
-    const mapWidth = WORLD_WIDTH * scale;
-    const mapHeight = WORLD_HEIGHT * scale;
+    const mapWidth = WORLD_MAP_WIDTH * scale;
+    const mapHeight = WORLD_MAP_HEIGHT * scale;
 
-    if (mapWidth <= width) {
-      offsetX = (width - mapWidth) / 2;
-    } else {
-      offsetX = Math.min(0, Math.max(width - mapWidth, offsetX));
-    }
+    offsetX = mapWidth <= width ? (width - mapWidth) / 2 : Math.min(0, Math.max(width - mapWidth, offsetX));
+    offsetY = mapHeight <= height ? (height - mapHeight) / 2 : Math.min(0, Math.max(height - mapHeight, offsetY));
+  }
 
-    if (mapHeight <= height) {
-      offsetY = (height - mapHeight) / 2;
-    } else {
-      offsetY = Math.min(0, Math.max(height - mapHeight, offsetY));
-    }
+  function announceCamera() {
+    const zoomMultiplier = scale / Math.max(0.0001, minScale);
+    canvas.dataset.cameraScale = String(scale);
+    canvas.dataset.zoomMultiplier = String(zoomMultiplier);
+    window.dispatchEvent(new CustomEvent('elcano:camera-change', {
+      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier },
+    }));
   }
 
   function applyCamera() {
     clampCamera();
     canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    announceCamera();
     updateTargetIndicator();
   }
 
   function resetCamera() {
     const { width } = viewportSize();
-    minScale = width / WORLD_WIDTH;
-    scale = minScale;
-    offsetX = 0;
-    offsetY = 0;
+    minScale = width / WORLD_MAP_WIDTH;
+    scale = Math.max(minScale, minScale * INITIAL_ZOOM_MULTIPLIER);
+    offsetX = width / 2 - tutorialCenter.x * scale;
+    offsetY = viewport.clientHeight / 2 - tutorialCenter.y * scale;
     applyCamera();
   }
 
   function zoomAround(screenX: number, screenY: number, nextScale: number) {
-    const clampedScale = Math.max(minScale, Math.min(minScale * 5, nextScale));
+    const clampedScale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, nextScale));
     const worldX = (screenX - offsetX) / scale;
     const worldY = (screenY - offsetY) / scale;
     scale = clampedScale;
@@ -73,8 +80,8 @@ if (canvas && viewport) {
 
   function updateTargetIndicator() {
     const { width, height } = viewportSize();
-    const x = offsetX + TARGET.x * scale;
-    const y = offsetY + TARGET.y * scale;
+    const x = offsetX + target.x * scale;
+    const y = offsetY + target.y * scale;
     const margin = 22;
     const inside = x >= margin && x <= width - margin && y >= margin && y <= height - margin;
 
@@ -107,6 +114,13 @@ if (canvas && viewport) {
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   }
 
+  window.addEventListener('elcano:camera-target', (event) => {
+    const detail = (event as CustomEvent<{ x: number; y: number }>).detail;
+    if (!detail) return;
+    target = detail;
+    updateTargetIndicator();
+  });
+
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
@@ -137,10 +151,7 @@ if (canvas && viewport) {
       pinchStartScale = scale;
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      pinchWorldAnchor = {
-        x: (midX - offsetX) / scale,
-        y: (midY - offsetY) / scale,
-      };
+      pinchWorldAnchor = { x: (midX - offsetX) / scale, y: (midY - offsetY) / scale };
     }
   });
 
@@ -162,7 +173,7 @@ if (canvas && viewport) {
       const distance = Math.hypot(b.x - a.x, b.y - a.y);
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
-      scale = Math.max(minScale, Math.min(minScale * 5, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
+      scale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
       offsetX = midX - pinchWorldAnchor.x * scale;
       offsetY = midY - pinchWorldAnchor.y * scale;
       applyCamera();
@@ -189,14 +200,13 @@ if (canvas && viewport) {
   window.addEventListener('resize', () => {
     const oldMin = minScale;
     const { width } = viewportSize();
-    minScale = width / WORLD_WIDTH;
-    if (Math.abs(scale - oldMin) < 0.001) scale = minScale;
-    else scale = Math.max(minScale, scale);
+    minScale = width / WORLD_MAP_WIDTH;
+    if (scale < minScale) scale = minScale;
+    else if (Math.abs(scale - oldMin) < 0.001) scale = minScale * INITIAL_ZOOM_MULTIPLIER;
     applyCamera();
   });
 
   const observer = new ResizeObserver(() => applyCamera());
   observer.observe(viewport);
-
   resetCamera();
 }

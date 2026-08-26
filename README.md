@@ -6,23 +6,23 @@ The core idea is simple: **the ocean is the game**. Players do not merely point 
 
 ## Current status
 
-The first playable MVP is merged into `main`.
+`main` contains the first abstract-world MVP. The `feature/real-world-map` branch is migrating that gameplay onto real geography.
 
-It currently includes:
+The branch currently includes:
 
-- a 1000 × 650 simulated ocean world;
-- ship heading and sail controls;
-- wind and current vector fields;
-- movement derived from sail-driven velocity plus current;
-- fog-of-war exploration;
-- a tutorial destination and landfall objective;
-- time acceleration;
-- ship-relative wind/current/track instrumentation;
-- mobile-first helm and sail telemetry;
-- a pannable and zoomable map camera;
-- mouse-wheel, drag and touch/pinch navigation;
-- an off-screen destination indicator;
-- static Netlify deployment.
+- real Natural Earth-derived coastlines and islands bundled into the static build;
+- WGS84 latitude/longitude as simulation position truth;
+- Web Mercator as a rendering-only map projection;
+- nautical headings and east/north environmental vectors;
+- movement in knots/nautical miles over geographic coordinates;
+- pluggable `windAt(position, time)` / `currentAt(position, time)` environment providers;
+- a simplified offline climatology provider as the initial fallback;
+- preserved helm, sails, time acceleration, fog-of-war, HUD and ship-force telemetry;
+- preserved mobile pan/pinch/wheel camera behavior;
+- a camera target supplied by projected game data rather than hard-coded canvas coordinates;
+- static Netlify-compatible deployment.
+
+See [WORLD_DATA.md](./WORLD_DATA.md) for the real-world geography, wind and current data strategy.
 
 ## Vision
 
@@ -33,7 +33,6 @@ Elcano should develop into a navigation, exploration and cartography game in whi
 - navigate with imperfect knowledge;
 - discover coastlines, islands and safe passages;
 - build maps from experience;
-- manage weather, supplies, ship condition and crew;
 - undertake historically inspired expeditions;
 - learn why historical routes developed the way they did.
 
@@ -53,13 +52,14 @@ The long-term experience should reward observation and navigational judgment mor
 
 ```text
 src/
-  main.ts           Game shell, current simulation loop and rendering
-  simulation.ts     Sailing, wind, currents and world-state calculations
-  telemetry-ui.ts   Additional helm/sail/ship-force instrumentation
-  camera-ui.ts      Map pan, zoom, pinch and target edge indicator
-  style.css         Main UI styling
-  telemetry-ui.css  Telemetry and force-panel styling
-  camera-ui.css     Camera-specific canvas and indicator styling
+  main.ts              Game shell, orchestration and current canvas rendering
+  simulation.ts        Sailing and geographic world-state stepping
+  world/
+    coordinates.ts     Lat/lon, projection and nautical-distance helpers
+    environment.ts     Pluggable wind/current provider boundary
+    geography.ts       Static Natural Earth-derived land rendering
+  telemetry-ui.ts      Additional helm/sail/ship-force instrumentation
+  camera-ui.ts         Map pan, zoom, pinch and target edge indicator
 ```
 
 For the intended system boundaries and future refactoring direction, see [ARCHITECTURE.md](./ARCHITECTURE.md).
@@ -83,15 +83,11 @@ The app is built with TypeScript and Vite and is deployable as a static Netlify 
 
 ## Near-term priorities
 
-The current prototype proves the interaction loop, but several foundations should be improved before adding large amounts of content:
-
-- replace abstract canvas coordinates with a coherent geographic/world-coordinate model;
-- define nautical heading conventions consistently;
-- define wind direction semantics consistently (`from` vs `toward`);
-- calibrate distance, speed and time units;
-- formalize camera/world/screen coordinate transforms;
-- separate the current game loop further from presentation code;
-- introduce scenario/world data instead of embedding the tutorial world in UI code;
+- stabilize real-world movement and camera behavior on desktop/mobile;
+- add coastline/land collision as simulation/world logic rather than render logic;
+- replace the simplified environmental fallback with compact baked Atlantic monthly wind/current grids;
+- move the current tutorial into a data-driven scenario definition;
+- add the first historical route with an explicit date/environment dataset;
 - preserve deterministic simulation behavior where practical.
 
 ## Deployment workflow

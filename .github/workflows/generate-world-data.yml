@@ -1,0 +1,39 @@
+name: Generate world data
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/real-world-map
+    paths:
+      - '.github/workflows/generate-world-data.yml'
+      - 'scripts/build-world-data.mjs'
+      - 'package.json'
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/real-world-map
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run world:data
+      - name: Commit generated regional data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/world/data/atlantic-climatology.generated.ts package-lock.json
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+            exit 0
+          fi
+          git commit -m "Generate high-resolution regional world data"
+          git push origin HEAD:feature/real-world-map
