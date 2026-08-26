@@ -178,7 +178,7 @@ function arrow(x: number, y: number, vector: Vec2, length: number) {
 function drawGrid() {
   ctx.strokeStyle = 'rgba(255,255,255,.075)'; ctx.lineWidth = 1;
   for (let lon = -180; lon <= 180; lon += 20) { const a = project({ lat: -80, lon }); const b = project({ lat: 80, lon }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
-  for (let lat = -80; lat <= 80; lat += 10) { const a = project({ lat, lon: -180 }); const b = project({ lat: 80, lon: 180 }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+  for (let lat = -80; lat <= 80; lat += 10) { const a = project({ lat, lon: -180 }); const b = project({ lat, lon: 180 }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
 }
 
 function drawEnvironment() {
