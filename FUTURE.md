@@ -16,6 +16,10 @@ Replace the abstract test world with real geography.
 - Add tap/click measurement: distance and bearing from the ship to a chosen map point.
 - [x] Add a two-state camera control: static camera or follow ship. Static preserves the current view; follow keeps the ship centered while allowing zoom.
 
+### Future map-label architecture
+
+The current label layer intentionally uses one centralized label list with zoom thresholds, priorities and collision suppression. Keep that simple architecture for now. If several more historical campaigns make the list unwieldy, refactor the data without changing the renderer: separate global geography from campaign-specific label packs, allow labels to declare one or more campaign IDs, and derive primary mission start/destination labels automatically from campaign mission definitions so mission coordinates are not duplicated manually.
+
 The player should eventually be able to navigate the real Atlantic and the wider world.
 
 ## 2. Environmental navigation and weather visualization
