@@ -1,128 +1,39 @@
 .vector-panel-heading {
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: baseline;
   justify-content: center;
-  gap: 0;
+  gap: 5px;
   text-align: center;
 }
 
 .vector-panel-heading span,
-.vector-panel-heading small {
-  width: 100%;
-  text-align: center;
-}
+.vector-panel-heading strong { width: auto; text-align: center; }
+.vector-panel-heading strong { font-size: .62rem; font-variant-numeric: tabular-nums; opacity: .78; }
+.instrument-strip .instrument:not(.progress-instrument) { display: none !important; }
+.instrument-strip { grid-template-columns: minmax(120px, 180px) !important; justify-content: end; }
+.vector-legend { display: none !important; }
+.force-readouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 0; }
+.force-readout { min-width: 0; display: grid; grid-template-rows: auto 2px auto auto; justify-items: center; row-gap: 0; text-align: center; }
+.force-label { margin-bottom: 2px; font-size: .44rem; text-transform: uppercase; letter-spacing: .06em; opacity: .5; }
+.force-line { width: 70%; min-width: 18px; height: 2px; margin-bottom: 1px; border-radius: 999px; background: currentColor; opacity: .5; }
+.force-speed,.force-angle { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; color: rgba(244,239,230,.62); line-height: 1.05; }
+.force-speed { font-size: .45rem; }
+.force-angle { margin-top: 1px; font-size: .42rem; opacity: .72; }
+.wind-force-readout { color: #f4efe6; }.current-force-readout { color: #4bd4ff; }.track-force-readout { color: #e8b94f; }
 
-/* Replace the four duplicated top navigation boxes with the compact
-   Ship Forces readouts below. Voyage progress remains available on larger
-   screens; mobile already hides it. */
-.instrument-strip .instrument:not(.progress-instrument) {
-  display: none !important;
+/* Preserve the original voyage selector layout; only correct the number glyph alignment. */
+.pre-mission-number {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  text-align: center !important;
 }
-
-.instrument-strip {
-  grid-template-columns: minmax(120px, 180px) !important;
-  justify-content: end;
-}
-
-.vector-legend {
-  display: none !important;
-}
-
-.ship-heading-readout {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  margin: 3px 0 7px;
-  text-align: center;
-}
-
-.ship-heading-readout span {
-  font-size: .44rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  opacity: .38;
-}
-
-.ship-heading-readout strong {
-  font-size: .54rem;
-  font-variant-numeric: tabular-nums;
-  opacity: .68;
-}
-
-.force-readouts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px;
-  margin-top: 0;
-}
-
-.force-readout {
-  min-width: 0;
-  display: grid;
-  grid-template-rows: auto 2px auto auto;
-  justify-items: center;
-  row-gap: 0;
-  text-align: center;
-}
-
-.force-label {
-  margin-bottom: 2px;
-  font-size: .44rem;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  opacity: .5;
-}
-
-.force-line {
-  width: 70%;
-  min-width: 18px;
-  height: 2px;
-  margin-bottom: 1px;
-  border-radius: 999px;
-  background: currentColor;
-  opacity: .5;
-}
-
-.force-speed,
-.force-angle {
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  color: rgba(244,239,230,.62);
-  line-height: 1.05;
-}
-
-.force-speed {
-  font-size: .45rem;
-}
-
-.force-angle {
-  margin-top: 1px;
-  font-size: .42rem;
-  opacity: .72;
-}
-
-.wind-force-readout { color: #f4efe6; }
-.current-force-readout { color: #4bd4ff; }
-.track-force-readout { color: #e8b94f; }
 
 @media (max-width: 760px) {
-  .instrument-strip {
-    display: none !important;
-  }
-
-  .ship-heading-readout {
-    margin-top: 1px;
-    margin-bottom: 6px;
-  }
-
-  .force-readouts {
-    gap: 3px;
-  }
-
+  .instrument-strip { display: none !important; }
+  .force-readouts { gap: 3px; }
   .force-label { font-size: .42rem; }
   .force-speed { font-size: .42rem; }
   .force-angle { font-size: .39rem; }
