@@ -7,9 +7,15 @@
 }
 
 .vector-panel-heading span,
-.vector-panel-heading small {
+.vector-panel-heading strong {
   width: 100%;
   text-align: center;
+}
+
+.vector-panel-heading strong {
+  font-size: .62rem;
+  font-variant-numeric: tabular-nums;
+  opacity: .78;
 }
 
 /* Replace the four duplicated top navigation boxes with the compact
@@ -26,28 +32,6 @@
 
 .vector-legend {
   display: none !important;
-}
-
-.ship-heading-readout {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
-  margin: 3px 0 7px;
-  text-align: center;
-}
-
-.ship-heading-readout span {
-  font-size: .44rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  opacity: .38;
-}
-
-.ship-heading-readout strong {
-  font-size: .54rem;
-  font-variant-numeric: tabular-nums;
-  opacity: .68;
 }
 
 .force-readouts {
@@ -112,11 +96,6 @@
 @media (max-width: 760px) {
   .instrument-strip {
     display: none !important;
-  }
-
-  .ship-heading-readout {
-    margin-top: 1px;
-    margin-bottom: 6px;
   }
 
   .force-readouts {
