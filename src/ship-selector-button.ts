@@ -1,7 +1,7 @@
 function mountShipSelectorButton() {
   const topActions = document.querySelector<HTMLElement>('.top-actions');
   const modal = document.querySelector<HTMLElement>('#modal');
-  if (!topActions || !modal || document.querySelector('#ship-selector-button')) return;
+  if (!topActions || !modal || document.querySelector('#ship-selector-button')) return false;
 
   const button = document.createElement('button');
   button.id = 'ship-selector-button';
@@ -37,7 +37,7 @@ function mountShipSelectorButton() {
     let attempts = 0;
     const timer = window.setInterval(() => {
       attempts += 1;
-      if (bindCurrentLabel() || attempts >= 20) window.clearInterval(timer);
+      if (bindCurrentLabel() || attempts >= 50) window.clearInterval(timer);
     }, 100);
   }
 
@@ -48,7 +48,16 @@ function mountShipSelectorButton() {
     @media(max-width:640px){.ship-selector-button{max-width:132px;padding:.55rem .7rem;font-size:11px;overflow:hidden;text-overflow:ellipsis}}
   `;
   document.head.appendChild(style);
+  return true;
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountShipSelectorButton, { once: true });
-else mountShipSelectorButton();
+function ensureShipSelectorButton() {
+  if (mountShipSelectorButton()) return;
+  let attempts = 0;
+  const timer = window.setInterval(() => {
+    attempts += 1;
+    if (mountShipSelectorButton() || attempts >= 100) window.clearInterval(timer);
+  }, 100);
+}
+
+ensureShipSelectorButton();
