@@ -6,6 +6,9 @@ const modalTitle = document.querySelector<HTMLElement>('#modal-title');
 const actionButton = document.querySelector<HTMLButtonElement>('#start-mission');
 
 if (modal && modalTitle && actionButton) {
+  const completionModal = modal;
+  const completionTitle = modalTitle;
+  const completionButton = actionButton;
   const activeMission = missionFromUrl();
   const activeCampaign = campaignForMission(activeMission);
   const activeShip = shipPresetFromId(new URLSearchParams(window.location.search).get('ship'));
@@ -15,7 +18,7 @@ if (modal && modalTitle && actionButton) {
     : null;
 
   function missionIsComplete() {
-    return modalTitle.textContent?.trim() === `${activeMission.to} reached`;
+    return completionTitle.textContent?.trim() === `${activeMission.to} reached`;
   }
 
   function navigateToMission(missionId: string) {
@@ -37,23 +40,23 @@ if (modal && modalTitle && actionButton) {
 
   function syncCompletionAction() {
     if (!missionIsComplete()) {
-      actionButton.textContent = 'Take the helm';
-      actionButton.removeAttribute('data-completion-action');
+      completionButton.textContent = 'Take the helm';
+      completionButton.removeAttribute('data-completion-action');
       return;
     }
 
     if (nextMission) {
-      actionButton.textContent = 'Continue to next mission →';
-      actionButton.dataset.completionAction = 'next';
-      actionButton.setAttribute('aria-label', `Continue to Mission ${nextMission.number}: ${nextMission.title}`);
+      completionButton.textContent = 'Continue to next mission →';
+      completionButton.dataset.completionAction = 'next';
+      completionButton.setAttribute('aria-label', `Continue to Mission ${nextMission.number}: ${nextMission.title}`);
     } else {
-      actionButton.textContent = 'Campaign complete · return to voyage menu';
-      actionButton.dataset.completionAction = 'menu';
-      actionButton.setAttribute('aria-label', 'Campaign complete. Return to voyage menu');
+      completionButton.textContent = 'Campaign complete · return to voyage menu';
+      completionButton.dataset.completionAction = 'menu';
+      completionButton.setAttribute('aria-label', 'Campaign complete. Return to voyage menu');
     }
   }
 
-  actionButton.addEventListener('click', (event) => {
+  completionButton.addEventListener('click', (event) => {
     if (!missionIsComplete()) return;
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -61,7 +64,7 @@ if (modal && modalTitle && actionButton) {
     else returnToVoyageMenu();
   }, true);
 
-  new MutationObserver(syncCompletionAction).observe(modal, {
+  new MutationObserver(syncCompletionAction).observe(completionModal, {
     attributes: true,
     attributeFilter: ['class'],
     childList: true,
