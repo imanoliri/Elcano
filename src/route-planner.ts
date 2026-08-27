@@ -44,6 +44,12 @@ function initRoutePlanner() {
 
   function routeIsActive() { return waypoints.length > 0; }
 
+  function publishNavigationTarget() {
+    window.dispatchEvent(new CustomEvent('elcano:navigation-target', {
+      detail: { target: waypoints[0] ? project(waypoints[0]) : null },
+    }));
+  }
+
   function releaseHelm() {
     rudder.value = '0';
     rudder.disabled = false;
@@ -54,6 +60,7 @@ function initRoutePlanner() {
   function clearRoute() {
     waypoints = [];
     releaseHelm();
+    publishNavigationTarget();
     drawRoute();
   }
 
@@ -212,6 +219,7 @@ function initRoutePlanner() {
         waypoints.splice(gesture.index, 1);
         if (waypoints.length === 0) releaseHelm();
         else followRoute();
+        publishNavigationTarget();
         drawRoute();
       } else if (waypoints[gesture.index]) {
         waypoints[gesture.index] = screenToGeo(event.clientX, event.clientY);
@@ -304,12 +312,15 @@ function initRoutePlanner() {
     if (!ship || !routeIsActive()) {
       rudder.disabled = false;
       if (centerRudder) centerRudder.disabled = false;
+      publishNavigationTarget();
       return;
     }
 
     while (waypoints.length > 0 && waypointWasReached(previousShipPosition, ship, waypoints[0])) {
       waypoints.shift();
     }
+
+    publishNavigationTarget();
 
     if (!routeIsActive()) {
       releaseHelm();
@@ -405,6 +416,7 @@ function initRoutePlanner() {
 
   new ResizeObserver(drawRoute).observe(viewport);
   setPlanningMode('direct');
+  publishNavigationTarget();
   drawRoute();
 }
 
