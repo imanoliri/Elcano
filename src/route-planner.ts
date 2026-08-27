@@ -5,7 +5,7 @@ import { isPolarRow, virtualWorldPoint, visibleWorldRange } from './world-wrap';
 type Geo = { lat: number; lon: number };
 type Point = { x: number; y: number };
 type Camera = { x: number; y: number; scale: number };
-type PlanningMode = 'off' | 'direct' | 'waypoints';
+type PlanningMode = 'direct' | 'waypoints';
 
 const WAYPOINT_RADIUS_NM = 1.5;
 
@@ -18,20 +18,18 @@ function initRoutePlanner() {
   const routeActions = document.createElement('div');
   routeActions.className = 'route-actions';
   routeActions.innerHTML = `
-    <button type="button" class="icon-button route-button" aria-label="Choose navigation mode" aria-pressed="false" title="Direct destination">📍</button>
-    <button type="button" class="icon-button route-clear" aria-label="Clear route" title="Clear route" hidden>❌</button>
+    <button type="button" class="icon-button route-button" aria-label="Direct destination mode. Tap for waypoint mode" aria-pressed="true" title="Direct destination mode">📍</button>
   `;
   topActions.prepend(routeActions);
 
   const routeButton = routeActions.querySelector<HTMLButtonElement>('.route-button')!;
-  const clearButton = routeActions.querySelector<HTMLButtonElement>('.route-clear')!;
   const layer = document.createElement('canvas');
   layer.className = 'route-layer';
   layer.setAttribute('aria-hidden', 'true');
   viewport.append(layer);
   const routeCtx = layer.getContext('2d')!;
 
-  let planningMode: PlanningMode = 'off';
+  let planningMode: PlanningMode = 'direct';
   let waypoints: Geo[] = [];
   let shipPosition: Geo | null = null;
   let previousShipPosition: Geo | null = null;
@@ -41,49 +39,43 @@ function initRoutePlanner() {
 
   function routeIsActive() { return waypoints.length > 0; }
 
+  function releaseHelm() {
+    rudder.value = '0';
+    rudder.disabled = false;
+    if (centerRudder) centerRudder.disabled = false;
+    rudder.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function clearRoute() {
+    waypoints = [];
+    releaseHelm();
+    drawRoute();
+  }
+
   function setPlanningMode(next: PlanningMode) {
     planningMode = next;
-    const active = next !== 'off';
-    routeButton.classList.toggle('active', active);
+    routeButton.classList.add('active');
     routeButton.classList.toggle('direct-mode', next === 'direct');
     routeButton.classList.toggle('waypoint-mode', next === 'waypoints');
-    routeButton.setAttribute('aria-pressed', String(active));
-    viewport.classList.toggle('route-planning', active);
+    routeButton.setAttribute('aria-pressed', 'true');
+    viewport.classList.add('route-planning');
     viewport.dataset.routeMode = next;
 
     if (next === 'direct') {
       routeButton.textContent = '📍';
-      routeButton.title = 'Direct destination mode · tap again for waypoint mode';
-      routeButton.setAttribute('aria-label', 'Direct destination mode. Tap again for waypoint mode');
-    } else if (next === 'waypoints') {
-      routeButton.textContent = '🗺️';
-      routeButton.title = 'Waypoint mode · tap again to leave planning';
-      routeButton.setAttribute('aria-label', 'Waypoint mode. Tap again to leave planning');
+      routeButton.title = 'Direct destination mode · tap for waypoint mode';
+      routeButton.setAttribute('aria-label', 'Direct destination mode. Tap for waypoint mode');
     } else {
-      routeButton.textContent = '📍';
-      routeButton.title = 'Direct destination';
-      routeButton.setAttribute('aria-label', 'Choose navigation mode');
+      routeButton.textContent = '🗺️';
+      routeButton.title = 'Waypoint mode · tap for direct destination mode';
+      routeButton.setAttribute('aria-label', 'Waypoint mode. Tap for direct destination mode');
     }
+    drawRoute();
   }
 
-  function updateButtons() { clearButton.hidden = waypoints.length === 0; }
-  function pauseTime() { document.querySelector<HTMLButtonElement>('.time-button[data-time="0"]')?.click(); }
-
   routeButton.addEventListener('click', () => {
-    const next: PlanningMode = planningMode === 'off' ? 'direct' : planningMode === 'direct' ? 'waypoints' : 'off';
-    if (planningMode === 'off' && waypoints.length === 0) pauseTime();
-    setPlanningMode(next);
-  });
-
-  clearButton.addEventListener('click', () => {
-    pauseTime();
-    waypoints = [];
-    setPlanningMode('off');
-    rudder.value = '0';
-    rudder.disabled = false;
-    if (centerRudder) centerRudder.disabled = false;
-    updateButtons();
-    drawRoute();
+    clearRoute();
+    setPlanningMode(planningMode === 'direct' ? 'waypoints' : 'direct');
   });
 
   function positiveModulo(value: number, modulus: number) { return ((value % modulus) + modulus) % modulus; }
@@ -107,12 +99,12 @@ function initRoutePlanner() {
   }
 
   window.addEventListener('pointerdown', (event) => {
-    if (planningMode === 'off' || isUiTarget(event.target)) return;
+    if (isUiTarget(event.target)) return;
     pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
   }, true);
 
   window.addEventListener('pointerup', (event) => {
-    if (planningMode === 'off' || !pointerStart || pointerStart.id !== event.pointerId || isUiTarget(event.target)) {
+    if (!pointerStart || pointerStart.id !== event.pointerId || isUiTarget(event.target)) {
       pointerStart = null;
       return;
     }
@@ -124,7 +116,6 @@ function initRoutePlanner() {
     if (planningMode === 'direct') waypoints = [destination];
     else waypoints.push(destination);
 
-    updateButtons();
     followRoute();
     drawRoute();
   }, true);
@@ -189,13 +180,10 @@ function initRoutePlanner() {
 
     while (waypoints.length > 0 && waypointWasReached(previousShipPosition, ship, waypoints[0])) {
       waypoints.shift();
-      updateButtons();
     }
 
     if (!routeIsActive()) {
-      rudder.value = '0';
-      rudder.disabled = false;
-      if (centerRudder) centerRudder.disabled = false;
+      releaseHelm();
       return;
     }
 
@@ -259,7 +247,7 @@ function initRoutePlanner() {
       routeCtx.fill();
       routeCtx.strokeStyle = 'rgba(255,255,255,.9)';
       routeCtx.stroke();
-      if (planningMode !== 'direct') {
+      if (planningMode === 'waypoints') {
         routeCtx.fillStyle = 'rgba(255,255,255,.95)';
         routeCtx.font = '600 10px system-ui, sans-serif';
         routeCtx.textAlign = 'center';
@@ -271,8 +259,7 @@ function initRoutePlanner() {
   }
 
   new ResizeObserver(drawRoute).observe(viewport);
-  updateButtons();
-  setPlanningMode('off');
+  setPlanningMode('direct');
   drawRoute();
 }
 
