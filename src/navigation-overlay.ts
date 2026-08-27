@@ -33,6 +33,7 @@ if (ocean && shell) {
   const ctx = overlay.getContext('2d');
   let camera: CameraState | null = null;
   let markers: MarkerState | null = null;
+  let navigationTarget: TrailPoint | null = null;
   let previousShip: TrailPoint | null = null;
   let trackVector: TrailPoint | null = null;
   let scheduled = false;
@@ -134,7 +135,7 @@ if (ocean && shell) {
     ctx.restore();
   }
 
-  function drawArrow(origin: TrailPoint, direction: TrailPoint, length: number, dashed: boolean, strokeStyle: string) {
+  function drawArrow(origin: TrailPoint, direction: TrailPoint, length: number, dashPattern: number[], strokeStyle: string) {
     if (!ctx) return;
     const magnitude = Math.hypot(direction.x, direction.y);
     if (magnitude < 0.00001) return;
@@ -148,7 +149,7 @@ if (ocean && shell) {
     ctx.fillStyle = strokeStyle;
     ctx.lineWidth = 2.2;
     ctx.lineCap = 'round';
-    if (dashed) ctx.setLineDash([7, 6]);
+    if (dashPattern.length > 0) ctx.setLineDash(dashPattern);
     ctx.beginPath();
     ctx.moveTo(origin.x, origin.y);
     ctx.lineTo(end.x, end.y);
@@ -164,12 +165,13 @@ if (ocean && shell) {
   }
 
   function drawNavigationVectors() {
-    if ((!visibility.heading && !visibility.track) || !ctx || !camera || !markers) return;
+    if ((!visibility.heading && !visibility.track && !navigationTarget) || !ctx || !camera || !markers) return;
     const range = visibleWorldRange(camera.x, camera.y, camera.scale, gameShell.clientWidth, gameShell.clientHeight);
     const heading = markers.headingDeg * Math.PI / 180;
     const latDeg = 90 - markers.ship.y / WORLD_MAP_HEIGHT * 180;
     const cosLat = Math.max(0.12, Math.cos(latDeg * Math.PI / 180));
     const headingDirection = { x: Math.sin(heading) / cosLat, y: -Math.cos(heading) };
+    const targetDirection = navigationTarget ? correctedDelta(markers.ship, navigationTarget) : null;
 
     for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
       for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
@@ -178,13 +180,16 @@ if (ocean && shell) {
 
         let visualHeading = headingDirection;
         let visualTrack = trackVector;
+        let visualTarget = targetDirection;
         if (isPolarRow(row)) {
           visualHeading = { x: -headingDirection.x, y: -headingDirection.y };
           visualTrack = trackVector ? { x: -trackVector.x, y: -trackVector.y } : null;
+          visualTarget = targetDirection ? { x: -targetDirection.x, y: -targetDirection.y } : null;
         }
 
-        if (visibility.heading) drawArrow(ship, visualHeading, VECTOR_LENGTH_SCREEN_PX, true, 'rgba(247, 240, 223, .9)');
-        if (visibility.track && visualTrack) drawArrow(ship, visualTrack, VECTOR_LENGTH_SCREEN_PX, false, '#f0bd45');
+        if (navigationTarget && visualTarget) drawArrow(ship, visualTarget, VECTOR_LENGTH_SCREEN_PX, [2, 5], 'rgba(126, 224, 196, .95)');
+        if (visibility.heading) drawArrow(ship, visualHeading, VECTOR_LENGTH_SCREEN_PX, [7, 6], 'rgba(247, 240, 223, .9)');
+        if (visibility.track && visualTrack) drawArrow(ship, visualTrack, VECTOR_LENGTH_SCREEN_PX, [], '#f0bd45');
       }
     }
   }
@@ -229,6 +234,12 @@ if (ocean && shell) {
     scheduleRender();
   });
 
+  window.addEventListener('elcano:navigation-target', (event) => {
+    const detail = (event as CustomEvent<{ target: TrailPoint | null }>).detail;
+    navigationTarget = detail?.target ?? null;
+    scheduleRender();
+  });
+
   window.addEventListener('elcano:navigation-visibility', (event) => {
     const detail = (event as CustomEvent<Partial<NavigationVisibility>>).detail;
     if (!detail) return;
@@ -240,6 +251,7 @@ if (ocean && shell) {
     trail.length = 0;
     previousShip = null;
     trackVector = null;
+    navigationTarget = null;
     scheduleRender();
   });
 
