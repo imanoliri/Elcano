@@ -14,7 +14,7 @@ Replace the abstract test world with real geography.
 - Add a nautical-mile scale bar that updates with zoom.
 - Add optional compass/cardinal ticks at useful zoom levels.
 - Add tap/click measurement: distance and bearing from the ship to a chosen map point.
-- Add a follow-ship / recenter control after the player pans away.
+- [x] Add a two-state camera control: static camera or follow ship. Static preserves the current view; follow keeps the ship centered while allowing zoom.
 
 The player should eventually be able to navigate the real Atlantic and the wider world.
 
