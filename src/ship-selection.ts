@@ -15,6 +15,14 @@ export type ShipPreset = {
 
 export const SHIP_PRESETS: readonly ShipPreset[] = [
   {
+    id: 'lateen', name: 'Lateen Vessel', rigLabel: 'Lateen rig · upwind specialist',
+    description: 'Best choice for sailing close to the wind, trading away some downwind power.',
+    vessel: { id: 'lateen-hull', name: 'Lateen-rigged vessel', maxThroughWaterSpeedKn: 5.8 },
+    rig: { id: 'lateen-rig', name: 'Lateen rig', speedScale: 0.43, points: [
+      { angleDeg: 0, efficiency: 0 }, { angleDeg: 25, efficiency: 0 }, { angleDeg: 30, efficiency: 0.3 }, { angleDeg: 35, efficiency: 0.55 }, { angleDeg: 45, efficiency: 0.78 }, { angleDeg: 60, efficiency: 0.92 }, { angleDeg: 90, efficiency: 1 }, { angleDeg: 120, efficiency: 0.86 }, { angleDeg: 150, efficiency: 0.7 }, { angleDeg: 180, efficiency: 0.58 },
+    ] },
+  },
+  {
     id: 'caravel', name: 'Caravel', rigLabel: 'Mixed rig · agile',
     description: 'Light and responsive, with useful performance at tighter wind angles.',
     vessel: { id: 'caravel-hull', name: 'Caravel', maxThroughWaterSpeedKn: 6.4 },
@@ -36,14 +44,6 @@ export const SHIP_PRESETS: readonly ShipPreset[] = [
     vessel: { id: 'galleon-hull', name: 'Galleon', maxThroughWaterSpeedKn: 7 },
     rig: { id: 'galleon-square-rig', name: 'Galleon · heavy square rig', speedScale: 0.5, points: [
       { angleDeg: 0, efficiency: 0 }, { angleDeg: 42, efficiency: 0 }, { angleDeg: 48, efficiency: 0.25 }, { angleDeg: 60, efficiency: 0.55 }, { angleDeg: 90, efficiency: 0.88 }, { angleDeg: 120, efficiency: 1 }, { angleDeg: 150, efficiency: 1 }, { angleDeg: 180, efficiency: 0.94 },
-    ] },
-  },
-  {
-    id: 'lateen', name: 'Lateen Vessel', rigLabel: 'Lateen rig · upwind specialist',
-    description: 'Best choice for sailing close to the wind, trading away some downwind power.',
-    vessel: { id: 'lateen-hull', name: 'Lateen-rigged vessel', maxThroughWaterSpeedKn: 5.8 },
-    rig: { id: 'lateen-rig', name: 'Lateen rig', speedScale: 0.43, points: [
-      { angleDeg: 0, efficiency: 0 }, { angleDeg: 25, efficiency: 0 }, { angleDeg: 30, efficiency: 0.3 }, { angleDeg: 35, efficiency: 0.55 }, { angleDeg: 45, efficiency: 0.78 }, { angleDeg: 60, efficiency: 0.92 }, { angleDeg: 90, efficiency: 1 }, { angleDeg: 120, efficiency: 0.86 }, { angleDeg: 150, efficiency: 0.7 }, { angleDeg: 180, efficiency: 0.58 },
     ] },
   },
   {
