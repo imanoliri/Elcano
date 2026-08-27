@@ -12,7 +12,7 @@ type MapLabel = Geo & {
   priority: number;
 };
 
-const viewport = document.querySelector<HTMLElement>('.game-shell');
+const viewport = document.querySelector<HTMLElement>('.game-shell')!;
 
 if (viewport) {
   const layer = document.createElement('canvas');
