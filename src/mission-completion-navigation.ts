@@ -38,19 +38,24 @@ if (modal && modalTitle && actionButton) {
     window.location.assign(url);
   }
 
+  function setButtonLabel(label: string) {
+    if (completionButton.textContent !== label) completionButton.textContent = label;
+  }
+
   function syncCompletionAction() {
     if (!missionIsComplete()) {
-      completionButton.textContent = 'Take the helm';
+      setButtonLabel('Take the helm');
       completionButton.removeAttribute('data-completion-action');
+      completionButton.removeAttribute('aria-label');
       return;
     }
 
     if (nextMission) {
-      completionButton.textContent = 'Continue to next mission →';
+      setButtonLabel('Continue to next mission →');
       completionButton.dataset.completionAction = 'next';
       completionButton.setAttribute('aria-label', `Continue to Mission ${nextMission.number}: ${nextMission.title}`);
     } else {
-      completionButton.textContent = 'Campaign complete · return to voyage menu';
+      setButtonLabel('Campaign complete · return to voyage menu');
       completionButton.dataset.completionAction = 'menu';
       completionButton.setAttribute('aria-label', 'Campaign complete. Return to voyage menu');
     }
@@ -64,12 +69,15 @@ if (modal && modalTitle && actionButton) {
     else returnToVoyageMenu();
   }, true);
 
-  new MutationObserver(syncCompletionAction).observe(completionModal, {
-    attributes: true,
-    attributeFilter: ['class'],
+  new MutationObserver(syncCompletionAction).observe(completionTitle, {
     childList: true,
     subtree: true,
     characterData: true,
+  });
+
+  new MutationObserver(syncCompletionAction).observe(completionModal, {
+    attributes: true,
+    attributeFilter: ['class'],
   });
 
   syncCompletionAction();
