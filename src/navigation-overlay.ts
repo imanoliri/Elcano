@@ -22,10 +22,12 @@ const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
 
 if (ocean && shell) {
+  const oceanCanvas = ocean;
+  const gameShell = shell;
   const overlay = document.createElement('canvas');
   overlay.id = 'navigation-overlay';
   overlay.setAttribute('aria-hidden', 'true');
-  ocean.insertAdjacentElement('afterend', overlay);
+  oceanCanvas.insertAdjacentElement('afterend', overlay);
 
   const ctx = overlay.getContext('2d');
   let camera: CameraState | null = null;
@@ -41,8 +43,8 @@ if (ocean && shell) {
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
-    const width = Math.max(1, shell.clientWidth);
-    const height = Math.max(1, shell.clientHeight);
+    const width = Math.max(1, gameShell.clientWidth);
+    const height = Math.max(1, gameShell.clientHeight);
     overlay.width = Math.round(width * dpr);
     overlay.height = Math.round(height * dpr);
     overlay.style.width = `${width}px`;
@@ -94,7 +96,7 @@ if (ocean && shell) {
 
   function drawTrail() {
     if (!ctx || !camera || trail.length < 2) return;
-    const range = visibleWorldRange(camera.x, camera.y, camera.scale, shell.clientWidth, shell.clientHeight);
+    const range = visibleWorldRange(camera.x, camera.y, camera.scale, gameShell.clientWidth, gameShell.clientHeight);
     ctx.save();
     ctx.strokeStyle = 'rgba(240, 189, 69, .52)';
     ctx.lineWidth = 2;
@@ -117,8 +119,8 @@ if (ocean && shell) {
             };
           }
           if (
-            Math.max(pa.x, pb.x) < -20 || Math.min(pa.x, pb.x) > shell.clientWidth + 20 ||
-            Math.max(pa.y, pb.y) < -20 || Math.min(pa.y, pb.y) > shell.clientHeight + 20
+            Math.max(pa.x, pb.x) < -20 || Math.min(pa.x, pb.x) > gameShell.clientWidth + 20 ||
+            Math.max(pa.y, pb.y) < -20 || Math.min(pa.y, pb.y) > gameShell.clientHeight + 20
           ) continue;
           ctx.beginPath();
           ctx.moveTo(pa.x, pa.y);
@@ -161,7 +163,7 @@ if (ocean && shell) {
 
   function drawNavigationVectors() {
     if (!ctx || !camera || !markers) return;
-    const range = visibleWorldRange(camera.x, camera.y, camera.scale, shell.clientWidth, shell.clientHeight);
+    const range = visibleWorldRange(camera.x, camera.y, camera.scale, gameShell.clientWidth, gameShell.clientHeight);
     const heading = markers.headingDeg * Math.PI / 180;
     const latDeg = 90 - markers.ship.y / WORLD_MAP_HEIGHT * 180;
     const cosLat = Math.max(0.12, Math.cos(latDeg * Math.PI / 180));
@@ -170,7 +172,7 @@ if (ocean && shell) {
     for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
       for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
         const ship = screenPoint(markers.ship, column, row);
-        if (ship.x < -110 || ship.x > shell.clientWidth + 110 || ship.y < -110 || ship.y > shell.clientHeight + 110) continue;
+        if (ship.x < -110 || ship.x > gameShell.clientWidth + 110 || ship.y < -110 || ship.y > gameShell.clientHeight + 110) continue;
 
         let visualHeading = headingDirection;
         let visualTrack = trackVector;
@@ -190,7 +192,7 @@ if (ocean && shell) {
     if (!ctx) return;
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, shell.clientWidth, shell.clientHeight);
+    ctx.clearRect(0, 0, gameShell.clientWidth, gameShell.clientHeight);
     drawTrail();
     drawNavigationVectors();
   }
@@ -236,6 +238,6 @@ if (ocean && shell) {
     resize();
     scheduleRender();
   });
-  resizeObserver.observe(shell);
+  resizeObserver.observe(gameShell);
   resize();
 }
