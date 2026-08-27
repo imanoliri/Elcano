@@ -93,20 +93,6 @@ export function relativeWindAngleDeg(headingDeg: number, wind: Vec2): number {
   return Math.acos(dot) / DEG;
 }
 
-export function pointOfSailFromAngle(angleDeg: number): PointOfSail {
-  const angle = Math.max(0, Math.min(180, Math.abs(angleDeg)));
-  if (angle < 40) return 'In irons';
-  if (angle < 60) return 'Close-hauled';
-  if (angle < 80) return 'Close reach';
-  if (angle < 110) return 'Beam reach';
-  if (angle < 160) return 'Broad reach';
-  return 'Running';
-}
-
-export function pointOfSail(headingDeg: number, wind: Vec2): PointOfSail {
-  return pointOfSailFromAngle(relativeWindAngleDeg(headingDeg, wind));
-}
-
 export function polarEfficiency(angleDeg: number, rig: RigPolar = DEFAULT_RIG_POLAR): number {
   const angle = Math.max(0, Math.min(180, Math.abs(angleDeg)));
   const points = rig.points;
@@ -125,6 +111,20 @@ export function polarEfficiency(angleDeg: number, rig: RigPolar = DEFAULT_RIG_PO
   }
 
   return points[points.length - 1].efficiency;
+}
+
+export function pointOfSailFromAngle(angleDeg: number, rig: RigPolar = DEFAULT_RIG_POLAR): PointOfSail {
+  const angle = Math.max(0, Math.min(180, Math.abs(angleDeg)));
+  if (polarEfficiency(angle, rig) <= 0.001) return 'In irons';
+  if (angle < 60) return 'Close-hauled';
+  if (angle < 80) return 'Close reach';
+  if (angle < 110) return 'Beam reach';
+  if (angle < 160) return 'Broad reach';
+  return 'Running';
+}
+
+export function pointOfSail(headingDeg: number, wind: Vec2, rig: RigPolar = DEFAULT_RIG_POLAR): PointOfSail {
+  return pointOfSailFromAngle(relativeWindAngleDeg(headingDeg, wind), rig);
 }
 
 export function sailingVelocity(
