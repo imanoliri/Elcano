@@ -25,13 +25,16 @@ The player should eventually be able to navigate the real Atlantic and the wider
 ## 2. Environmental navigation and weather visualization
 
 - [x] Load real-world environment tiles beyond the Bay of Biscay only around the visible map area, with caching and a deterministic fallback when remote data is unavailable.
-- Add separate wind/current visibility toggles.
-- Improve map-readable wind systems with optional wind arrows, streamlines or a compact weather overlay.
+- [x] Add separate wind/current visibility toggles.
+- [x] Make the zoom-aware wind/current overlay use the same persistent fog-of-war discovery cells as the map: undiscovered cells expose no environmental vectors, while discovered cells retain readable environmental information after the ship leaves.
+- [x] Improve map-readable wind/current arrows with zoom-adaptive sampling so zooming in reveals finer environmental detail without creating a separate discovery system.
 - [x] Add a thin course trail showing the ship's actual travelled path.
 - [x] Add two forward navigation vectors at the ship: a heading vector showing where the bow is pointed and a track/course-over-ground vector showing the actual direction of movement. Their angular difference is the ship's slip/drift angle.
 - Keep an optional bearing-to-target reference line as a separate future aid so desired bearing can be compared with heading and track without confusing it with either vector.
 - Add deterministic day-to-day wind variation around the monthly climatology so voyages encounter plausible calms, stronger winds and directional shifts while remaining reproducible and static-first. Preserve the climatological mean direction and scalar wind-speed distribution rather than simply adding random noise.
 - Keep historical missions explicit that modern observed/reanalysis data represents plausible prevailing conditions, not literal weather from the 16th century.
+
+For the current game, discovered environmental knowledge should remain intentionally arcade-readable: once an area has been explored, the player may inspect its current simulated wind/current field. Do not make this historically restrictive yet.
 
 ## 3. Small ship roster and rig selection
 
@@ -67,6 +70,21 @@ Possible instruments:
 - later, historically appropriate instruments where they improve gameplay.
 
 The emphasis should remain on reading the sea and making route decisions, not operating many individual controls.
+
+### Later historical uncertainty mode
+
+Keep the present sailing mode comparatively arcade-like and readable. Exact ship position, current local conditions and discovered environmental fields can remain available for now.
+
+A later historical-navigation layer may deliberately separate **world truth** from **what a 16th-century navigator could know**. Possible mechanics include:
+
+- hide or blur the exact ship position on the map;
+- estimate position from heading, speed and elapsed time through dead reckoning;
+- accumulate navigational error from currents, steering and imperfect speed estimates;
+- use latitude observations from the Sun or stars to correct part of that uncertainty;
+- make remembered wind/current knowledge approximate or stale instead of showing magically current conditions far from the ship;
+- distinguish observed local weather from learned prevailing regional patterns.
+
+This should be an optional later direction, not a requirement for the current core game. First make the arcade navigation, exploration, environmental reading and historical missions consistently fun and clear.
 
 ## 5. Historical campaigns and missions
 
@@ -124,11 +142,11 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 
 ## 7. Near-term implementation order
 
-1. Wind/current visualization improvements.
-2. Historical navigation instruments.
-3. Coastal navigation phase 2 route editing.
-4. Sparse map labels and nautical scale bar.
-5. Continue hardening global environment tiling and caching for long voyages.
+1. Historical navigation instruments.
+2. Coastal navigation phase 2 route editing.
+3. Sparse map labels and nautical scale bar.
+4. Continue hardening global environment tiling and caching for long voyages.
+5. Add deterministic day-to-day environmental variation.
 
 ## Scope rule
 
