@@ -17,6 +17,7 @@ type MarkerState = {
 };
 
 type TrailPoint = { x: number; y: number };
+type NavigationVisibility = { heading: boolean; track: boolean; trail: boolean };
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -35,6 +36,7 @@ if (ocean && shell) {
   let previousShip: TrailPoint | null = null;
   let trackVector: TrailPoint | null = null;
   let scheduled = false;
+  let visibility: NavigationVisibility = { heading: true, track: true, trail: true };
   const trail: TrailPoint[] = [];
 
   const TRAIL_SAMPLE_WORLD_PX = 0.7;
@@ -95,7 +97,7 @@ if (ocean && shell) {
   }
 
   function drawTrail() {
-    if (!ctx || !camera || trail.length < 2) return;
+    if (!visibility.trail || !ctx || !camera || trail.length < 2) return;
     const range = visibleWorldRange(camera.x, camera.y, camera.scale, gameShell.clientWidth, gameShell.clientHeight);
     ctx.save();
     ctx.strokeStyle = 'rgba(240, 189, 69, .52)';
@@ -162,7 +164,7 @@ if (ocean && shell) {
   }
 
   function drawNavigationVectors() {
-    if (!ctx || !camera || !markers) return;
+    if ((!visibility.heading && !visibility.track) || !ctx || !camera || !markers) return;
     const range = visibleWorldRange(camera.x, camera.y, camera.scale, gameShell.clientWidth, gameShell.clientHeight);
     const heading = markers.headingDeg * Math.PI / 180;
     const latDeg = 90 - markers.ship.y / WORLD_MAP_HEIGHT * 180;
@@ -181,8 +183,8 @@ if (ocean && shell) {
           visualTrack = trackVector ? { x: -trackVector.x, y: -trackVector.y } : null;
         }
 
-        drawArrow(ship, visualHeading, VECTOR_LENGTH_SCREEN_PX, true, 'rgba(247, 240, 223, .9)');
-        if (visualTrack) drawArrow(ship, visualTrack, VECTOR_LENGTH_SCREEN_PX, false, '#f0bd45');
+        if (visibility.heading) drawArrow(ship, visualHeading, VECTOR_LENGTH_SCREEN_PX, true, 'rgba(247, 240, 223, .9)');
+        if (visibility.track && visualTrack) drawArrow(ship, visualTrack, VECTOR_LENGTH_SCREEN_PX, false, '#f0bd45');
       }
     }
   }
@@ -224,6 +226,13 @@ if (ocean && shell) {
     }
     markers = detail;
     recordShip(detail.ship);
+    scheduleRender();
+  });
+
+  window.addEventListener('elcano:navigation-visibility', (event) => {
+    const detail = (event as CustomEvent<Partial<NavigationVisibility>>).detail;
+    if (!detail) return;
+    visibility = { ...visibility, ...detail };
     scheduleRender();
   });
 
