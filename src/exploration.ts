@@ -1,7 +1,7 @@
 export const EXPLORATION_CELL = 30;
 export const EXPLORATION_RADIUS = 100;
 
-const exploredCells = new Set<string>();
+export const exploredCells = new Set<string>();
 
 function keyForWorldPoint(point: { x: number; y: number }) {
   return `${Math.round(point.x / EXPLORATION_CELL)},${Math.round(point.y / EXPLORATION_CELL)}`;
