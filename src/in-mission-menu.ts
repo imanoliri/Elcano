@@ -28,7 +28,12 @@ if (params.get('play') === '1') {
 
   const topActions = document.querySelector<HTMLElement>('.top-actions');
   if (topActions) {
-    topActions.querySelectorAll('button').forEach((button) => button.remove());
+    // Keep gameplay controls such as waypoint planning visible. Only remove the
+    // old mission-level controls that are now represented by this menu.
+    topActions.querySelector('#campaign-menu-button')?.remove();
+    topActions.querySelector('#ship-selector-button')?.remove();
+    topActions.querySelector('#reset')?.remove();
+    topActions.querySelector('#help')?.remove();
 
     const menuButton = document.createElement('button');
     menuButton.id = 'game-menu-button';
