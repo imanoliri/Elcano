@@ -18,6 +18,15 @@ if (canvas && viewport) {
   canvas.insertAdjacentElement('afterend', wrapLayer);
   const wrapCtx = wrapLayer.getContext('2d', { alpha: false })!;
 
+  const topActions = document.querySelector<HTMLElement>('.top-actions');
+  const cameraModeButton = document.createElement('button');
+  cameraModeButton.type = 'button';
+  cameraModeButton.className = 'icon-button camera-mode-button';
+  if (topActions) topActions.prepend(cameraModeButton);
+
+  type CameraMode = 'static' | 'follow';
+  let cameraMode: CameraMode = 'static';
+  let shipPoint = project(missionFromUrl().start);
   let target = { x: WORLD_MAP_WIDTH / 2, y: WORLD_MAP_HEIGHT / 2 };
   let scale = 1;
   let minScale = 1;
@@ -35,7 +44,7 @@ if (canvas && viewport) {
   // Each mission opens over its own starting position. Previously this was a
   // hard-coded Bay of Biscay point, so every mission visually opened at the
   // tutorial even though the ship state had correctly moved elsewhere.
-  const initialCenter = project(missionFromUrl().start);
+  const initialCenter = shipPoint;
   const INITIAL_ZOOM_MULTIPLIER = 50;
   const MAX_ZOOM_MULTIPLIER = 256;
   const MAX_WRAP_DPR = 2;
@@ -133,6 +142,11 @@ if (canvas && viewport) {
 
   function zoomAround(screenX: number, screenY: number, nextScale: number) {
     const clampedScale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, nextScale));
+    if (cameraMode === 'follow') {
+      scale = clampedScale;
+      centerOnPoint(shipPoint);
+      return;
+    }
     const worldX = (screenX - offsetX) / scale;
     const worldY = (screenY - offsetY) / scale;
     scale = clampedScale;
@@ -156,6 +170,29 @@ if (canvas && viewport) {
     }
     return best;
   }
+
+  function centerOnPoint(point: { x: number; y: number }) {
+    const { width, height } = viewportSize();
+    const current = nearestWrappedScreenPoint(point);
+    offsetX += width / 2 - current.x;
+    offsetY += height / 2 - current.y;
+    applyCamera();
+  }
+
+  function setCameraMode(next: CameraMode) {
+    cameraMode = next;
+    cameraModeButton.classList.toggle('active', next === 'follow');
+    cameraModeButton.textContent = next === 'static' ? '📌' : '⛵';
+    cameraModeButton.title = next === 'static' ? 'Static camera · tap to follow ship' : 'Follow ship · tap for static camera';
+    cameraModeButton.setAttribute('aria-label', next === 'static' ? 'Static camera. Tap to follow ship' : 'Follow ship camera. Tap for static camera');
+    cameraModeButton.setAttribute('aria-pressed', String(next === 'follow'));
+    viewport.dataset.cameraMode = next;
+    if (next === 'follow') centerOnPoint(shipPoint);
+  }
+
+  cameraModeButton.addEventListener('click', () => {
+    setCameraMode(cameraMode === 'static' ? 'follow' : 'static');
+  });
 
   function updateTargetIndicator() {
     const { width, height } = viewportSize();
@@ -208,6 +245,13 @@ if (canvas && viewport) {
     updateTargetIndicator();
   });
 
+  window.addEventListener('elcano:map-markers', (event) => {
+    const detail = (event as CustomEvent<{ ship: { x: number; y: number } }>).detail;
+    if (!detail?.ship) return;
+    shipPoint = detail.ship;
+    if (cameraMode === 'follow') centerOnPoint(shipPoint);
+  });
+
   viewport.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
@@ -230,9 +274,9 @@ if (canvas && viewport) {
     viewport.setPointerCapture(event.pointerId);
 
     if (pointers.size === 1) {
-      draggingPointer = event.pointerId;
+      draggingPointer = cameraMode === 'static' ? event.pointerId : null;
       lastPointer = point;
-      canvas.classList.add('camera-dragging');
+      canvas.classList.toggle('camera-dragging', draggingPointer !== null);
     } else if (pointers.size === 2) {
       draggingPointer = null;
       const [a, b] = [...pointers.values()];
@@ -263,9 +307,13 @@ if (canvas && viewport) {
       const midX = (a.x + b.x) / 2;
       const midY = (a.y + b.y) / 2;
       scale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, pinchStartScale * distance / Math.max(1, pinchStartDistance)));
-      offsetX = midX - pinchWorldAnchor.x * scale;
-      offsetY = midY - pinchWorldAnchor.y * scale;
-      applyCamera();
+      if (cameraMode === 'follow') {
+        centerOnPoint(shipPoint);
+      } else {
+        offsetX = midX - pinchWorldAnchor.x * scale;
+        offsetY = midY - pinchWorldAnchor.y * scale;
+        applyCamera();
+      }
     }
   });
 
@@ -274,12 +322,12 @@ if (canvas && viewport) {
     if (draggingPointer === event.pointerId) draggingPointer = null;
     if (pointers.size === 1) {
       const [remainingId, point] = [...pointers.entries()][0];
-      draggingPointer = remainingId;
+      draggingPointer = cameraMode === 'static' ? remainingId : null;
       lastPointer = point;
     }
     if (pointers.size < 2) {
       pinchStartDistance = 0;
-      canvas.classList.toggle('camera-dragging', pointers.size > 0);
+      canvas.classList.toggle('camera-dragging', pointers.size > 0 && draggingPointer !== null);
     }
   }
 
@@ -292,10 +340,14 @@ if (canvas && viewport) {
     minScale = width / WORLD_MAP_WIDTH;
     if (scale < minScale) scale = minScale;
     else if (Math.abs(scale - oldMin) < 0.001) scale = minScale * INITIAL_ZOOM_MULTIPLIER;
-    applyCamera();
+    if (cameraMode === 'follow') centerOnPoint(shipPoint);
+    else applyCamera();
   });
 
-  const observer = new ResizeObserver(() => applyCamera());
+  const observer = new ResizeObserver(() => {
+    if (cameraMode === 'follow') centerOnPoint(shipPoint);
+    else applyCamera();
+  });
   observer.observe(viewport);
 
   function mirrorFrame(timestamp: number) {
@@ -309,5 +361,6 @@ if (canvas && viewport) {
   }
 
   resetCamera();
+  setCameraMode('static');
   requestAnimationFrame(mirrorFrame);
 }
