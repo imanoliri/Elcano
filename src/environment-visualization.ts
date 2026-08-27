@@ -1,5 +1,6 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
+import { isWorldPointExplored } from './exploration';
 import { project, unproject } from './world/coordinates';
 import { prefetchEnvironmentBounds } from './world/environment';
 import { drawLandMask } from './world/geography';
@@ -17,7 +18,9 @@ if (ocean && shell) {
 
   const ctx = overlay.getContext('2d');
 
+  type FieldId = 'wind' | 'current';
   type Field = {
+    id: FieldId;
     minLat: number;
     maxLat: number;
     minLon: number;
@@ -33,6 +36,7 @@ if (ocean && shell) {
 
   const fields: Field[] = [
     {
+      id: 'wind',
       minLat: -80,
       maxLat: 80,
       minLon: -180,
@@ -46,6 +50,7 @@ if (ocean && shell) {
       width: 1.35,
     },
     {
+      id: 'current',
       minLat: -80,
       maxLat: 80,
       minLon: -180,
@@ -64,6 +69,7 @@ if (ocean && shell) {
   type GeoBounds = { minLat: number; maxLat: number; minLon: number; maxLon: number };
   let camera: Camera | null = null;
   let prefetchTimer = 0;
+  const visibility: Record<FieldId, boolean> = { wind: true, current: true };
 
   function resizeOverlay() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
@@ -140,7 +146,7 @@ if (ocean && shell) {
   }
 
   function drawField(field: Field, time: Date, value: Camera, visible: GeoBounds) {
-    if (!ctx) return;
+    if (!ctx || !visibility[field.id]) return;
     const minLat = Math.max(field.minLat, visible.minLat);
     const maxLat = Math.min(field.maxLat, visible.maxLat);
     const minLon = Math.max(field.minLon, visible.minLon);
@@ -160,6 +166,7 @@ if (ocean && shell) {
       for (let lon = startLon; lon <= maxLon + step * 0.25; lon += step) {
         const position = { lat, lon };
         const world = project(position);
+        if (!isWorldPointExplored(world)) continue;
         const x = value.x + world.x * value.scale;
         const y = value.y + world.y * value.scale;
         drawArrow(x, y, field.vectorAt(position, time), field);
@@ -205,6 +212,14 @@ if (ocean && shell) {
   });
 
   window.addEventListener('elcano:environment-data-change', scheduleRender);
+  window.addEventListener('elcano:exploration-change', scheduleRender);
+  window.addEventListener('elcano:navigation-visibility', (event) => {
+    const detail = (event as CustomEvent<{ wind?: boolean; current?: boolean }>).detail;
+    if (!detail) return;
+    if (typeof detail.wind === 'boolean') visibility.wind = detail.wind;
+    if (typeof detail.current === 'boolean') visibility.current = detail.current;
+    scheduleRender();
+  });
 
   const resizeObserver = new ResizeObserver(() => {
     resizeOverlay();
