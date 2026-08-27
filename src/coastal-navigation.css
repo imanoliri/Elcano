@@ -49,7 +49,12 @@
 @media (max-width: 720px) {
   .coastal-controls {
     top: 6.8rem;
-    right: .6rem;
-    padding: .42rem .5rem;
+    right: .35rem;
+    gap: .35rem;
+    padding: .32rem .38rem;
   }
+
+  .coastal-status span { font-size: .55rem; }
+  .coastal-status strong { font-size: .7rem; }
+  .anchor-button { width: 2rem; height: 2rem; font-size: 1rem; }
 }
