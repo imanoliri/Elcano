@@ -121,7 +121,8 @@ if (!isPlaying) {
     const { cx, cy, radius, points, xy, path } = polarGeometry(ship);
     const rings = [0.5, 1].map((fraction) => {
       const y = cy - radius * fraction + 10;
-      return `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/><text x="${cx + 5}" y="${y.toFixed(1)}" fill="rgba(244,239,230,.46)" font-size="8" font-family="system-ui">${Math.round(fraction * 100)}%</text>`;
+      const label = fraction < 1 ? `<text x="${cx + 5}" y="${y.toFixed(1)}" fill="rgba(244,239,230,.46)" font-size="8" font-family="system-ui">${Math.round(fraction * 100)}%</text>` : '';
+      return `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>${label}`;
     }).join('');
     const sectorAngles = [0, 30, 45, 60, 90, 120, 150, 180, 210, 240, 270, 300, 315, 330];
     const spokes = sectorAngles.map((angleDeg) => {
@@ -137,9 +138,9 @@ if (!isPlaying) {
     const right = xy(noGo, 1);
     const noGoLabel = xy(noGo, 1.08);
     const deadZone = `<path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/><line x1="${cx}" y1="${cy}" x2="${left.x.toFixed(1)}" y2="${left.y.toFixed(1)}" stroke="rgba(230,120,105,.7)" stroke-width="1.4" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${right.x.toFixed(1)}" y2="${right.y.toFixed(1)}" stroke="rgba(230,120,105,.7)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="${noGoLabel.x.toFixed(1)}" y="${noGoLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text>`;
-    const efficiencyLabels = points.filter((point) => point.angleDeg >= noGo && point.angleDeg > 0).map((point) => {
-      const p = xy(point.angleDeg, Math.max(point.efficiency, 0.13));
-      return `<text x="${(p.x + 7).toFixed(1)}" y="${(p.y + 3).toFixed(1)}" fill="rgba(255,226,160,.93)" font-size="8" font-weight="700" font-family="system-ui">${Math.round(point.efficiency * 100)}%</text>`;
+    const efficiencyLabels = points.filter((point) => point.angleDeg >= noGo && point.angleDeg > 0 && Math.round(point.efficiency * 100) < 100).map((point) => {
+      const p = xy(-point.angleDeg, Math.max(point.efficiency, 0.13));
+      return `<text x="${(p.x - 7).toFixed(1)}" y="${(p.y + 3).toFixed(1)}" text-anchor="end" fill="rgba(255,226,160,.93)" font-size="8" font-weight="700" font-family="system-ui">${Math.round(point.efficiency * 100)}%</text>`;
     }).join('');
     return `<svg viewBox="0 0 320 325" role="img" aria-label="Detailed polar performance diagram for ${ship.name}">
       ${rings}${spokes}${deadZone}
