@@ -39,10 +39,12 @@ if (!isPlaying) {
     </main>
     <div id="ship-info-modal" class="ship-info-modal" aria-hidden="true">
       <div class="ship-info-backdrop"></div>
+      <button class="ship-info-nav ship-info-prev" type="button" aria-label="Previous ship">←</button>
       <section class="ship-info-card" role="dialog" aria-modal="true" aria-labelledby="ship-info-title">
         <button class="ship-info-close" type="button" aria-label="Close ship information">×</button>
         <div id="ship-info-content"></div>
       </section>
+      <button class="ship-info-nav ship-info-next" type="button" aria-label="Next ship">→</button>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -57,8 +59,8 @@ if (!isPlaying) {
     .pre-ship-choice{padding-right:48px}.pre-ship-info{position:absolute;right:9px;top:9px;display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:rgba(4,16,24,.42);color:#f4efe6;font:800 14px/1 Georgia,serif;cursor:pointer}.pre-ship-info:hover{background:rgba(232,185,79,.16);border-color:rgba(232,185,79,.45)}
     .pre-mission{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:start}.pre-mission-number{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.07);color:#d7bc7f;font-weight:800;font-size:.72rem}
     .pre-game-footer{position:sticky;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:28px;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(4,16,24,.9);backdrop-filter:blur(16px);box-shadow:0 16px 50px rgba(0,0,0,.35)}.pre-summary{min-width:0}.pre-summary strong,.pre-summary small{display:block}.pre-summary small{margin-top:3px;opacity:.58}.pre-start{flex:0 0 auto;border:0;border-radius:12px;background:#e8b94f;color:#17202a;padding:13px 20px;font-weight:900}
-    .ship-info-modal{position:fixed;inset:0;z-index:260;display:none;place-items:center;padding:18px}.ship-info-modal.open{display:grid}.ship-info-backdrop{position:absolute;inset:0;background:rgba(2,9,14,.8);backdrop-filter:blur(8px)}.ship-info-card{position:relative;width:min(720px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:26px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(13,43,56,.99),rgba(5,19,28,.99));box-shadow:0 25px 80px rgba(0,0,0,.55)}.ship-info-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#f4efe6;font-size:1.5rem}.ship-info-header{padding-right:44px}.ship-info-header .pre-game-kicker{margin-bottom:6px}.ship-info-header h2{margin:0;font:700 clamp(28px,6vw,42px)/1 Georgia,serif}.ship-info-header p{margin:8px 0 0;opacity:.7;line-height:1.45}.ship-info-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);gap:22px;margin-top:22px;align-items:start}.polar-panel{position:relative;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.025)}.polar-panel svg{display:block;width:100%;height:auto}.polar-mode-toggle{position:absolute;z-index:2;top:10px;right:10px;width:116px;height:28px;padding:2px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(4,16,24,.78);color:#f4efe6;display:grid;grid-template-columns:1fr 1fr;align-items:center;cursor:pointer;font-size:.62rem;font-weight:800;isolation:isolate}.polar-mode-toggle::before{content:'';position:absolute;z-index:-1;top:2px;left:2px;width:calc(50% - 2px);height:22px;border-radius:999px;background:rgba(232,185,79,.2);border:1px solid rgba(232,185,79,.5);transition:transform .16s ease}.polar-mode-toggle.detailed::before{transform:translateX(100%)}.polar-mode-toggle span{position:relative;text-align:center;opacity:.55}.polar-mode-toggle:not(.detailed) span:first-child,.polar-mode-toggle.detailed span:last-child{opacity:1;color:#f1d38d}.ship-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.ship-stat{padding:11px;border-radius:12px;background:rgba(255,255,255,.05)}.ship-stat span,.ship-stat strong{display:block}.ship-stat span{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;opacity:.52}.ship-stat strong{margin-top:4px;font-size:.92rem}.polar-table{margin-top:14px;width:100%;border-collapse:collapse;font-size:.72rem}.polar-table th,.polar-table td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right}.polar-table th:first-child,.polar-table td:first-child{text-align:left}.polar-table th{opacity:.5;text-transform:uppercase;font-size:.58rem;letter-spacing:.08em}.ship-role{margin-top:14px;padding:12px 13px;border-left:3px solid #e8b94f;background:rgba(232,185,79,.07);font-size:.78rem;line-height:1.45}
-    @media(max-width:650px){.pre-game-card{width:min(100% - 20px,980px);padding-top:26px}.pre-game-header{display:block}.pre-game-header>p{margin-top:12px}.pre-campaigns,.pre-ships{display:flex;overflow-x:auto}.pre-campaigns .pre-choice,.pre-ships .pre-choice{flex:0 0 180px}.pre-missions{grid-template-columns:1fr;max-height:280px}.pre-game-footer{bottom:8px}.pre-summary small{display:none}.ship-info-layout{grid-template-columns:1fr}.ship-info-card{padding:22px}.ship-stats{grid-template-columns:1fr 1fr}}
+    .ship-info-modal{position:fixed;inset:0;z-index:260;display:none;place-items:center;padding:18px}.ship-info-modal.open{display:grid}.ship-info-backdrop{position:absolute;inset:0;background:rgba(2,9,14,.8);backdrop-filter:blur(8px)}.ship-info-card{position:relative;width:min(720px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:26px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(13,43,56,.99),rgba(5,19,28,.99));box-shadow:0 25px 80px rgba(0,0,0,.55)}.ship-info-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#f4efe6;font-size:1.5rem}.ship-info-nav{position:absolute;z-index:3;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:44px;height:56px;border:1px solid rgba(255,255,255,.16);border-radius:14px;background:rgba(4,16,24,.82);color:#f4efe6;font-size:1.35rem;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28)}.ship-info-nav:hover{background:rgba(232,185,79,.16);border-color:rgba(232,185,79,.45)}.ship-info-prev{left:max(10px,calc(50% - 420px))}.ship-info-next{right:max(10px,calc(50% - 420px))}.ship-info-header{padding-right:44px}.ship-info-header .pre-game-kicker{margin-bottom:6px}.ship-info-header h2{margin:0;font:700 clamp(28px,6vw,42px)/1 Georgia,serif}.ship-info-header p{margin:8px 0 0;opacity:.7;line-height:1.45}.ship-info-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);gap:22px;margin-top:22px;align-items:start}.polar-panel{position:relative;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.025)}.polar-panel svg{display:block;width:100%;height:auto}.polar-mode-toggle{position:absolute;z-index:2;top:10px;right:10px;width:116px;height:28px;padding:2px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(4,16,24,.78);color:#f4efe6;display:grid;grid-template-columns:1fr 1fr;align-items:center;cursor:pointer;font-size:.62rem;font-weight:800;isolation:isolate}.polar-mode-toggle::before{content:'';position:absolute;z-index:-1;top:2px;left:2px;width:calc(50% - 2px);height:22px;border-radius:999px;background:rgba(232,185,79,.2);border:1px solid rgba(232,185,79,.5);transition:transform .16s ease}.polar-mode-toggle.detailed::before{transform:translateX(100%)}.polar-mode-toggle span{position:relative;text-align:center;opacity:.55}.polar-mode-toggle:not(.detailed) span:first-child,.polar-mode-toggle.detailed span:last-child{opacity:1;color:#f1d38d}.ship-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.ship-stat{padding:11px;border-radius:12px;background:rgba(255,255,255,.05)}.ship-stat span,.ship-stat strong{display:block}.ship-stat span{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;opacity:.52}.ship-stat strong{margin-top:4px;font-size:.92rem}.polar-table{margin-top:14px;width:100%;border-collapse:collapse;font-size:.72rem}.polar-table th,.polar-table td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right}.polar-table th:first-child,.polar-table td:first-child{text-align:left}.polar-table th{opacity:.5;text-transform:uppercase;font-size:.58rem;letter-spacing:.08em}.ship-role{margin-top:14px;padding:12px 13px;border-left:3px solid #e8b94f;background:rgba(232,185,79,.07);font-size:.78rem;line-height:1.45}
+    @media(max-width:650px){.pre-game-card{width:min(100% - 20px,980px);padding-top:26px}.pre-game-header{display:block}.pre-game-header>p{margin-top:12px}.pre-campaigns,.pre-ships{display:flex;overflow-x:auto}.pre-campaigns .pre-choice,.pre-ships .pre-choice{flex:0 0 180px}.pre-missions{grid-template-columns:1fr;max-height:280px}.pre-game-footer{bottom:8px}.pre-summary small{display:none}.ship-info-layout{grid-template-columns:1fr}.ship-info-card{padding:22px}.ship-info-nav{width:38px;height:48px}.ship-info-prev{left:5px}.ship-info-next{right:5px}.ship-stats{grid-template-columns:1fr 1fr}}
   `;
   document.head.appendChild(style);
 
@@ -130,13 +132,13 @@ if (!isPlaying) {
       return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(255,255,255,.09)" stroke-width="1"/>`;
     }).join('');
     const angleLabels = [30, 45, 60, 90, 120, 150, 180].map((angleDeg) => {
-      const p = xy(angleDeg, 1.11);
-      return `<text x="${p.x.toFixed(1)}" y="${(p.y + 3).toFixed(1)}" text-anchor="middle" fill="rgba(244,239,230,.54)" font-size="8" font-family="system-ui">${angleDeg}°</text>`;
+      const p = xy(-angleDeg, 1.11);
+      return `<text x="${(p.x - 4).toFixed(1)}" y="${(p.y + 3).toFixed(1)}" text-anchor="end" fill="rgba(244,239,230,.54)" font-size="8" font-family="system-ui">${angleDeg}°</text>`;
     }).join('');
     const noGo = noGoAngle(ship);
     const left = xy(-noGo, 1);
     const right = xy(noGo, 1);
-    const noGoLabel = xy(noGo, 1.08);
+    const noGoLabel = xy(-noGo, 1.08);
     const deadZone = `<path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/><line x1="${cx}" y1="${cy}" x2="${left.x.toFixed(1)}" y2="${left.y.toFixed(1)}" stroke="rgba(230,120,105,.7)" stroke-width="1.4" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${right.x.toFixed(1)}" y2="${right.y.toFixed(1)}" stroke="rgba(230,120,105,.7)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="${noGoLabel.x.toFixed(1)}" y="${noGoLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text>`;
     const efficiencyLabels = points.filter((point) => point.angleDeg >= noGo && point.angleDeg > 0 && Math.round(point.efficiency * 100) < 100).map((point) => {
       const p = xy(-point.angleDeg, Math.max(point.efficiency, 0.13));
@@ -190,6 +192,17 @@ if (!isPlaying) {
     });
   }
 
+  function switchShipInfo(offset: number) {
+    if (!shipInfoShip) return;
+    const currentIndex = SHIP_PRESETS.findIndex((ship) => ship.id === shipInfoShip?.id);
+    const nextIndex = (currentIndex + offset + SHIP_PRESETS.length) % SHIP_PRESETS.length;
+    const nextShip = SHIP_PRESETS[nextIndex];
+    shipInfoShip = nextShip;
+    selectedShip = nextShip;
+    render();
+    renderShipInfo();
+  }
+
   function openShipInfo(ship: ShipPreset) {
     shipInfoShip = ship;
     detailedPolar = false;
@@ -207,7 +220,14 @@ if (!isPlaying) {
 
   shipInfoModal.querySelector('.ship-info-close')?.addEventListener('click', closeShipInfo);
   shipInfoModal.querySelector('.ship-info-backdrop')?.addEventListener('click', closeShipInfo);
-  window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && shipInfoModal.classList.contains('open')) closeShipInfo(); });
+  shipInfoModal.querySelector<HTMLButtonElement>('.ship-info-prev')?.addEventListener('click', () => switchShipInfo(-1));
+  shipInfoModal.querySelector<HTMLButtonElement>('.ship-info-next')?.addEventListener('click', () => switchShipInfo(1));
+  window.addEventListener('keydown', (event) => {
+    if (!shipInfoModal.classList.contains('open')) return;
+    if (event.key === 'Escape') closeShipInfo();
+    if (event.key === 'ArrowLeft') switchShipInfo(-1);
+    if (event.key === 'ArrowRight') switchShipInfo(1);
+  });
 
   function render() {
     campaignsEl.innerHTML = campaigns.map((campaign) => `
