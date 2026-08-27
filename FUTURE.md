@@ -14,7 +14,7 @@ Replace the abstract test world with real geography.
 - Add a nautical-mile scale bar that updates with zoom.
 - Add optional compass/cardinal ticks at useful zoom levels.
 - Add tap/click measurement: distance and bearing from the ship to a chosen map point.
-- Add a follow-ship / recenter control after the player pans away.
+- [x] Add a two-state camera control: static camera or follow ship. Static preserves the current view; follow keeps the ship centered while allowing zoom.
 
 The player should eventually be able to navigate the real Atlantic and the wider world.
 
@@ -23,8 +23,9 @@ The player should eventually be able to navigate the real Atlantic and the wider
 - [x] Load real-world environment tiles beyond the Bay of Biscay only around the visible map area, with caching and a deterministic fallback when remote data is unavailable.
 - Add separate wind/current visibility toggles.
 - Improve map-readable wind systems with optional wind arrows, streamlines or a compact weather overlay.
-- Add a thin course trail showing the ship's actual travelled path.
-- Add an optional bearing-to-target reference line so desired bearing can be compared with heading and track.
+- [x] Add a thin course trail showing the ship's actual travelled path.
+- [x] Add two forward navigation vectors at the ship: a heading vector showing where the bow is pointed and a track/course-over-ground vector showing the actual direction of movement. Their angular difference is the ship's slip/drift angle.
+- Keep an optional bearing-to-target reference line as a separate future aid so desired bearing can be compared with heading and track without confusing it with either vector.
 - Add deterministic day-to-day wind variation around the monthly climatology so voyages encounter plausible calms, stronger winds and directional shifts while remaining reproducible and static-first. Preserve the climatological mean direction and scalar wind-speed distribution rather than simply adding random noise.
 - Keep historical missions explicit that modern observed/reanalysis data represents plausible prevailing conditions, not literal weather from the 16th century.
 
@@ -111,6 +112,7 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 - [x] Prevent normal sailing across land / stop the ship when grounded.
 - [x] Add contextual anchoring in coastal water.
 - [x] Add manual waypoint route planning and automatic helm following while keeping sails manual.
+- [x] Add a direct-destination mode to the same map control: one map tap sets a single autopilot target, and each later tap replaces the previous target. Toggle the control into waypoint mode to append multiple route points instead.
 - Allow editing individual waypoints.
 - Allow inserting/removing route points without clearing the full route.
 - Show route-leg distance and bearing.
@@ -118,14 +120,11 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 
 ## 7. Near-term implementation order
 
-1. Historical campaign/mission selector and Campaign 1: Loaísa–Elcano Expedition.
-2. Ship/rig selection using contrasting data-driven polar curves.
-3. Course trail and bearing-to-target reference line.
-4. Wind/current visualization improvements.
-5. Historical navigation instruments.
-6. Coastal navigation phase 2 route editing.
-7. Sparse map labels and nautical scale bar.
-8. Continue hardening global environment tiling and caching for long voyages.
+1. Wind/current visualization improvements.
+2. Historical navigation instruments.
+3. Coastal navigation phase 2 route editing.
+4. Sparse map labels and nautical scale bar.
+5. Continue hardening global environment tiling and caching for long voyages.
 
 ## Scope rule
 

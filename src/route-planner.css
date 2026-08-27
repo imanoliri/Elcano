@@ -15,10 +15,6 @@
   background: rgba(255,255,255,.12);
 }
 
-.route-clear[hidden] {
-  display: none;
-}
-
 .route-layer {
   position: absolute;
   inset: 0;
