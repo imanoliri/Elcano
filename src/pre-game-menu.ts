@@ -9,6 +9,8 @@ if (!isPlaying) {
   let selectedCampaign: Campaign = campaigns.find((campaign) => campaign.missions.some((mission) => mission.id === activeMission.id)) ?? campaigns[0];
   let selectedMission: Mission = activeMission;
   let selectedShip: ShipPreset = shipPresetFromId(params.get('ship'));
+  let shipInfoShip: ShipPreset | null = null;
+  let detailedPolar = false;
 
   const overlay = document.createElement('div');
   overlay.className = 'pre-game-menu';
@@ -55,7 +57,7 @@ if (!isPlaying) {
     .pre-ship-choice{padding-right:48px}.pre-ship-info{position:absolute;right:9px;top:9px;display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:rgba(4,16,24,.42);color:#f4efe6;font:800 14px/1 Georgia,serif;cursor:pointer}.pre-ship-info:hover{background:rgba(232,185,79,.16);border-color:rgba(232,185,79,.45)}
     .pre-mission{display:grid;grid-template-columns:34px 1fr;gap:9px;align-items:start}.pre-mission-number{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.07);color:#d7bc7f;font-weight:800;font-size:.72rem}
     .pre-game-footer{position:sticky;bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:28px;padding:14px 16px;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(4,16,24,.9);backdrop-filter:blur(16px);box-shadow:0 16px 50px rgba(0,0,0,.35)}.pre-summary{min-width:0}.pre-summary strong,.pre-summary small{display:block}.pre-summary small{margin-top:3px;opacity:.58}.pre-start{flex:0 0 auto;border:0;border-radius:12px;background:#e8b94f;color:#17202a;padding:13px 20px;font-weight:900}
-    .ship-info-modal{position:fixed;inset:0;z-index:260;display:none;place-items:center;padding:18px}.ship-info-modal.open{display:grid}.ship-info-backdrop{position:absolute;inset:0;background:rgba(2,9,14,.8);backdrop-filter:blur(8px)}.ship-info-card{position:relative;width:min(720px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:26px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(13,43,56,.99),rgba(5,19,28,.99));box-shadow:0 25px 80px rgba(0,0,0,.55)}.ship-info-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#f4efe6;font-size:1.5rem}.ship-info-header{padding-right:44px}.ship-info-header .pre-game-kicker{margin-bottom:6px}.ship-info-header h2{margin:0;font:700 clamp(28px,6vw,42px)/1 Georgia,serif}.ship-info-header p{margin:8px 0 0;opacity:.7;line-height:1.45}.ship-info-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);gap:22px;margin-top:22px;align-items:start}.polar-panel{padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.025)}.polar-panel svg{display:block;width:100%;height:auto}.polar-caption{margin:8px 0 0;text-align:center;font-size:.7rem;opacity:.56}.ship-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.ship-stat{padding:11px;border-radius:12px;background:rgba(255,255,255,.05)}.ship-stat span,.ship-stat strong{display:block}.ship-stat span{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;opacity:.52}.ship-stat strong{margin-top:4px;font-size:.92rem}.polar-table{margin-top:14px;width:100%;border-collapse:collapse;font-size:.72rem}.polar-table th,.polar-table td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right}.polar-table th:first-child,.polar-table td:first-child{text-align:left}.polar-table th{opacity:.5;text-transform:uppercase;font-size:.58rem;letter-spacing:.08em}.ship-role{margin-top:14px;padding:12px 13px;border-left:3px solid #e8b94f;background:rgba(232,185,79,.07);font-size:.78rem;line-height:1.45}
+    .ship-info-modal{position:fixed;inset:0;z-index:260;display:none;place-items:center;padding:18px}.ship-info-modal.open{display:grid}.ship-info-backdrop{position:absolute;inset:0;background:rgba(2,9,14,.8);backdrop-filter:blur(8px)}.ship-info-card{position:relative;width:min(720px,100%);max-height:calc(100dvh - 36px);overflow:auto;padding:26px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(13,43,56,.99),rgba(5,19,28,.99));box-shadow:0 25px 80px rgba(0,0,0,.55)}.ship-info-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#f4efe6;font-size:1.5rem}.ship-info-header{padding-right:44px}.ship-info-header .pre-game-kicker{margin-bottom:6px}.ship-info-header h2{margin:0;font:700 clamp(28px,6vw,42px)/1 Georgia,serif}.ship-info-header p{margin:8px 0 0;opacity:.7;line-height:1.45}.ship-info-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);gap:22px;margin-top:22px;align-items:start}.polar-panel{padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.025)}.polar-panel svg{display:block;width:100%;height:auto}.polar-caption{margin:8px 0 0;text-align:center;font-size:.7rem;opacity:.56}.polar-mode-toggle{display:flex;justify-content:center;gap:6px;margin-bottom:8px}.polar-mode-toggle button{border:1px solid rgba(255,255,255,.13);border-radius:999px;background:rgba(255,255,255,.04);color:#f4efe6;padding:6px 11px;font-size:.67rem;font-weight:750}.polar-mode-toggle button.active{border-color:rgba(232,185,79,.6);background:rgba(232,185,79,.13);color:#f1d38d}.ship-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}.ship-stat{padding:11px;border-radius:12px;background:rgba(255,255,255,.05)}.ship-stat span,.ship-stat strong{display:block}.ship-stat span{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;opacity:.52}.ship-stat strong{margin-top:4px;font-size:.92rem}.polar-table{margin-top:14px;width:100%;border-collapse:collapse;font-size:.72rem}.polar-table th,.polar-table td{padding:6px 7px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right}.polar-table th:first-child,.polar-table td:first-child{text-align:left}.polar-table th{opacity:.5;text-transform:uppercase;font-size:.58rem;letter-spacing:.08em}.ship-role{margin-top:14px;padding:12px 13px;border-left:3px solid #e8b94f;background:rgba(232,185,79,.07);font-size:.78rem;line-height:1.45}
     @media(max-width:650px){.pre-game-card{width:min(100% - 20px,980px);padding-top:26px}.pre-game-header{display:block}.pre-game-header>p{margin-top:12px}.pre-campaigns,.pre-ships{display:flex;overflow-x:auto}.pre-campaigns .pre-choice,.pre-ships .pre-choice{flex:0 0 180px}.pre-missions{grid-template-columns:1fr;max-height:280px}.pre-game-footer{bottom:8px}.pre-summary small{display:none}.ship-info-layout{grid-template-columns:1fr}.ship-info-card{padding:22px}.ship-stats{grid-template-columns:1fr 1fr}}
   `;
   document.head.appendChild(style);
@@ -72,7 +74,7 @@ if (!isPlaying) {
     return firstUseful?.angleDeg ?? 180;
   }
 
-  function polarSvg(ship: ShipPreset) {
+  function polarGeometry(ship: ShipPreset) {
     const cx = 160;
     const cy = 160;
     const radius = 116;
@@ -90,46 +92,67 @@ if (!isPlaying) {
       const p = xy(point.angleDeg, point.efficiency);
       return `${index === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
     }).join(' ') + ' Z';
+    return { cx, cy, radius, points, xy, path };
+  }
 
-    const rings = [0.25, 0.5, 0.75, 1].map((fraction) => {
-      const ringLabelY = cy - radius * fraction + 10;
-      return `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/><text x="${cx + 5}" y="${ringLabelY.toFixed(1)}" fill="rgba(244,239,230,.45)" font-size="8" font-family="system-ui">${Math.round(fraction * 100)}%</text>`;
-    }).join('');
-
-    const sectorAngles = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
-    const spokes = sectorAngles.map((angleDeg) => {
+  function simplePolarSvg(ship: ShipPreset) {
+    const { cx, cy, radius, xy, path } = polarGeometry(ship);
+    const rings = [0.25, 0.5, 0.75, 1].map((fraction) => `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`).join('');
+    const spokes = [0, 45, 90, 135, 180, 225, 270, 315].map((angleDeg) => {
       const p = xy(angleDeg, 1);
-      const label = xy(angleDeg, 1.12);
-      const displayAngle = angleDeg <= 180 ? angleDeg : 360 - angleDeg;
-      return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(255,255,255,.09)" stroke-width="1"/><text x="${label.x.toFixed(1)}" y="${(label.y + 3).toFixed(1)}" text-anchor="middle" fill="rgba(244,239,230,.52)" font-size="8" font-family="system-ui">${displayAngle}°</text>`;
+      return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(255,255,255,.09)" stroke-width="1"/>`;
     }).join('');
-
     const noGo = noGoAngle(ship);
     const left = xy(-noGo, 1);
     const right = xy(noGo, 1);
-    const noGoLeftLabel = xy(-noGo, 1.08);
-    const noGoRightLabel = xy(noGo, 1.08);
-    const deadZone = `<path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/><line x1="${cx}" y1="${cy}" x2="${left.x.toFixed(1)}" y2="${left.y.toFixed(1)}" stroke="rgba(230,120,105,.75)" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${right.x.toFixed(1)}" y2="${right.y.toFixed(1)}" stroke="rgba(230,120,105,.75)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${noGoLeftLabel.x.toFixed(1)}" y="${noGoLeftLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text><text x="${noGoRightLabel.x.toFixed(1)}" y="${noGoRightLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text>`;
-
-    const performanceLabels = points.filter((point) => point.angleDeg > 0).map((point) => {
-      const pct = Math.round(point.efficiency * 100);
-      const rightPoint = xy(point.angleDeg, Math.max(point.efficiency, 0.12));
-      const leftPoint = xy(-point.angleDeg, Math.max(point.efficiency, 0.12));
-      const offset = point.efficiency < 0.15 ? 10 : 7;
-      return `<text x="${(rightPoint.x + offset).toFixed(1)}" y="${(rightPoint.y + 3).toFixed(1)}" fill="rgba(255,226,160,.95)" font-size="8" font-weight="700" font-family="system-ui">${pct}%</text><text x="${(leftPoint.x - offset).toFixed(1)}" y="${(leftPoint.y + 3).toFixed(1)}" text-anchor="end" fill="rgba(255,226,160,.95)" font-size="8" font-weight="700" font-family="system-ui">${pct}%</text>`;
-    }).join('');
-
-    return `<svg viewBox="0 0 320 325" role="img" aria-label="Polar performance diagram for ${ship.name}">
-      ${rings}${spokes}${deadZone}
+    return `<svg viewBox="0 0 320 325" role="img" aria-label="Simple polar performance diagram for ${ship.name}">
+      ${rings}${spokes}
+      <path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/>
       <path d="${path}" fill="rgba(232,185,79,.18)" stroke="#e8b94f" stroke-width="2.5" stroke-linejoin="round"/>
-      ${performanceLabels}
-      <text x="${cx}" y="18" text-anchor="middle" fill="rgba(244,239,230,.68)" font-size="9" font-family="system-ui">Into wind</text>
-      <text x="${cx}" y="318" text-anchor="middle" fill="rgba(244,239,230,.68)" font-size="9" font-family="system-ui">Running</text>
+      <text x="${cx}" y="18" text-anchor="middle" fill="rgba(244,239,230,.62)" font-size="9" font-family="system-ui">0° · into wind</text>
+      <text x="292" y="164" text-anchor="end" fill="rgba(244,239,230,.55)" font-size="9" font-family="system-ui">90°</text>
+      <text x="${cx}" y="318" text-anchor="middle" fill="rgba(244,239,230,.62)" font-size="9" font-family="system-ui">180° · running</text>
+      <text x="28" y="164" fill="rgba(244,239,230,.55)" font-size="9" font-family="system-ui">90°</text>
       <circle cx="${cx}" cy="${cy}" r="3.5" fill="#f4efe6"/>
     </svg>`;
   }
 
-  function openShipInfo(ship: ShipPreset) {
+  function detailedPolarSvg(ship: ShipPreset) {
+    const { cx, cy, radius, points, xy, path } = polarGeometry(ship);
+    const rings = [0.5, 1].map((fraction) => {
+      const y = cy - radius * fraction + 10;
+      return `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/><text x="${cx + 5}" y="${y.toFixed(1)}" fill="rgba(244,239,230,.46)" font-size="8" font-family="system-ui">${Math.round(fraction * 100)}%</text>`;
+    }).join('');
+    const sectorAngles = [0, 30, 45, 60, 90, 120, 150, 180, 210, 240, 270, 300, 315, 330];
+    const spokes = sectorAngles.map((angleDeg) => {
+      const p = xy(angleDeg, 1);
+      return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(255,255,255,.09)" stroke-width="1"/>`;
+    }).join('');
+    const angleLabels = [30, 45, 60, 90, 120, 150, 180].map((angleDeg) => {
+      const p = xy(angleDeg, 1.11);
+      return `<text x="${p.x.toFixed(1)}" y="${(p.y + 3).toFixed(1)}" text-anchor="middle" fill="rgba(244,239,230,.54)" font-size="8" font-family="system-ui">${angleDeg}°</text>`;
+    }).join('');
+    const noGo = noGoAngle(ship);
+    const left = xy(-noGo, 1);
+    const right = xy(noGo, 1);
+    const noGoLabel = xy(noGo, 1.08);
+    const deadZone = `<path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/><line x1="${cx}" y1="${cy}" x2="${left.x.toFixed(1)}" y2="${left.y.toFixed(1)}" stroke="rgba(230,120,105,.7)" stroke-width="1.4" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${right.x.toFixed(1)}" y2="${right.y.toFixed(1)}" stroke="rgba(230,120,105,.7)" stroke-width="1.4" stroke-dasharray="4 3"/><text x="${noGoLabel.x.toFixed(1)}" y="${noGoLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text>`;
+    const efficiencyLabels = points.filter((point) => point.angleDeg >= noGo && point.angleDeg > 0).map((point) => {
+      const p = xy(point.angleDeg, Math.max(point.efficiency, 0.13));
+      return `<text x="${(p.x + 7).toFixed(1)}" y="${(p.y + 3).toFixed(1)}" fill="rgba(255,226,160,.93)" font-size="8" font-weight="700" font-family="system-ui">${Math.round(point.efficiency * 100)}%</text>`;
+    }).join('');
+    return `<svg viewBox="0 0 320 325" role="img" aria-label="Detailed polar performance diagram for ${ship.name}">
+      ${rings}${spokes}${deadZone}
+      <path d="${path}" fill="rgba(232,185,79,.18)" stroke="#e8b94f" stroke-width="2.5" stroke-linejoin="round"/>
+      ${angleLabels}${efficiencyLabels}
+      <text x="${cx}" y="18" text-anchor="middle" fill="rgba(244,239,230,.68)" font-size="9" font-family="system-ui">Into wind</text>
+      <circle cx="${cx}" cy="${cy}" r="3.5" fill="#f4efe6"/>
+    </svg>`;
+  }
+
+  function renderShipInfo() {
+    if (!shipInfoShip) return;
+    const ship = shipInfoShip;
     const rows = ship.rig.points.map((point) => `<tr><td>${point.angleDeg}°</td><td>${Math.round(point.efficiency * 100)}%</td></tr>`).join('');
     const peakAngles = ship.rig.points.filter((point) => point.efficiency >= 0.98).map((point) => `${point.angleDeg}°`).join('–') || '—';
     shipInfoContent.innerHTML = `
@@ -140,8 +163,12 @@ if (!isPlaying) {
       </header>
       <div class="ship-info-layout">
         <div class="polar-panel">
-          ${polarSvg(ship)}
-          <p class="polar-caption">Angle labels show true-wind angle. Radial rings and curve labels show percentage of this rig's peak sailing efficiency.</p>
+          <div class="polar-mode-toggle" role="group" aria-label="Diagram detail">
+            <button type="button" data-polar-mode="simple" class="${detailedPolar ? '' : 'active'}" aria-pressed="${!detailedPolar}">Simple</button>
+            <button type="button" data-polar-mode="detailed" class="${detailedPolar ? 'active' : ''}" aria-pressed="${detailedPolar}">Detailed</button>
+          </div>
+          ${detailedPolar ? detailedPolarSvg(ship) : simplePolarSvg(ship)}
+          <p class="polar-caption">${detailedPolar ? 'Detailed: key wind angles, no-go boundary and efficiency labels.' : 'Simple: shape of the rig polar and the main wind directions.'}</p>
         </div>
         <div>
           <div class="ship-stats">
@@ -158,6 +185,16 @@ if (!isPlaying) {
         </div>
       </div>
     `;
+    shipInfoContent.querySelectorAll<HTMLButtonElement>('[data-polar-mode]').forEach((button) => button.addEventListener('click', () => {
+      detailedPolar = button.dataset.polarMode === 'detailed';
+      renderShipInfo();
+    }));
+  }
+
+  function openShipInfo(ship: ShipPreset) {
+    shipInfoShip = ship;
+    detailedPolar = false;
+    renderShipInfo();
     shipInfoModal.classList.add('open');
     shipInfoModal.setAttribute('aria-hidden', 'false');
   }
@@ -165,6 +202,8 @@ if (!isPlaying) {
   function closeShipInfo() {
     shipInfoModal.classList.remove('open');
     shipInfoModal.setAttribute('aria-hidden', 'true');
+    shipInfoShip = null;
+    detailedPolar = false;
   }
 
   shipInfoModal.querySelector('.ship-info-close')?.addEventListener('click', closeShipInfo);
