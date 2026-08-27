@@ -73,9 +73,9 @@ if (!isPlaying) {
   }
 
   function polarSvg(ship: ShipPreset) {
-    const cx = 150;
-    const cy = 150;
-    const radius = 112;
+    const cx = 160;
+    const cy = 160;
+    const radius = 116;
     const points = ship.rig.points;
     const mirrored = [
       ...points.slice().reverse().map((point) => ({ angleDeg: -point.angleDeg, efficiency: point.efficiency })),
@@ -90,25 +90,41 @@ if (!isPlaying) {
       const p = xy(point.angleDeg, point.efficiency);
       return `${index === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
     }).join(' ') + ' Z';
-    const rings = [0.25, 0.5, 0.75, 1].map((fraction) => `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/>`).join('');
-    const spokes = [0, 45, 90, 135, 180, 225, 270, 315].map((angleDeg) => {
-      const p = xy(angleDeg, 1);
-      return `<line x1="${cx}" y1="${cy}" x2="${p.x}" y2="${p.y}" stroke="rgba(255,255,255,.09)" stroke-width="1"/>`;
+
+    const rings = [0.25, 0.5, 0.75, 1].map((fraction) => {
+      const ringLabelY = cy - radius * fraction + 10;
+      return `<circle cx="${cx}" cy="${cy}" r="${radius * fraction}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1"/><text x="${cx + 5}" y="${ringLabelY.toFixed(1)}" fill="rgba(244,239,230,.45)" font-size="8" font-family="system-ui">${Math.round(fraction * 100)}%</text>`;
     }).join('');
-    const labels = [
-      { x: 150, y: 19, text: '0° · into wind' },
-      { x: 279, y: 154, text: '90°' },
-      { x: 150, y: 292, text: '180° · running' },
-      { x: 21, y: 154, text: '90°' },
-    ].map((label) => `<text x="${label.x}" y="${label.y}" text-anchor="middle" fill="rgba(244,239,230,.58)" font-size="10" font-family="system-ui">${label.text}</text>`).join('');
-    const nogo = noGoAngle(ship);
-    const left = xy(-nogo, 1);
-    const right = xy(nogo, 1);
-    return `<svg viewBox="0 0 300 305" role="img" aria-label="Polar performance diagram for ${ship.name}">
-      ${rings}${spokes}
-      <path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/>
+
+    const sectorAngles = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
+    const spokes = sectorAngles.map((angleDeg) => {
+      const p = xy(angleDeg, 1);
+      const label = xy(angleDeg, 1.12);
+      const displayAngle = angleDeg <= 180 ? angleDeg : 360 - angleDeg;
+      return `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="rgba(255,255,255,.09)" stroke-width="1"/><text x="${label.x.toFixed(1)}" y="${(label.y + 3).toFixed(1)}" text-anchor="middle" fill="rgba(244,239,230,.52)" font-size="8" font-family="system-ui">${displayAngle}°</text>`;
+    }).join('');
+
+    const noGo = noGoAngle(ship);
+    const left = xy(-noGo, 1);
+    const right = xy(noGo, 1);
+    const noGoLeftLabel = xy(-noGo, 1.08);
+    const noGoRightLabel = xy(noGo, 1.08);
+    const deadZone = `<path d="M ${cx} ${cy} L ${left.x.toFixed(1)} ${left.y.toFixed(1)} A ${radius} ${radius} 0 0 1 ${right.x.toFixed(1)} ${right.y.toFixed(1)} Z" fill="rgba(220,90,76,.12)"/><line x1="${cx}" y1="${cy}" x2="${left.x.toFixed(1)}" y2="${left.y.toFixed(1)}" stroke="rgba(230,120,105,.75)" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="${cx}" y1="${cy}" x2="${right.x.toFixed(1)}" y2="${right.y.toFixed(1)}" stroke="rgba(230,120,105,.75)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${noGoLeftLabel.x.toFixed(1)}" y="${noGoLeftLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text><text x="${noGoRightLabel.x.toFixed(1)}" y="${noGoRightLabel.y.toFixed(1)}" text-anchor="middle" fill="rgba(245,170,155,.9)" font-size="8" font-family="system-ui">${noGo}° dead</text>`;
+
+    const performanceLabels = points.filter((point) => point.angleDeg > 0).map((point) => {
+      const pct = Math.round(point.efficiency * 100);
+      const rightPoint = xy(point.angleDeg, Math.max(point.efficiency, 0.12));
+      const leftPoint = xy(-point.angleDeg, Math.max(point.efficiency, 0.12));
+      const offset = point.efficiency < 0.15 ? 10 : 7;
+      return `<text x="${(rightPoint.x + offset).toFixed(1)}" y="${(rightPoint.y + 3).toFixed(1)}" fill="rgba(255,226,160,.95)" font-size="8" font-weight="700" font-family="system-ui">${pct}%</text><text x="${(leftPoint.x - offset).toFixed(1)}" y="${(leftPoint.y + 3).toFixed(1)}" text-anchor="end" fill="rgba(255,226,160,.95)" font-size="8" font-weight="700" font-family="system-ui">${pct}%</text>`;
+    }).join('');
+
+    return `<svg viewBox="0 0 320 325" role="img" aria-label="Polar performance diagram for ${ship.name}">
+      ${rings}${spokes}${deadZone}
       <path d="${path}" fill="rgba(232,185,79,.18)" stroke="#e8b94f" stroke-width="2.5" stroke-linejoin="round"/>
-      ${labels}
+      ${performanceLabels}
+      <text x="${cx}" y="18" text-anchor="middle" fill="rgba(244,239,230,.68)" font-size="9" font-family="system-ui">Into wind</text>
+      <text x="${cx}" y="318" text-anchor="middle" fill="rgba(244,239,230,.68)" font-size="9" font-family="system-ui">Running</text>
       <circle cx="${cx}" cy="${cy}" r="3.5" fill="#f4efe6"/>
     </svg>`;
   }
@@ -125,7 +141,7 @@ if (!isPlaying) {
       <div class="ship-info-layout">
         <div class="polar-panel">
           ${polarSvg(ship)}
-          <p class="polar-caption">Distance from center = percentage of this rig's peak sailing efficiency at that true-wind angle.</p>
+          <p class="polar-caption">Angle labels show true-wind angle. Radial rings and curve labels show percentage of this rig's peak sailing efficiency.</p>
         </div>
         <div>
           <div class="ship-stats">
