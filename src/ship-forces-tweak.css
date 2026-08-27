@@ -105,4 +105,61 @@
   .force-label { font-size: .42rem; }
   .force-speed { font-size: .42rem; }
   .force-angle { font-size: .39rem; }
+
+  /* Voyage setup: keep every choice fully reachable on narrow screens. */
+  .pre-game-card {
+    width: calc(100% - 24px) !important;
+    padding-bottom: 116px !important;
+  }
+
+  .pre-campaigns,
+  .pre-ships {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    overflow: visible !important;
+  }
+
+  .pre-campaigns .pre-choice,
+  .pre-ships .pre-choice {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .pre-missions {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .pre-game-footer {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+  }
+
+  .pre-summary {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .pre-summary strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    font-size: .82rem !important;
+  }
+
+  .pre-summary small {
+    display: none !important;
+  }
+
+  .pre-start {
+    flex: 0 0 auto !important;
+    padding: 11px 14px !important;
+    white-space: nowrap !important;
+  }
 }
