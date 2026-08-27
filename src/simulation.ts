@@ -51,13 +51,13 @@ export type PointOfSail =
 
 const DEG = Math.PI / 180;
 
-export const DEFAULT_VESSEL: VesselType = {
+export let DEFAULT_VESSEL: VesselType = {
   id: 'nao-carrack-baseline',
   name: 'Nao / carrack',
   maxThroughWaterSpeedKn: 6,
 };
 
-export const DEFAULT_RIG_POLAR: RigPolar = {
+export let DEFAULT_RIG_POLAR: RigPolar = {
   id: 'carrack-square-baseline',
   name: 'Carrack · square-rig baseline',
   speedScale: 0.45,
@@ -73,6 +73,11 @@ export const DEFAULT_RIG_POLAR: RigPolar = {
     { angleDeg: 180, efficiency: 0.72 },
   ],
 };
+
+export function configureDefaultShip(vessel: VesselType, rig: RigPolar) {
+  DEFAULT_VESSEL = vessel;
+  DEFAULT_RIG_POLAR = rig;
+}
 
 export { windAt, currentAt };
 
