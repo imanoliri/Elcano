@@ -8,8 +8,13 @@ import {
   type Vec2,
   type WorldState,
 } from './simulation';
+import { campaignForMission, missionFromUrl, worldStateForMission } from './missions';
 import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
 import { drawLand } from './world/geography';
+
+const activeMission = missionFromUrl();
+const activeCampaign = campaignForMission(activeMission);
+const initialStep = activeMission.tutorialSteps?.[0];
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -19,8 +24,8 @@ app.innerHTML = `
 
     <header class="hud-top">
       <button id="mission-chip" class="mission-chip" aria-label="Open mission instructions">
-        <span class="eyebrow">Elcano's road to the Moluccas</span>
-        <strong id="mission-title">1. Read the Bay of Biscay</strong>
+        <span class="eyebrow">${activeCampaign.title}</span>
+        <strong id="mission-title">${initialStep?.title ?? `Mission ${activeMission.number}. ${activeMission.title}`}</strong>
       </button>
       <div class="top-actions">
         <button id="reset" class="icon-button" aria-label="Restart mission">↻</button>
@@ -77,7 +82,7 @@ app.innerHTML = `
 
     <div id="modal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-backdrop"></div>
-      <section class="modal-card"><button id="close-modal" class="modal-close" aria-label="Close instructions">×</button><p class="eyebrow">San Sebastián → A Coruña · July 1525</p><h1 id="modal-title">Sail to Elcano's expedition</h1><p id="modal-text"></p><div class="legend-row"><span><i class="legend-line wind-line"></i> Wind</span><span><i class="legend-line current-line"></i> Current</span><span><i class="legend-dot"></i> A Coruña</span></div><p class="modal-note">A Coruña was the departure port of the Loaísa–Elcano expedition, which sailed for the Moluccas on 24 July 1525. This tutorial voyage from San Sebastián is a playable historical prelude, not a documented leg of Elcano's journey.</p><button id="start-mission" class="primary-button">Take the helm</button></section>
+      <section class="modal-card"><button id="close-modal" class="modal-close" aria-label="Close instructions">×</button><p id="mission-meta" class="eyebrow">${activeMission.from} → ${activeMission.to} · ${activeMission.date}</p><h1 id="modal-title">${activeMission.title}</h1><p id="modal-text"></p><div class="legend-row"><span><i class="legend-line wind-line"></i> Wind</span><span><i class="legend-line current-line"></i> Current</span><span><i class="legend-dot"></i> ${activeMission.to}</span></div><p id="mission-note" class="modal-note">${activeMission.historicalNote}</p><button id="start-mission" class="primary-button">Take the helm</button></section>
     </div>
     <div id="toast" class="toast" role="status"></div>
   </main>
@@ -95,12 +100,7 @@ const missionTitle = document.querySelector<HTMLElement>('#mission-title')!;
 const toast = document.querySelector<HTMLElement>('#toast')!;
 const timeButtons = [...document.querySelectorAll<HTMLButtonElement>('.time-button')];
 
-const START: WorldState = {
-  time: new Date('1525-07-01T12:00:00Z'),
-  elapsedHours: 0,
-  ship: { position: { lat: 43.3183, lon: -1.9812 }, headingDeg: 285, speed: 0 },
-  destination: { lat: 43.3623, lon: -8.4115 },
-};
+const START: WorldState = worldStateForMission(activeMission);
 const START_DISTANCE = distanceToDestination(START);
 let state: WorldState = structuredClone(START);
 let last = performance.now();
@@ -108,12 +108,7 @@ let reached = false;
 let tutorialStage = 0;
 let timeScale = 0;
 const explored = new Set<string>();
-
-const tutorial = [
-  { title: '1. Read the Bay of Biscay', text: 'Depart San Sebastián and study the real northern Spanish coastline. White arrows show prevailing wind; blue arrows show surface current. A Coruña is your destination on the Galician coast.' },
-  { title: '2. Make way west', text: 'Set sail and work west across the Bay of Biscay. Do not simply point at A Coruña: compare your heading with wind, current and actual track.' },
-  { title: '3. Approach Galicia', text: 'As you close the Galician coast, adjust your route for the final approach to A Coruña, where the Loaísa–Elcano fleet will depart for the Moluccas on 24 July 1525.' },
-];
+const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
 
 function setTimeScale(value: number) {
   timeScale = value;
@@ -151,13 +146,13 @@ function formatSignedHeading(degrees: number) {
 
 function openHelp() {
   const step = tutorial[Math.min(tutorialStage, tutorial.length - 1)];
-  modalTitle.textContent = reached ? 'A Coruña reached' : step.title;
-  modalText.textContent = reached ? `Reached A Coruña after ${formatElapsedDays(state.elapsedHours)}. Elcano's next voyage will depart from this port for the Moluccas.` : step.text;
+  modalTitle.textContent = reached ? `${activeMission.to} reached` : step.title;
+  modalText.textContent = reached ? `${activeMission.completion} Voyage time: ${formatElapsedDays(state.elapsedHours)}.` : step.text;
   modal.classList.add('open');
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; explored.clear(); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); showToast('Mission restarted');
+  state = structuredClone(START); reached = false; tutorialStage = 0; explored.clear(); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted');
 }
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
@@ -207,7 +202,13 @@ function draw() {
   }));
   updateInstruments();
 
-  if (!reached && distanceToDestination(state) < 20) { reached = true; setTimeScale(0); missionTitle.textContent = 'Mission complete'; showToast(`A Coruña · ${formatElapsedDays(state.elapsedHours)}`); openHelp(); }
+  if (!reached && distanceToDestination(state) < 20) {
+    reached = true;
+    setTimeScale(0);
+    missionTitle.textContent = 'Mission complete';
+    showToast(`${activeMission.to} · ${formatElapsedDays(state.elapsedHours)}`);
+    openHelp();
+  }
 }
 
 function updateInstruments() {
@@ -231,7 +232,14 @@ function setWidth(id: string, percent: number) { document.querySelector<HTMLElem
 let toastTimer = 0; function showToast(message: string) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = window.setTimeout(() => toast.classList.remove('show'), 1700); }
 
 function updateTutorial() {
-  if (reached) return; if (tutorialStage === 0 && timeScale > 0 && Number(sails.value) > 20) tutorialStage = 1; if (tutorialStage === 1 && state.ship.position.lon < -5.5) tutorialStage = 2; missionTitle.textContent = tutorial[Math.min(tutorialStage, tutorial.length - 1)].title;
+  if (reached) return;
+  if (!activeMission.tutorialSteps) {
+    missionTitle.textContent = `Mission ${activeMission.number}. ${activeMission.title}`;
+    return;
+  }
+  if (tutorialStage === 0 && timeScale > 0 && Number(sails.value) > 20) tutorialStage = 1;
+  if (tutorialStage === 1 && state.ship.position.lon < -5.5) tutorialStage = 2;
+  missionTitle.textContent = tutorial[Math.min(tutorialStage, tutorial.length - 1)].title;
 }
 
 function frame(now: number) {
@@ -240,4 +248,7 @@ function frame(now: number) {
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 
-modalText.textContent = tutorial[0].text; revealAroundShip(); updateControlReadouts(); requestAnimationFrame(frame);
+modalText.textContent = tutorial[0].text;
+revealAroundShip();
+updateControlReadouts();
+requestAnimationFrame(frame);
