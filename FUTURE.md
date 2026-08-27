@@ -112,6 +112,7 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 - [x] Prevent normal sailing across land / stop the ship when grounded.
 - [x] Add contextual anchoring in coastal water.
 - [x] Add manual waypoint route planning and automatic helm following while keeping sails manual.
+- [x] Add a direct-destination mode to the same map control: one map tap sets a single autopilot target, and each later tap replaces the previous target. Toggle the control into waypoint mode to append multiple route points instead.
 - Allow editing individual waypoints.
 - Allow inserting/removing route points without clearing the full route.
 - Show route-leg distance and bearing.
@@ -119,12 +120,11 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 
 ## 7. Near-term implementation order
 
-1. Course trail plus heading and course-over-ground navigation vectors.
-2. Wind/current visualization improvements.
-3. Historical navigation instruments.
-4. Coastal navigation phase 2 route editing.
-5. Sparse map labels and nautical scale bar.
-6. Continue hardening global environment tiling and caching for long voyages.
+1. Wind/current visualization improvements.
+2. Historical navigation instruments.
+3. Coastal navigation phase 2 route editing.
+4. Sparse map labels and nautical scale bar.
+5. Continue hardening global environment tiling and caching for long voyages.
 
 ## Scope rule
 
