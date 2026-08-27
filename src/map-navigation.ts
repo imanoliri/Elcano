@@ -33,6 +33,7 @@ const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
 
 if (ocean && shell) {
+  const viewport = shell;
   const overlay = document.createElement('canvas');
   overlay.id = 'map-navigation-overlay';
   overlay.setAttribute('aria-hidden', 'true');
@@ -42,7 +43,7 @@ if (ocean && shell) {
   const scale = document.createElement('div');
   scale.className = 'nautical-scale';
   scale.innerHTML = '<div class="nautical-scale-line"></div><span class="nautical-scale-label">— nm</span>';
-  shell.append(scale);
+  viewport.append(scale);
   const scaleLine = scale.querySelector<HTMLElement>('.nautical-scale-line')!;
   const scaleLabel = scale.querySelector<HTMLElement>('.nautical-scale-label')!;
 
@@ -50,15 +51,15 @@ if (ocean && shell) {
   north.className = 'map-north-cue';
   north.setAttribute('aria-hidden', 'true');
   north.innerHTML = '<span>N</span>';
-  shell.append(north);
+  viewport.append(north);
 
   let camera: Camera | null = null;
   let scheduled = false;
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
-    const width = Math.max(1, shell.clientWidth);
-    const height = Math.max(1, shell.clientHeight);
+    const width = Math.max(1, viewport.clientWidth);
+    const height = Math.max(1, viewport.clientHeight);
     overlay.width = Math.round(width * dpr);
     overlay.height = Math.round(height * dpr);
     overlay.style.width = `${width}px`;
@@ -68,7 +69,7 @@ if (ocean && shell) {
 
   function screenCopies(point: Point) {
     if (!camera) return [];
-    const range = visibleWorldRange(camera.x, camera.y, camera.scale, shell.clientWidth, shell.clientHeight);
+    const range = visibleWorldRange(camera.x, camera.y, camera.scale, viewport.clientWidth, viewport.clientHeight);
     const points: Point[] = [];
     for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
       for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
@@ -97,7 +98,7 @@ if (ocean && shell) {
       ctx.font = style.font;
       const width = ctx.measureText(label.name).width;
       for (const point of screenCopies(project(label))) {
-        if (point.x < -width || point.x > shell.clientWidth + width || point.y < -20 || point.y > shell.clientHeight + 20) continue;
+        if (point.x < -width || point.x > viewport.clientWidth + width || point.y < -20 || point.y > viewport.clientHeight + 20) continue;
         const box = { x: point.x - width / 2 - 4, y: point.y - 8, w: width + 8, h: 16 };
         if (occupied.some((other) => box.x < other.x + other.w && box.x + box.w > other.x && box.y < other.y + other.h && box.y + box.h > other.y)) continue;
         occupied.push(box);
@@ -133,9 +134,9 @@ if (ocean && shell) {
 
   function updateScale() {
     if (!camera) return;
-    const targetPx = Math.min(110, Math.max(70, shell.clientWidth * 0.12));
-    const centerX = shell.clientWidth / 2;
-    const centerY = shell.clientHeight / 2;
+    const targetPx = Math.min(110, Math.max(70, viewport.clientWidth * 0.12));
+    const centerX = viewport.clientWidth / 2;
+    const centerY = viewport.clientHeight / 2;
     const worldA = { x: (centerX - camera.x) / camera.scale, y: (centerY - camera.y) / camera.scale };
     const worldB = { x: (centerX + targetPx - camera.x) / camera.scale, y: (centerY - camera.y) / camera.scale };
     const geoA = unproject({ x: ((worldA.x % WORLD_MAP_WIDTH) + WORLD_MAP_WIDTH) % WORLD_MAP_WIDTH, y: Math.max(0, Math.min(WORLD_MAP_HEIGHT, worldA.y)) });
@@ -152,7 +153,7 @@ if (ocean && shell) {
     if (!ctx || !camera) return;
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, shell.clientWidth, shell.clientHeight);
+    ctx.clearRect(0, 0, viewport.clientWidth, viewport.clientHeight);
     drawLabels();
     updateScale();
   }
@@ -171,6 +172,6 @@ if (ocean && shell) {
   });
 
   const resizeObserver = new ResizeObserver(() => { resize(); scheduleRender(); });
-  resizeObserver.observe(shell);
+  resizeObserver.observe(viewport);
   resize();
 }
