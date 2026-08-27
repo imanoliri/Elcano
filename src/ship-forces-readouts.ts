@@ -4,16 +4,14 @@ const panel = document.querySelector<HTMLElement>('.ship-vector-panel');
 const diagram = document.querySelector<SVGElement>('#ship-diagram');
 
 if (panel && diagram) {
-  const headingReadout = document.createElement('div');
-  headingReadout.className = 'ship-heading-readout';
-  headingReadout.innerHTML = '<span>Heading</span><strong id="forces-heading">0°</strong>';
-  diagram.insertAdjacentElement('afterend', headingReadout);
+  const panelHeading = panel.querySelector<HTMLElement>('.vector-panel-heading');
+  if (panelHeading) panelHeading.innerHTML = '<span>Heading</span><strong id="forces-heading">0°</strong>';
 
   const readouts = document.createElement('div');
   readouts.className = 'force-readouts';
   readouts.innerHTML = `
     <div class="force-readout wind-force-readout">
-      <span class="force-label">Wind from</span>
+      <span class="force-label">Wind</span>
       <span class="force-line"></span>
       <span class="force-speed" id="forces-wind-speed">0.0 kn</span>
       <span class="force-angle" id="forces-wind-angle">0°</span>
