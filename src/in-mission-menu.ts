@@ -43,6 +43,13 @@ if (params.get('play') === '1') {
     menuButton.setAttribute('aria-label', 'Mission menu');
     topActions.appendChild(menuButton);
 
+    // Keep the menu button on the first row and move gameplay actions such as
+    // waypoint planning to a second row directly beneath it.
+    const gameplayActions = document.createElement('div');
+    gameplayActions.className = 'gameplay-action-row';
+    topActions.querySelectorAll<HTMLElement>(':scope > .route-actions').forEach((group) => gameplayActions.appendChild(group));
+    if (gameplayActions.childElementCount > 0) topActions.appendChild(gameplayActions);
+
     const overlay = document.createElement('div');
     overlay.className = 'game-menu-overlay';
     overlay.setAttribute('aria-hidden', 'true');
@@ -69,6 +76,7 @@ if (params.get('play') === '1') {
 
     const style = document.createElement('style');
     style.textContent = `
+      .top-actions{display:grid;justify-items:end;align-items:start;gap:8px}.gameplay-action-row{display:flex;justify-content:flex-end;gap:8px}.gameplay-action-row .route-actions{display:flex;gap:8px}
       .game-menu-overlay{position:fixed;inset:0;z-index:160;display:none;place-items:center;padding:18px}.game-menu-overlay.open{display:grid}.game-menu-backdrop{position:absolute;inset:0;background:rgba(2,9,14,.72);backdrop-filter:blur(7px)}
       .game-menu-card{position:relative;width:min(460px,100%);padding:28px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(13,43,56,.99),rgba(5,19,28,.99));box-shadow:0 25px 80px rgba(0,0,0,.55);color:#f4efe6}.game-menu-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#f4efe6;font-size:1.5rem}.game-menu-kicker{margin:0;color:#d7bc7f;font:800 10px/1 system-ui;letter-spacing:.15em;text-transform:uppercase}.game-menu-card h2{margin:7px 44px 5px 0;font:700 32px/1.05 Georgia,serif}.game-menu-route{margin:0;opacity:.68}.game-menu-ship{margin:18px 0 0;padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.05);font-size:.82rem;color:#ead098}
       .game-menu-actions{display:grid;gap:9px;margin-top:20px}.game-menu-actions button{border:1px solid rgba(255,255,255,.14);border-radius:11px;background:rgba(255,255,255,.055);color:#f4efe6;padding:12px 14px;font-weight:700}.game-menu-actions button:disabled{opacity:.3;cursor:default}.game-menu-actions .game-menu-primary{background:#e8b94f;color:#17202a;border-color:transparent}.game-menu-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}.game-menu-actions .game-menu-exit{margin-top:5px;border-color:rgba(232,185,79,.35);color:#e8c46c}
