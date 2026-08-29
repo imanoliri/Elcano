@@ -154,6 +154,19 @@ Initial mission breakdown:
 
 Mission endpoints are gameplay waypoints representing major historical legs, not a claim that the fleet stopped at every endpoint exactly as represented. Briefings should distinguish documented landfalls from useful geographic subdivision points.
 
+### Campaign progress, logbook and persistent chart knowledge
+
+Turn completed voyages into a coherent expedition without preventing replay or making the game grindy.
+
+- Store campaign progress locally: completed missions, completion date, voyage time, distance sailed, chosen ship and best result for each leg.
+- Add a voyage logbook that lets the player review completed legs, their route, basic results and previous attempts.
+- Mark completed legs in the campaign selector, but keep every mission replayable and selectable for practice.
+- Persist player chart knowledge across missions and campaigns. Water tiles discovered during an earlier voyage should remain visible on later voyages rather than returning to fog.
+- Persist only **player knowledge**—explored tiles and later, possibly, recorded observations—not the full hidden world state. New missions must still begin with undiscovered waters outside the accumulated chart.
+- Keep a deliberate reset option for players who want a fresh expedition/chart.
+
+This makes exploration cumulative: a player who crossed the Atlantic on an earlier leg can use the charted waters while preparing a later voyage, but must still personally discover unfamiliar seas.
+
 ### Later campaigns
 
 Possible future campaigns include:
@@ -177,13 +190,49 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 - Show route-leg distance and bearing.
 - Define a clear waypoint-arrival radius and route completion state.
 
-## 7. Near-term implementation order
+### Strait of Magellan local navigation
 
-1. Historical navigation instruments.
-2. Coastal navigation phase 2 route editing.
-3. Sparse map labels and nautical scale bar.
-4. Continue hardening global environment tiling and caching for long voyages.
-5. Add deterministic day-to-day environmental variation.
+Make the campaign's most constrained historical passage feel distinct from open-ocean sailing.
+
+- Add deterministic tidal currents and channel jets.
+- Model wind funneling through narrow channels and more sheltered anchorages.
+- Make favorable passage windows possible through waiting, observation and route choice.
+- Keep this local system separate from the global weather/current layers and avoid adding damage, waves or opaque randomness.
+
+## 7. Weather windows and route timing
+
+Build on moving deterministic weather systems so anchoring and time acceleration become meaningful route decisions.
+
+- Add a small, readable forecast for conditions the player has already discovered: local wind/current trend and nearby known storm movement over a limited future window.
+- Do not reveal undiscovered weather systems or create a perfect global forecast.
+- Make it clear when waiting at anchor could produce a better departure window than forcing an unfavorable passage.
+- Preserve deterministic results so forecasts, replays and tests remain reproducible.
+
+## 8. Named ocean-current corridors
+
+Make major currents legible as routes a player can deliberately find and exploit.
+
+- Strengthen and identify the Gulf Stream, Brazil Current, Kuroshio, Agulhas Current and East Australian Current as persistent current corridors.
+- Add compact map labels or chart cues at useful zoom levels; preserve fog-of-war so they are learned through exploration.
+- Keep the corridors compatible with the existing regional environment data and dynamic-weather influence.
+
+## 9. Nautical chart scale
+
+Add light-touch map aids without turning the game into a dense instrument panel.
+
+- Add a zoom-aware nautical-mile scale bar.
+- Optionally add sparse compass/cardinal ticks at useful zoom levels.
+- Keep distance/bearing measurement and dead reckoning for the later historical-uncertainty direction, not the current arcade-readable mode.
+
+## 10. Near-term implementation order
+
+1. Campaign progress, logbook and persistent chart knowledge.
+2. Weather windows and route timing.
+3. Strait of Magellan local navigation.
+4. Named ocean-current corridors.
+5. Nautical chart scale.
+6. Continue hardening global environment tiling and caching for long voyages.
+7. Add deterministic day-to-day environmental variation.
 
 ## Scope rule
 

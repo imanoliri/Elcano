@@ -24,6 +24,8 @@ The branch currently includes:
 
 See [WORLD_DATA.md](./WORLD_DATA.md) for the real-world geography, wind and current data strategy, and [SEAS_AND_WEATHER.md](./SEAS_AND_WEATHER.md) for the gameplay reference to prevailing conditions and dynamic storms.
 
+For a player-facing inventory of everything currently implemented, see [FEATURES.md](./FEATURES.md). Planned work is kept separately in [FUTURE.md](./FUTURE.md).
+
 ## Vision
 
 Elcano should develop into a navigation, exploration and cartography game in which players:
