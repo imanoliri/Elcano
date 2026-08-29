@@ -1,10 +1,12 @@
 import './map-labels.css';
 import { project } from './world/coordinates';
 import { virtualWorldPoint, visibleWorldRange } from './world-wrap';
+import { isWorldPointExplored } from './exploration';
+import { currentCorridors } from './world/current-corridors';
 
 type Geo = { lat: number; lon: number };
 type Camera = { x: number; y: number; scale: number; zoomMultiplier?: number };
-type LabelKind = 'mission' | 'city' | 'port' | 'island' | 'cape' | 'sea' | 'strait';
+type LabelKind = 'mission' | 'city' | 'port' | 'island' | 'cape' | 'sea' | 'strait' | 'current';
 type MapLabel = Geo & {
   name: string;
   kind: LabelKind;
@@ -105,6 +107,8 @@ if (viewport) {
     { name: 'Philippine Sea', lat: 17.0, lon: 132.0, kind: 'sea', minZoom: 8, priority: 25 },
   ];
 
+  const corridorLabels: MapLabel[] = currentCorridors.map(({ name, lat, lon, minZoom }) => ({ name, lat, lon, minZoom, priority: 36, kind: 'current' }));
+
   let camera: Camera = { x: 0, y: 0, scale: 1, zoomMultiplier: 1 };
 
   function resize() {
@@ -142,6 +146,7 @@ if (viewport) {
     if (kind === 'mission') return { font: '600 12px system-ui, sans-serif', fill: 'rgba(255,245,211,.98)', dot: true };
     if (kind === 'city' || kind === 'port') return { font: '600 11px system-ui, sans-serif', fill: 'rgba(239,244,244,.92)', dot: true };
     if (kind === 'sea' || kind === 'strait') return { font: 'italic 11px system-ui, sans-serif', fill: 'rgba(185,217,230,.72)', dot: false };
+    if (kind === 'current') return { font: 'italic 600 10px system-ui, sans-serif', fill: 'rgba(114,224,211,.88)', dot: false };
     return { font: '500 10.5px system-ui, sans-serif', fill: 'rgba(222,231,228,.82)', dot: kind === 'cape' };
   }
 
@@ -150,8 +155,9 @@ if (viewport) {
     ctx.clearRect(0, 0, width, height);
     const zoom = camera.zoomMultiplier ?? 1;
     const placed: DOMRect[] = [];
-    const candidates = labels
+    const candidates = [...labels, ...corridorLabels]
       .filter((label) => zoom >= label.minZoom)
+      .filter((label) => label.kind !== 'current' || isWorldPointExplored(project(label)))
       .map((label) => ({ label, point: nearestWrappedScreenPoint(project(label), width, height) }))
       .filter(({ point }) => point.x > -100 && point.x < width + 100 && point.y > -50 && point.y < height + 50)
       .sort((a, b) => b.label.priority - a.label.priority);
