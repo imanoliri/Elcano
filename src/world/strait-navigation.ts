@@ -3,7 +3,9 @@ import type { EastNorthVector, GeoPosition } from './coordinates';
 export type StraitZone = { id: string; name: string; center: GeoPosition; radiusNm: number; axisBearing: number; peakCurrentKn: number; phaseHours: number; windGain: number };
 export const straitZones: StraitZone[] = [
   { id: 'narrows', name: 'Atlantic Narrows', center: { lat: -52.42, lon: -69.15 }, radiusNm: 40, axisBearing: 270, peakCurrentKn: 4.5, phaseHours: 0, windGain: 1.25 },
-  { id: 'central', name: 'Central channels', center: { lat: -53.05, lon: -71.15 }, radiusNm: 58, axisBearing: 286, peakCurrentKn: 3.2, phaseHours: 3.5, windGain: 1.15 },
+  // Keep a meaningful but usable handover from the Atlantic Narrows: both
+  // zones now share a westbound set for roughly 4.7 hours each tide cycle.
+  { id: 'central', name: 'Central channels', center: { lat: -53.05, lon: -71.15 }, radiusNm: 58, axisBearing: 286, peakCurrentKn: 3.2, phaseHours: 1.5, windGain: 1.15 },
   // West of Bahía Fortescue the channel turns westward again. Without this
   // separate reach, the global background current remains visible here and
   // can make the passage permanently eastbound.
