@@ -252,6 +252,13 @@ if (canvas && viewport) {
     if (cameraMode === 'follow') centerOnPoint(shipPoint);
   });
 
+  window.addEventListener('elcano:camera-zoom', (event) => {
+    const factor = (event as CustomEvent<number>).detail;
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    const { width, height } = viewportSize();
+    zoomAround(width / 2, height / 2, scale * factor);
+  });
+
   viewport.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
