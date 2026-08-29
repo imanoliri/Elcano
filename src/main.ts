@@ -20,6 +20,7 @@ import {
 } from './exploration';
 import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedition-progress';
 import { shipPresetFromId } from './ship-selection';
+import { actionForKeyboardEvent } from './keyboard-controls';
 
 const activeMission = missionFromUrl();
 const activeCampaign = campaignForMission(activeMission);
@@ -122,7 +123,7 @@ const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMissi
 
 function setTimeScale(value: number) {
   timeScale = value;
-  timeButtons.forEach((button) => button.classList.toggle('active', Number(button.dataset.time) === value));
+  document.querySelectorAll<HTMLButtonElement>('.time-button').forEach((button) => button.classList.toggle('active', Number(button.dataset.time) === value));
 }
 
 timeButtons.forEach((button) => button.addEventListener('click', () => setTimeScale(Number(button.dataset.time))));
@@ -136,9 +137,31 @@ document.querySelector('#close-modal')!.addEventListener('click', closeHelp);
 document.querySelector('#start-mission')!.addEventListener('click', closeHelp);
 modal.querySelector('.modal-backdrop')!.addEventListener('click', closeHelp);
 window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeHelp();
-  if (event.key === 'ArrowLeft') rudder.value = String(Math.max(-20, Number(rudder.value) - 2));
-  if (event.key === 'ArrowRight') rudder.value = String(Math.min(20, Number(rudder.value) + 2));
+  if (event.key === 'Escape') { closeHelp(); return; }
+  if (event.target instanceof Element && event.target.closest('input, textarea, select, button, [contenteditable="true"]')) return;
+  if (document.querySelector('.keyboard-binding.is-capturing')) return;
+  if (document.querySelector('.modal.open, .game-menu-overlay.open, .campaign-menu-overlay.open')) return;
+  const action = actionForKeyboardEvent(event);
+  if (!action) return;
+  event.preventDefault();
+  if (action === 'helmPort') rudder.value = String(Math.max(-20, Number(rudder.value) - 2));
+  if (action === 'helmStarboard') rudder.value = String(Math.min(20, Number(rudder.value) + 2));
+  if (action === 'sailsRaise') sails.value = String(Math.min(100, Number(sails.value) + 5));
+  if (action === 'sailsLower') sails.value = String(Math.max(0, Number(sails.value) - 5));
+  if (action === 'centerHelm') rudder.value = '0';
+  if (action === 'anchor') document.querySelector<HTMLButtonElement>('#coastal-controls [data-anchor]:not([hidden])')?.click();
+  if (action === 'camera') document.querySelector<HTMLButtonElement>('.camera-mode-button')?.click();
+  if (action === 'navigation') document.querySelector<HTMLButtonElement>('.route-button')?.click();
+  if (action === 'zoomIn') window.dispatchEvent(new CustomEvent('elcano:camera-zoom', { detail: 1.25 }));
+  if (action === 'zoomOut') window.dispatchEvent(new CustomEvent('elcano:camera-zoom', { detail: .8 }));
+  if (action === 'pauseResume') setTimeScale(timeScale === 0 ? 1 : 0);
+  if (action === 'speed1') setTimeScale(1);
+  if (action === 'speed4') setTimeScale(4);
+  if (action === 'speed8') setTimeScale(8);
+  if (action === 'speed16') setTimeScale(16);
+  if (action === 'restart') resetMission();
+  if (action === 'instructions') openHelp();
+  if (action === 'missionMenu') window.dispatchEvent(new CustomEvent('elcano:open-game-menu'));
   updateControlReadouts();
 });
 

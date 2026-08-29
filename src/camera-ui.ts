@@ -46,6 +46,11 @@ if (canvas && viewport) {
   // tutorial even though the ship state had correctly moved elsewhere.
   const initialCenter = shipPoint;
   const INITIAL_ZOOM_MULTIPLIER = 50;
+  // The map source is a fixed-resolution canvas. A multiplier of 50 is useful
+  // on a phone, but turns into a very soft 30–40× interpolation on a laptop.
+  // Keep the automatic opening view below that visible blur threshold; players
+  // can still deliberately zoom farther in when they need to inspect a coast.
+  const MAX_CRISP_OPENING_SCALE = 8;
   const MAX_ZOOM_MULTIPLIER = 256;
   const MAX_WRAP_DPR = 2;
   const SOURCE_REFRESH_INTERVAL_MS = 50;
@@ -134,7 +139,7 @@ if (canvas && viewport) {
   function resetCamera() {
     const { width } = viewportSize();
     minScale = width / WORLD_MAP_WIDTH;
-    scale = Math.max(minScale, minScale * INITIAL_ZOOM_MULTIPLIER);
+    scale = Math.max(minScale, Math.min(minScale * INITIAL_ZOOM_MULTIPLIER, MAX_CRISP_OPENING_SCALE));
     offsetX = width / 2 - initialCenter.x * scale;
     offsetY = viewport.clientHeight / 2 - initialCenter.y * scale;
     applyCamera();
@@ -252,6 +257,13 @@ if (canvas && viewport) {
     if (cameraMode === 'follow') centerOnPoint(shipPoint);
   });
 
+  window.addEventListener('elcano:camera-zoom', (event) => {
+    const factor = (event as CustomEvent<number>).detail;
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    const { width, height } = viewportSize();
+    zoomAround(width / 2, height / 2, scale * factor);
+  });
+
   viewport.addEventListener('wheel', (event) => {
     event.preventDefault();
     const rect = viewport.getBoundingClientRect();
@@ -339,7 +351,7 @@ if (canvas && viewport) {
     const { width } = viewportSize();
     minScale = width / WORLD_MAP_WIDTH;
     if (scale < minScale) scale = minScale;
-    else if (Math.abs(scale - oldMin) < 0.001) scale = minScale * INITIAL_ZOOM_MULTIPLIER;
+    else if (Math.abs(scale - oldMin) < 0.001) scale = Math.min(minScale * INITIAL_ZOOM_MULTIPLIER, MAX_CRISP_OPENING_SCALE);
     if (cameraMode === 'follow') centerOnPoint(shipPoint);
     else applyCamera();
   });

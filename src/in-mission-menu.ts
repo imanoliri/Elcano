@@ -1,5 +1,6 @@
 import { allMissions, missionFromUrl } from './missions';
 import { shipPresetFromId } from './ship-selection';
+import { createKeyboardControlsPanel } from './keyboard-controls';
 
 const params = new URLSearchParams(window.location.search);
 if (params.get('play') === '1') {
@@ -74,6 +75,7 @@ if (params.get('play') === '1') {
             <label><input id="show-current-field" type="checkbox" checked> Current field</label>
             </div>
           </details>
+          <div id="game-keyboard-controls"></div>
           <button id="game-restart" type="button">Restart mission</button>
           <div class="game-menu-nav">
             <button id="game-previous" type="button" ${previous ? '' : 'disabled'}>← Previous mission</button>
@@ -121,11 +123,13 @@ if (params.get('play') === '1') {
     overlay.querySelector('#game-resume')!.addEventListener('click', close);
     overlay.querySelector('#game-briefing')!.addEventListener('click', () => openExistingModal('#modal'));
     overlay.querySelector('#game-sailing-guide')!.addEventListener('click', () => openExistingModal('#sailing-guide-modal'));
+    overlay.querySelector('#game-keyboard-controls')!.append(createKeyboardControlsPanel());
     overlay.querySelector('#game-restart')!.addEventListener('click', () => window.location.reload());
     overlay.querySelector('#game-exit')!.addEventListener('click', exitMission);
     overlay.querySelector('#game-previous')!.addEventListener('click', () => previous && goToMission(previous.id));
     overlay.querySelector('#game-next')!.addEventListener('click', () => next && goToMission(next.id));
     overlay.querySelectorAll<HTMLInputElement>('.game-menu-visibility input').forEach((input) => input.addEventListener('change', sendNavigationVisibility));
     window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && overlay.classList.contains('open')) close(); });
+    window.addEventListener('elcano:open-game-menu', open);
   }
 }
