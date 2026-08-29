@@ -2,6 +2,7 @@ import './style.css';
 import {
   currentAt,
   distanceToDestination,
+  maneuveringDriveVelocity,
   sailingVelocity,
   stepWorld,
   setManeuveringDriveActive,
@@ -270,7 +271,8 @@ function draw() {
 
 function updateInstruments() {
   const wind = windAt(state.ship.position, state.time); const current = currentAt(state.ship.position, state.time); const sail = sailingVelocity(state.ship.headingDeg, wind, Number(sails.value) / 100);
-  const ground = { x: sail.x + current.x, y: sail.y + current.y }; const apparent = { x: wind.x - ground.x, y: wind.y - ground.y };
+  const drive = maneuveringDriveVelocity(state.ship.headingDeg, wind, Number(sails.value) / 100);
+  const ground = { x: sail.x + drive.x + current.x, y: sail.y + drive.y + current.y }; const apparent = { x: wind.x - ground.x, y: wind.y - ground.y };
   const speed = Math.hypot(ground.x, ground.y); const windSpeed = Math.hypot(wind.x, wind.y); const currentSpeed = Math.hypot(current.x, current.y); const distance = distanceToDestination(state); const progress = Math.max(0, Math.min(1, 1 - distance / START_DISTANCE));
   setText('heading', formatSignedHeading(state.ship.headingDeg)); setText('speed', `${speed.toFixed(2)} kn`); setText('wind', windSpeed.toFixed(1)); setText('wind-bearing', bearing(wind)); setText('current', currentSpeed.toFixed(2)); setText('current-bearing', bearing(current)); setText('distance', `${distance.toFixed(0)} nm`); setText('elapsed', `${(state.elapsedHours / 24).toFixed(1)} d`);
   setWidth('speed-bar', speed / 10 * 100); setWidth('wind-bar', windSpeed / 25 * 100); setWidth('current-bar', currentSpeed / 1.5 * 100); setWidth('progress-bar', progress * 100); document.querySelector<HTMLElement>('#compass-needle')!.style.transform = `rotate(${state.ship.headingDeg}deg)`;
