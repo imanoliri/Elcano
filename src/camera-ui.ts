@@ -128,7 +128,7 @@ if (canvas && viewport) {
     canvas.dataset.cameraScale = String(scale);
     canvas.dataset.zoomMultiplier = String(zoomMultiplier);
     window.dispatchEvent(new CustomEvent('elcano:camera-change', {
-      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier, wrapped: true },
+      detail: { x: offsetX, y: offsetY, scale, minScale, zoomMultiplier, mode: cameraMode, wrapped: true },
     }));
   }
 
