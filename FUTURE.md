@@ -218,7 +218,36 @@ Add light-touch map aids without turning the game into a dense instrument panel.
 - Optionally add sparse compass/cardinal ticks at useful zoom levels.
 - Keep distance/bearing measurement and dead reckoning for the later historical-uncertainty direction, not the current arcade-readable mode.
 
-## 10. Near-term implementation order
+## 10. Expedition resources, crew, and vessel condition
+
+Only introduce this as a deliberate later expansion of Elcano beyond the navigation-first game. It should add meaningful expedition choices without becoming a dense survival, combat, or management game.
+
+### Provisions and armament
+
+- Track a compact set of expedition resources: **food**, **weapons/ammunition**, and **gold**. Do not add freshwater unless a later voyage design makes it necessary.
+- Before a mission, let the player choose a limited crew complement of sailors and soldiers. The choice should have readable trade-offs: sailors improve sailing capability and recovery, while soldiers provide security for specifically designed encounters.
+- Use gold to pay sailors and soldiers, fund repairs and provisions, and resolve some encounter choices. Unpaid crew should affect morale gradually and visibly rather than fail the expedition without warning.
+- Let successful fishing, trading, resupply, or other contextual encounters replenish food; do not make resource collection a repetitive grind.
+- Let selected encounters offer gold gains, costs, or trade-offs, while avoiding a broad buy-low/sell-high trading economy.
+- Make shortages affect morale and expedition options rather than instantly causing opaque failure states.
+
+### Ship and mast integrity
+
+- Give the hull a small, readable integrity track of roughly three to six points.
+- Give each mast its own one- or two-point integrity track.
+- Severe storms, grounding, and other clearly signalled hazards can cause damage. Mast damage should reduce the associated sail plan/performance; hull damage should make continued voyaging riskier.
+- Provide limited, legible repair and mitigation options at safe anchorages or through crew/resources. Damage must be deterministic or explicitly seed-driven for reproducible voyages.
+- Keep the system connected to real sailing decisions—seeking shelter, waiting for a weather window, and choosing a route—not as random attrition.
+
+### Morale, incidents, and coastal encounters
+
+- Add a small morale state driven by food, damage, weather exposure, progress, and major decisions. Low morale can create warnings, refusals, and eventually a mutiny situation; it should not produce arbitrary surprise game-overs.
+- Add authored or seeded voyage situations: fishing sightings, found supplies, distress signals, damaged rigging, illness, storms, and other navigational decisions with clear choices and consequences.
+- At coasts, support historically grounded encounters with local inhabitants that can lead to observation, diplomacy, trade, resupply, retreat, or—only where the mission context supports it—conflict using the selected soldiers and weapons.
+- Do not portray Indigenous people as generic random attackers. Encounters should have named/contextual framing and avoid making violence the default or rewarding response.
+- Keep combat abstract, brief, and consequence-focused if it is included at all; Elcano remains a sailing-navigation game rather than a combat game.
+
+## 11. Near-term implementation order
 
 1. Campaign progress, logbook and persistent chart knowledge.
 2. Weather windows and route timing.
@@ -230,6 +259,6 @@ Add light-touch map aids without turning the game into a dense instrument panel.
 
 ## Scope rule
 
-Do not add crew management, supplies, trading, RPG progression, detailed damage systems, politics, combat, or other large subsystems unless the direction of the game changes explicitly later.
+Do not add dense crew management, survival simulation, trading economies, RPG progression, detailed damage systems, politics, or combat systems as a default direction. The later expedition layer above is an explicit, deliberately lightweight exception if the project chooses to broaden in that direction.
 
 The intended game remains primarily about **real-world sailing navigation, winds, currents, ship/rig choice, and historical voyages**.
