@@ -34,6 +34,8 @@ The player should eventually be able to navigate the real Atlantic and the wider
 - [x] Add two forward navigation vectors at the ship: a heading vector showing where the bow is pointed and a track/course-over-ground vector showing the actual direction of movement. Their angular difference is the ship's slip/drift angle.
 - Keep an optional bearing-to-target reference line as a separate future aid so desired bearing can be compared with heading and track without confusing it with either vector.
 - Add deterministic day-to-day wind variation around the monthly climatology so voyages encounter plausible calms, stronger winds and directional shifts while remaining reproducible and static-first. Preserve the climatological mean direction and scalar wind-speed distribution rather than simply adding random noise.
+- Add post-voyage route debriefs using the existing logbook data: route map, time, distance, average speed, weather encountered and readable personal-best comparisons.
+- Add a short weather-window tutorial that explicitly teaches observing the forecast, anchoring, waiting and departing in favourable conditions.
 - Keep historical missions explicit that modern observed/reanalysis data represents plausible prevailing conditions, not literal weather from the 16th century.
 
 For the current game, discovered environmental knowledge should remain intentionally arcade-readable: once an area has been explored, the player may inspect its current simulated wind/current field. Do not make this historically restrictive yet.
@@ -206,7 +208,7 @@ Build on moving deterministic weather systems so anchoring and time acceleration
 
 Make major currents legible as routes a player can deliberately find and exploit.
 
-- Strengthen and identify the Gulf Stream, Brazil Current, Kuroshio, Agulhas Current and East Australian Current as persistent current corridors.
+- [x] Identify the Gulf Stream, Brazil Current, Kuroshio, Agulhas Current and East Australian Current as persistent current corridors.
 - Add compact map labels or chart cues at useful zoom levels; preserve fog-of-war so they are learned through exploration.
 - Keep the corridors compatible with the existing regional environment data and dynamic-weather influence.
 
