@@ -1,6 +1,6 @@
 import { campaigns, missionFromUrl, type Campaign, type Mission } from './missions';
 import { SHIP_PRESETS, shipPresetFromId, type ShipPreset } from './ship-selection';
-import { bestTimeForMission, getExpeditionProgress, resetExpeditionProgress, voyageForMission } from './expedition-progress';
+import { bestTimeForMission, exportExpeditionProgress, getExpeditionProgress, importExpeditionProgress, resetExpeditionProgress, voyageForMission } from './expedition-progress';
 
 const params = new URLSearchParams(window.location.search);
 const isPlaying = params.get('play') === '1';
@@ -53,7 +53,7 @@ if (!isPlaying) {
 
   const style = document.createElement('style');
   style.textContent = `
-    .pre-game-menu{position:fixed;inset:0;z-index:200;background:radial-gradient(circle at 50% 15%,#174b5f 0,#0b2d3d 38%,#06131b 100%);overflow:auto;color:#f4efe6}.pre-logbook-button{margin-top:10px;border:1px solid rgba(232,185,79,.45);border-radius:999px;background:rgba(232,185,79,.1);color:#f1d38d;padding:8px 12px;font-weight:800;cursor:pointer}.logbook-list{display:grid;gap:9px;margin-top:18px}.logbook-entry{padding:11px;border-radius:12px;background:rgba(255,255,255,.05)}.logbook-entry strong,.logbook-entry small{display:block}.logbook-entry small{margin-top:4px;opacity:.68;line-height:1.4}.logbook-reset{margin-top:20px;width:100%;padding:12px;border:1px solid rgba(229,119,102,.5);border-radius:11px;background:rgba(151,51,40,.16);color:#ffd0c8;font-weight:800;cursor:pointer}
+    .pre-game-menu{position:fixed;inset:0;z-index:200;background:radial-gradient(circle at 50% 15%,#174b5f 0,#0b2d3d 38%,#06131b 100%);overflow:auto;color:#f4efe6}.pre-logbook-button{margin-top:10px;border:1px solid rgba(232,185,79,.45);border-radius:999px;background:rgba(232,185,79,.1);color:#f1d38d;padding:8px 12px;font-weight:800;cursor:pointer}.logbook-list{display:grid;gap:9px;margin-top:18px}.logbook-entry{padding:11px;border-radius:12px;background:rgba(255,255,255,.05)}.logbook-entry strong,.logbook-entry small{display:block}.logbook-entry small{margin-top:4px;opacity:.68;line-height:1.4}.logbook-transfer{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}.logbook-transfer button{padding:12px;border:1px solid rgba(232,185,79,.4);border-radius:11px;background:rgba(232,185,79,.1);color:#f1d38d;font-weight:800;cursor:pointer}.logbook-reset{margin-top:10px;width:100%;padding:12px;border:1px solid rgba(229,119,102,.5);border-radius:11px;background:rgba(151,51,40,.16);color:#ffd0c8;font-weight:800;cursor:pointer}
     .pre-game-card{width:min(980px,calc(100% - 32px));margin:0 auto;padding:clamp(28px,6vw,64px) 0 48px}.pre-game-header{display:flex;justify-content:space-between;gap:32px;align-items:end;margin-bottom:32px}.pre-game-header h1{margin:4px 0 0;font:700 clamp(36px,7vw,68px)/.95 Georgia,serif}.pre-game-header>p{max-width:320px;margin:0;opacity:.68;line-height:1.5}.pre-game-kicker{margin:0;color:#d7bc7f;font:800 11px/1 system-ui;letter-spacing:.22em}
     .pre-game-section{margin:24px 0}.pre-game-section h2{margin:0 0 10px;font:700 12px/1 system-ui;text-transform:uppercase;letter-spacing:.14em;color:#d7bc7f}
     .pre-campaigns,.pre-ships{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.pre-missions{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;max-height:310px;overflow:auto;padding-right:3px}
@@ -81,7 +81,20 @@ if (!isPlaying) {
     logbookContent.innerHTML = `<header class="ship-info-header"><p class="pre-game-kicker">EXPEDITION RECORD</p><h2 id="logbook-title">Voyage logbook</h2><p>Completed legs and your accumulated chart knowledge. Replays update one mission record: latest result plus best time.</p></header>${campaigns.map((campaign) => {
       const done = campaign.missions.filter((mission) => voyageForMission(mission.id));
       return `<section class="logbook-list"><strong>${campaign.title} · ${done.length} / ${campaign.missions.length} completed</strong>${done.length ? done.map((mission) => { const v = voyageForMission(mission.id)!; return `<div class="logbook-entry"><strong>✓ ${mission.number}. ${mission.title}</strong><small>Best ${formatHours(bestTimeForMission(mission.id)!)} · latest ${formatHours(v.elapsedHours)} · ${Math.round(v.distanceNm)} nm · ${shipPresetFromId(v.shipId).name}</small></div>`; }).join('') : '<small>No completed legs yet.</small>'}</section>`;
-    }).join('')}<button id="reset-expedition" class="logbook-reset" type="button">Reset expedition progress and chart</button>`;
+    }).join('')}<div class="logbook-transfer"><button id="export-expedition" type="button">Export JSON</button><button id="import-expedition" type="button">Import JSON</button><input id="import-expedition-file" type="file" accept="application/json,.json" hidden></div><button id="reset-expedition" class="logbook-reset" type="button">Reset expedition progress and chart</button>`;
+    logbookContent.querySelector('#export-expedition')?.addEventListener('click', () => {
+      const blob = new Blob([exportExpeditionProgress()], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const link = document.createElement('a');
+      link.href = url; link.download = `elcano-expedition-${new Date().toISOString().slice(0, 10)}.json`; link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    });
+    const importInput = logbookContent.querySelector<HTMLInputElement>('#import-expedition-file')!;
+    logbookContent.querySelector('#import-expedition')?.addEventListener('click', () => importInput.click());
+    importInput.addEventListener('change', async () => {
+      const file = importInput.files?.[0]; if (!file) return;
+      if (!importExpeditionProgress(await file.text())) { window.alert('That file is not a valid Elcano expedition export.'); return; }
+      renderLogbook(); render(); window.alert('Expedition progress and chart knowledge imported.');
+    });
     logbookContent.querySelector('#reset-expedition')?.addEventListener('click', () => {
       if (!window.confirm('Reset expedition progress? This removes completed-mission records, best results, voyage history, and every explored chart tile.')) return;
       resetExpeditionProgress(); renderLogbook(); render();

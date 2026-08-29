@@ -39,3 +39,23 @@ export function recordVoyage(missionId: string, voyage: VoyageRecord) {
 export function voyageForMission(missionId: string) { return progress.voyages[missionId]; }
 export function bestTimeForMission(missionId: string) { const v = progress.voyages[missionId]; return v?.bestElapsedHours ?? v?.elapsedHours; }
 export function resetExpeditionProgress() { progress = empty(); window.clearTimeout(saveTimer); try { window.localStorage.removeItem(STORAGE_KEY); } catch {} }
+
+export function exportExpeditionProgress() {
+  return JSON.stringify({ ...progress, exportedAt: new Date().toISOString() }, null, 2);
+}
+
+export function importExpeditionProgress(serialized: string) {
+  try {
+    const parsed: unknown = JSON.parse(serialized);
+    if (!parsed || typeof parsed !== 'object') return false;
+    const value = parsed as Partial<ExpeditionProgress>;
+    if (!Array.isArray(value.exploredCells) || !value.voyages || typeof value.voyages !== 'object') return false;
+    progress = {
+      version: EXPEDITION_SCHEMA_VERSION,
+      exploredCells: value.exploredCells.filter((cell): cell is string => typeof cell === 'string').slice(0, 50000),
+      voyages: value.voyages as Record<string, VoyageRecord>,
+    };
+    scheduleSave();
+    return true;
+  } catch { return false; }
+}

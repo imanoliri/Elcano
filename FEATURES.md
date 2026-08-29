@@ -55,6 +55,7 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - Campaign and mission selectors show completed missions and campaign progress while leaving every mission selectable for replay.
 - The Voyage logbook in voyage setup groups completed legs by campaign and makes replay results clear: one mission record has a latest result and best time.
 - A deliberate confirmed reset clears expedition records, results, route history, and accumulated chart knowledge; restarting a mission does not.
+- The logbook can export or import the entire local expedition as a JSON file through the device’s normal download and file-picker flow.
 
 ## Wind, currents, and weather
 
