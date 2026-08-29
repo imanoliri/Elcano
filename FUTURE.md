@@ -2,6 +2,8 @@
 
 Elcano should stay simple. New features should strengthen the core loop: choose a ship, read the wind and currents, pick a route, and complete a voyage.
 
+For the intentionally deferred weather/current roadmap, see [FUTURE_WEATHER.md](./FUTURE_WEATHER.md).
+
 ## 1. Real-world map
 
 Replace the abstract test world with real geography.
