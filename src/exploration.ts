@@ -35,3 +35,9 @@ export function clearExploration() {
   exploredCells.clear();
   announceExplorationChange();
 }
+
+export function restoreExploration(cells: Iterable<string>) {
+  exploredCells.clear();
+  for (const cell of cells) exploredCells.add(cell);
+  announceExplorationChange();
+}

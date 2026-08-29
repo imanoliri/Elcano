@@ -321,6 +321,8 @@ Potential contents:
 
 Schema migrations should be introduced once saves are expected to survive releases.
 
+The current expedition persistence adapter is browser-local and versioned. It stores only player knowledge (the existing exploration-cell keys) and completed-voyage summaries; it never stores hidden environmental truth or arbitrary live simulation state. Storage failures are non-fatal and save writes are debounced.
+
 ## Optional backend
 
 A backend may later provide:
