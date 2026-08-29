@@ -4,6 +4,10 @@ export type StraitZone = { id: string; name: string; center: GeoPosition; radius
 export const straitZones: StraitZone[] = [
   { id: 'narrows', name: 'Atlantic Narrows', center: { lat: -52.42, lon: -69.15 }, radiusNm: 40, axisBearing: 270, peakCurrentKn: 4.5, phaseHours: 0, windGain: 1.25 },
   { id: 'central', name: 'Central channels', center: { lat: -53.05, lon: -71.15 }, radiusNm: 58, axisBearing: 286, peakCurrentKn: 3.2, phaseHours: 3.5, windGain: 1.15 },
+  // West of Bahía Fortescue the channel turns westward again. Without this
+  // separate reach, the global background current remains visible here and
+  // can make the passage permanently eastbound.
+  { id: 'fortescue-west', name: 'Fortescue western channel', center: { lat: -53.62, lon: -72.85 }, radiusNm: 56, axisBearing: 270, peakCurrentKn: 3.4, phaseHours: 5.25, windGain: 1.18 },
   { id: 'pacific', name: 'Pacific exit', center: { lat: -52.74, lon: -73.75 }, radiusNm: 50, axisBearing: 270, peakCurrentKn: 2.6, phaseHours: 7, windGain: 1.35 },
 ];
 
