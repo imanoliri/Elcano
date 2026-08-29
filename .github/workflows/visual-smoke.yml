@@ -32,6 +32,8 @@ jobs:
           exit 1
       - name: Capture tutorial start view
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=start" elcano-mobile-start.png
+      - name: Capture follow-camera smoke
+        run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=follow" elcano-mobile-follow.png
       - name: Capture deep zoom render
         run: npx --yes playwright@1.55.0 screenshot --device="Pixel 7" --wait-for-timeout=2500 "http://127.0.0.1:4173/?visual-smoke=deep" elcano-mobile-deep.png
       - name: Capture South Pole wrap
@@ -44,6 +46,7 @@ jobs:
           name: visual-smoke-mobile
           path: |
             elcano-mobile-start.png
+            elcano-mobile-follow.png
             elcano-mobile-deep.png
             elcano-mobile-south-pole.png
             elcano-mobile-sailing.png
