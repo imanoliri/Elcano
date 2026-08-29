@@ -209,6 +209,10 @@ function resetMission() {
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
   setText('rudder-readout', r === 0 ? side : `${Math.abs(r)}° ${side}`); setText('sail-readout', `${sails.value}%`); wheel.style.transform = `rotate(${r * 3.5}deg)`;
+  const rowing = document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle');
+  if (rowing && navigationMode === 'maneuvering') rowing.textContent = maneuveringDriveEnabled
+    ? Number(sails.value) <= 25 ? 'Rowing: On' : 'Rowing: furl sails'
+    : 'Rowing: Off';
 }
 
 function revealAroundShip() {
