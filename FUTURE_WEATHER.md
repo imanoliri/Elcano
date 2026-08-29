@@ -2,7 +2,7 @@
 
 Keep these additions deterministic, data-driven and separate from rendering/UI.
 
-1. **Storm lifecycle and seasonal activity** — systems form, intensify, peak, weaken and dissipate; each basin varies its system count and severity by season.
+1. **Storm lifecycle and seasonal activity** — all current basin tracks now form, intensify, peak, weaken and dissipate with overlapping deterministic systems. Their count, size, cadence, and intensity mix now vary by basin and season. Later, add formation/dissipation areas and recurvature rather than fixed tracks.
 2. **Indian Ocean monsoon** — seasonal reversal of prevailing wind and major surface currents, including the Somali Current.
 3. **Southern Ocean / Cape Horn belt** — make the Antarctic Circumpolar Current an explicit, persistent eastbound force alongside fast mid-latitude lows.
 4. **Strait of Magellan local water** — tidal currents, channel jets, wind funneling and sheltered anchoring windows.

@@ -185,7 +185,7 @@ function openHelp() {
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
+  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); window.dispatchEvent(new CustomEvent('elcano:mission-reset')); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
 }
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';

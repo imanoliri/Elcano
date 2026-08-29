@@ -32,15 +32,29 @@ Storms principally alter wind. Their current effect is only 0.8% of their local 
 
 | Region | Prevailing wind/current character | Dynamic systems in Elcano |
 |---|---|---|
-| North Atlantic | Trades in the subtropics; westerlies north of them. North Atlantic gyre, Gulf Stream/North Atlantic Drift and Canary Current shape currents. | A year-round eastbound mid-latitude low; stronger in northern winter. |
-| South Atlantic | Southeast trades north of the subtropical high; strong westerlies toward Patagonia. Brazil, Benguela and South Atlantic currents form the gyre. | A south-Atlantic low plus Southern-Ocean influence; strongest in austral winter. Tropical cyclones are not generated here. |
-| North Pacific | Trades in the subtropics; vigorous westerly storm track farther north. Kuroshio, North Pacific Drift and California Current shape the gyre. | Two year-round eastbound mid-latitude lows, strongest in northern winter; a western-Pacific typhoon system can occur year-round. |
-| East Pacific | Northeast trades and the California Current in the north; tropical eastward/westward variations near Central America. | Tropical cyclone system only June–November, moving broadly west before later recurvature is modelled. |
-| North Indian Ocean | Monsoon reversal is important: southwest monsoon in boreal summer and northeast monsoon in winter. Currents reverse with it. | Tropical system only in the pre- and post-monsoon windows: April–May and October–December. |
-| Southwest Indian Ocean | Southeast trades and subtropical gyre; Agulhas Current is the dominant southwest-bound boundary current near Africa. | Tropical cyclones during November–April, moving broadly west/southwest in the initial model. |
-| Australian / Southeast Indian | Trade-wind and monsoonal region north of Australia; Leeuwin and broader subtropical circulation affect surface flow. | Tropical cyclones November–April. |
-| South Pacific | Southeast trades and South Pacific gyre; stronger westerlies south of about 30°S. | Tropical cyclones November–April, especially in the southwest tropical Pacific. |
-| Southern Ocean | Persistent, fast eastward westerlies and the Antarctic Circumpolar Current. | Two fast, year-round eastbound low-pressure tracks; strongest in austral winter. |
+| North Atlantic | Trades in the subtropics; westerlies north of them. North Atlantic gyre, Gulf Stream/North Atlantic Drift and Canary Current shape currents. | One smaller, weaker, poleward summer low; 2–3 larger and stronger winter lows on the western-to-northeastern Atlantic track. |
+| South Atlantic | Southeast trades north of the subtropical high; strong westerlies toward Patagonia. Brazil, Benguela and South Atlantic currents form the gyre. | A broad eastbound westerly track: typically 1–2 lows in austral summer and three larger, stronger lows in austral winter. Tropical cyclones are not generated here. |
+| North Pacific | Trades in the subtropics; vigorous westerly storm track farther north. Kuroshio, North Pacific Drift and California Current shape the gyre. | A dense western winter track plus a weaker eastern branch; about two low systems in summer and four in northern winter, plus a year-round western-Pacific typhoon track that peaks July–October. |
+| East Pacific | Northeast trades and the California Current in the north; tropical eastward/westward variations near Central America. | Compact tropical systems only June–November; activity, size, strength, and overlap peak August–October. |
+| North Indian Ocean | Monsoon reversal is important: southwest monsoon in boreal summer and northeast monsoon in winter. Currents reverse with it. | Compact tropical systems only in the pre- and post-monsoon windows: April–May and October–December, with the strongest overlap in May and October–November. |
+| Southwest Indian Ocean | Southeast trades and subtropical gyre; Agulhas Current is the dominant southwest-bound boundary current near Africa. | Compact tropical cyclones November–April, strongest and most frequent in January–March, moving broadly west/southwest. |
+| Australian / Southeast Indian | Trade-wind and monsoonal region north of Australia; Leeuwin and broader subtropical circulation affect surface flow. | Compact tropical cyclones November–April, strongest and most frequent in January–March. |
+| South Pacific | Southeast trades and South Pacific gyre; stronger westerlies south of about 30°S. | Compact southwest-Pacific tropical cyclones November–April, strongest and most frequent in January–March. |
+| Southern Ocean | Persistent, fast eastward westerlies and the Antarctic Circumpolar Current. | The most persistent and severe belt: two fast, large low tracks in austral summer and six in austral winter, with the highest gale/severe-storm share. |
+
+### Storm profile quick reference
+
+| Sea / basin | Short gameplay identity |
+|---|---|
+| North Atlantic | Quiet, weaker summer track; strong and crowded winter lows. |
+| South Atlantic | Broad westerly lows, especially powerful in austral winter. |
+| North Pacific | Strong western winter track with a weaker eastern branch. |
+| East Pacific | Summer-to-autumn tropical cyclones, peaking late in the season. |
+| North Indian Ocean | Compact pre- and post-monsoon cyclones. |
+| Southwest Indian Ocean | November–April cyclones, strongest in January–March. |
+| Australian waters | November–April tropical cyclones, strongest in January–March. |
+| South Pacific | Southwest-Pacific tropical cyclones during the southern summer. |
+| Southern Ocean | Fast, large, persistent, and the most severe storm belt. |
 
 ## Storm model
 
@@ -52,6 +66,8 @@ Every generated system is a low-pressure circulation:
 - gradually stronger from the centre to a broad peak-wind ring at 70% of its radius;
 - sharply weaker between that ring and the outer edge;
 - moving through its basin on a deterministic track, usually about 10–13 kn eastward for mid-latitude lows.
+
+Every procedural system still follows the same readable lifecycle: its wind contribution rises from zero, peaks halfway through, then fades to zero. The profiles intentionally differ by basin: lifetime, birth cadence, size, movement, intensity distribution, and seasonal activation are all defined per track. This produces handover overlap rather than abrupt replacement without treating every ocean as the same storm belt.
 
 ### Intensity classes
 

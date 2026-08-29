@@ -12,14 +12,17 @@ if (ocean && shell) {
   mapCanvas.insertAdjacentElement('afterend', overlay);
 
   const ctx = overlay.getContext('2d');
-  type CameraDetail = { x: number; y: number; scale: number; zoomMultiplier: number };
+  type CameraDetail = { x: number; y: number; scale: number; zoomMultiplier: number; mode?: 'static' | 'follow' };
   type WorldBounds = { minX: number; minY: number; maxX: number; maxY: number };
   type DetailedRenderer = (ctx: CanvasRenderingContext2D, screenScale: number, visibleBounds: WorldBounds) => void;
   let camera: CameraDetail | null = null;
   let detailedRenderer: DetailedRenderer | null = null;
   let loading = false;
   let settleTimer = 0;
-  const DETAIL_ZOOM = 10;
+  let followRenderScheduled = false;
+  // Normal laptop follow view is about 8× the fit-to-world scale. The previous
+  // 10× threshold left it showing only the stretched 50m base canvas.
+  const DETAIL_ZOOM = 4;
   const CAMERA_SETTLE_MS = 70;
 
   function resize() {
@@ -63,6 +66,7 @@ if (ocean && shell) {
   }
 
   function render() {
+    followRenderScheduled = false;
     clear();
     if (!ctx || !camera || camera.zoomMultiplier < DETAIL_ZOOM) return;
 
@@ -76,6 +80,13 @@ if (ocean && shell) {
     ctx.scale(camera.scale, camera.scale);
     detailedRenderer(ctx, camera.scale, visibleWorldBounds(camera));
     ctx.restore();
+    overlay.dataset.detailActive = 'true';
+  }
+
+  function scheduleFollowRender() {
+    if (followRenderScheduled) return;
+    followRenderScheduled = true;
+    requestAnimationFrame(render);
   }
 
   function scheduleSettledRender(delay = CAMERA_SETTLE_MS) {
@@ -88,12 +99,20 @@ if (ocean && shell) {
     if (!detail) return;
     camera = detail;
 
-    // Keep gesture frames cheap: the 50m base map is already being transformed
-    // by the browser. Hide stale detail while moving, then redraw the 10m LOD
-    // once the camera settles instead of rebuilding it on every pointer frame.
-    clear();
-    if (camera.zoomMultiplier >= DETAIL_ZOOM && !detailedRenderer) void ensureDetailedRenderer();
-    scheduleSettledRender();
+    if (camera.zoomMultiplier < DETAIL_ZOOM) {
+      clear();
+      overlay.dataset.detailActive = 'false';
+      return;
+    }
+    if (!detailedRenderer) void ensureDetailedRenderer();
+    // Follow mode continuously changes camera position. Deferring every detail
+    // render until movement stops means it never appears at all. Render this
+    // vector layer once per animation frame so coastlines stay sharp.
+    if (camera.mode === 'follow') scheduleFollowRender();
+    else {
+      clear();
+      scheduleSettledRender();
+    }
   });
 
   const resizeObserver = new ResizeObserver(() => {

@@ -43,6 +43,19 @@ if (smokeMode) {
     }, 700);
   }
 
+  if (smokeMode === 'follow') {
+    // Follow mode used to keep only the stretched base canvas visible. Switch
+    // cameras and expose whether the crisp detail layer became active so the
+    // visual smoke screenshot covers this specific regression.
+    window.setTimeout(() => {
+      document.querySelector<HTMLButtonElement>('.camera-mode-button')?.click();
+    }, 300);
+    window.setTimeout(() => {
+      const detailActive = document.querySelector<HTMLElement>('#map-detail-overlay')?.dataset.detailActive === 'true';
+      document.documentElement.dataset.followCameraDetail = detailActive ? 'pass' : 'fail';
+    }, 1800);
+  }
+
   if (smokeMode === 'sailing') {
     window.setTimeout(() => {
       const sails = document.querySelector<HTMLInputElement>('#sails');
