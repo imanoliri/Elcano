@@ -25,16 +25,12 @@ import { actionForKeyboardEvent } from './keyboard-controls';
 const activeMission = missionFromUrl();
 const activeCampaign = campaignForMission(activeMission);
 const initialStep = activeMission.tutorialSteps?.[0];
-// The follow camera samples this canvas at up to twice its logical map scale.
-// Keep enough backing pixels for crisp laptop/retina rendering without making
-// the world-coordinate system depend on display pixels.
-const MAP_RENDER_SCALE = Math.min(4, Math.max(2, Math.ceil(window.devicePixelRatio || 1) * 2));
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
 app.innerHTML = `
   <main class="game-shell">
-    <canvas id="ocean" width="${WORLD_MAP_WIDTH * MAP_RENDER_SCALE}" height="${WORLD_MAP_HEIGHT * MAP_RENDER_SCALE}" aria-label="Real-world ocean navigation map"></canvas>
+    <canvas id="ocean" width="${WORLD_MAP_WIDTH}" height="${WORLD_MAP_HEIGHT}" aria-label="Real-world ocean navigation map"></canvas>
 
     <header class="hud-top">
       <button id="mission-chip" class="mission-chip" aria-label="Open mission instructions">
@@ -104,7 +100,6 @@ app.innerHTML = `
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const ctx = canvas.getContext('2d')!;
-ctx.setTransform(MAP_RENDER_SCALE, 0, 0, MAP_RENDER_SCALE, 0, 0);
 const rudder = document.querySelector<HTMLInputElement>('#rudder')!;
 const sails = document.querySelector<HTMLInputElement>('#sails')!;
 const wheel = document.querySelector<HTMLElement>('#wheel')!;
@@ -223,12 +218,12 @@ function drawEnvironment() {
 
 function drawFog() {
   ctx.fillStyle = 'rgba(3,12,18,.53)';
-  for (let x = 0; x < WORLD_MAP_WIDTH; x += EXPLORATION_CELL) for (let y = 0; y < WORLD_MAP_HEIGHT; y += EXPLORATION_CELL) if (!isWorldPointExplored({ x, y })) ctx.fillRect(x, y, EXPLORATION_CELL + 1, EXPLORATION_CELL + 1);
+  for (let x = 0; x < canvas.width; x += EXPLORATION_CELL) for (let y = 0; y < canvas.height; y += EXPLORATION_CELL) if (!isWorldPointExplored({ x, y })) ctx.fillRect(x, y, EXPLORATION_CELL + 1, EXPLORATION_CELL + 1);
 }
 
 function draw() {
-  ctx.clearRect(0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT);
-  const gradient = ctx.createLinearGradient(0, 0, 0, WORLD_MAP_HEIGHT); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawGrid(); drawLand(ctx); drawEnvironment(); drawFog();
 
   const target = project(state.destination);
