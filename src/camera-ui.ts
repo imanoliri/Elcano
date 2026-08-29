@@ -46,11 +46,11 @@ if (canvas && viewport) {
   // tutorial even though the ship state had correctly moved elsewhere.
   const initialCenter = shipPoint;
   const INITIAL_ZOOM_MULTIPLIER = 50;
-  // The map source is a fixed-resolution canvas. A multiplier of 50 is useful
-  // on a phone, but turns into a very soft 30–40× interpolation on a laptop.
-  // Keep the automatic opening view below that visible blur threshold; players
-  // can still deliberately zoom farther in when they need to inspect a coast.
+  // The map source is rendered above its logical resolution. Follow mode may
+  // use no more than two logical map pixels per CSS pixel, avoiding the old
+  // 8× raster stretch that blurred laptop coastlines.
   const MAX_CRISP_OPENING_SCALE = 8;
+  const MAX_CRISP_FOLLOW_SCALE = 2;
   const MAX_ZOOM_MULTIPLIER = 256;
   const MAX_WRAP_DPR = 2;
   const SOURCE_REFRESH_INTERVAL_MS = 50;
@@ -98,16 +98,18 @@ if (canvas && viewport) {
     const dw = WORLD_MAP_WIDTH * scale;
     const dh = WORLD_MAP_HEIGHT * scale;
 
+    const sourceWidth = canvas.width;
+    const sourceHeight = canvas.height;
     if (!isPolarRow(row)) {
-      wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT, dx, dy, dw, dh);
+      wrapCtx.drawImage(canvas, 0, 0, sourceWidth, sourceHeight, dx, dy, dw, dh);
       return;
     }
 
     wrapCtx.save();
     wrapCtx.translate(dx, dy + dh);
     wrapCtx.scale(1, -1);
-    wrapCtx.drawImage(canvas, WORLD_MAP_WIDTH / 2, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, 0, 0, dw / 2, dh);
-    wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, dw / 2, 0, dw / 2, dh);
+    wrapCtx.drawImage(canvas, sourceWidth / 2, 0, sourceWidth / 2, sourceHeight, 0, 0, dw / 2, dh);
+    wrapCtx.drawImage(canvas, 0, 0, sourceWidth / 2, sourceHeight, dw / 2, 0, dw / 2, dh);
     wrapCtx.restore();
   }
 
@@ -150,7 +152,8 @@ if (canvas && viewport) {
   }
 
   function zoomAround(screenX: number, screenY: number, nextScale: number) {
-    const clampedScale = Math.max(minScale, Math.min(minScale * MAX_ZOOM_MULTIPLIER, nextScale));
+    const maxScale = cameraMode === 'follow' ? Math.min(minScale * MAX_ZOOM_MULTIPLIER, MAX_CRISP_FOLLOW_SCALE) : minScale * MAX_ZOOM_MULTIPLIER;
+    const clampedScale = Math.max(minScale, Math.min(maxScale, nextScale));
     if (cameraMode === 'follow') {
       scale = clampedScale;
       centerOnPoint(shipPoint);
@@ -202,7 +205,7 @@ if (canvas && viewport) {
     cameraModeButton.setAttribute('aria-label', next === 'static' ? 'Static camera. Tap to follow ship' : 'Follow ship camera. Tap for static camera');
     cameraModeButton.setAttribute('aria-pressed', String(next === 'follow'));
     viewport.dataset.cameraMode = next;
-    if (next === 'follow') centerOnPoint(shipPoint);
+    if (next === 'follow') { scale = Math.min(scale, MAX_CRISP_FOLLOW_SCALE); centerOnPoint(shipPoint); }
   }
 
   cameraModeButton.addEventListener('click', () => {
