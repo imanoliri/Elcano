@@ -11,6 +11,12 @@ import {
 import { campaignForMission, missionFromUrl, worldStateForMission } from './missions';
 import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
 import { drawLand } from './world/geography';
+import {
+  clearExploration,
+  EXPLORATION_CELL,
+  isWorldPointExplored,
+  revealAroundWorldPoint,
+} from './exploration';
 
 const activeMission = missionFromUrl();
 const activeCampaign = campaignForMission(activeMission);
@@ -107,7 +113,6 @@ let last = performance.now();
 let reached = false;
 let tutorialStage = 0;
 let timeScale = 0;
-const explored = new Set<string>();
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
 
 function setTimeScale(value: number) {
@@ -152,7 +157,7 @@ function openHelp() {
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; explored.clear(); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted');
+  state = structuredClone(START); reached = false; tutorialStage = 0; clearExploration(); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted');
 }
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
@@ -160,8 +165,7 @@ function updateControlReadouts() {
 }
 
 function revealAroundShip() {
-  const p = project(state.ship.position); const cell = 30; const radius = 100;
-  for (let x = p.x - radius; x <= p.x + radius; x += cell) for (let y = p.y - radius; y <= p.y + radius; y += cell) if (Math.hypot(x - p.x, y - p.y) <= radius) explored.add(`${Math.round(x / cell)},${Math.round(y / cell)}`);
+  revealAroundWorldPoint(project(state.ship.position));
 }
 
 function arrow(x: number, y: number, vector: Vec2, length: number) {
@@ -178,15 +182,15 @@ function drawGrid() {
 
 function drawEnvironment() {
   for (let lat = -60; lat <= 60; lat += 10) for (let lon = -170; lon <= 170; lon += 15) {
-    const p = project({ lat, lon }); const key = `${Math.round(p.x / 30)},${Math.round(p.y / 30)}`; if (!explored.has(key)) continue;
+    const p = project({ lat, lon }); if (!isWorldPointExplored(p)) continue;
     const wind = windAt({ lat, lon }, state.time); const current = currentAt({ lat, lon }, state.time);
     ctx.strokeStyle = 'rgba(255,255,255,.34)'; arrow(p.x, p.y, wind, 14); ctx.strokeStyle = 'rgba(74,213,255,.75)'; arrow(p.x + 5, p.y + 5, current, 10);
   }
 }
 
 function drawFog() {
-  const cell = 30; ctx.fillStyle = 'rgba(3,12,18,.53)';
-  for (let x = 0; x < canvas.width; x += cell) for (let y = 0; y < canvas.height; y += cell) if (!explored.has(`${Math.round(x / cell)},${Math.round(y / cell)}`)) ctx.fillRect(x, y, cell + 1, cell + 1);
+  ctx.fillStyle = 'rgba(3,12,18,.53)';
+  for (let x = 0; x < canvas.width; x += EXPLORATION_CELL) for (let y = 0; y < canvas.height; y += EXPLORATION_CELL) if (!isWorldPointExplored({ x, y })) ctx.fillRect(x, y, EXPLORATION_CELL + 1, EXPLORATION_CELL + 1);
 }
 
 function draw() {

@@ -69,6 +69,8 @@ if (params.get('play') === '1') {
             <label><input id="show-heading-vector" type="checkbox" checked> Heading vector</label>
             <label><input id="show-track-vector" type="checkbox" checked> Track vector</label>
             <label><input id="show-course-trail" type="checkbox" checked> Course trail</label>
+            <label><input id="show-wind-field" type="checkbox" checked> Wind field</label>
+            <label><input id="show-current-field" type="checkbox" checked> Current field</label>
           </fieldset>
           <button id="game-restart" type="button">Restart mission</button>
           <div class="game-menu-nav">
@@ -87,7 +89,7 @@ if (params.get('play') === '1') {
       .game-menu-overlay{position:fixed;inset:0;z-index:160;display:none;place-items:center;padding:18px}.game-menu-overlay.open{display:grid}.game-menu-backdrop{position:absolute;inset:0;background:rgba(2,9,14,.72);backdrop-filter:blur(7px)}
       .game-menu-card{position:relative;width:min(460px,100%);padding:28px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:linear-gradient(145deg,rgba(13,43,56,.99),rgba(5,19,28,.99));box-shadow:0 25px 80px rgba(0,0,0,.55);color:#f4efe6}.game-menu-close{position:absolute;right:14px;top:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#f4efe6;font-size:1.5rem}.game-menu-kicker{margin:0;color:#d7bc7f;font:800 10px/1 system-ui;letter-spacing:.15em;text-transform:uppercase}.game-menu-card h2{margin:7px 44px 5px 0;font:700 32px/1.05 Georgia,serif}.game-menu-route{margin:0;opacity:.68}.game-menu-ship{margin:18px 0 0;padding:11px 12px;border-radius:11px;background:rgba(255,255,255,.05);font-size:.82rem;color:#ead098}
       .game-menu-actions{display:grid;gap:9px;margin-top:20px}.game-menu-actions button{border:1px solid rgba(255,255,255,.14);border-radius:11px;background:rgba(255,255,255,.055);color:#f4efe6;padding:12px 14px;font-weight:700}.game-menu-actions button:disabled{opacity:.3;cursor:default}.game-menu-actions .game-menu-primary{background:#e8b94f;color:#17202a;border-color:transparent}.game-menu-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}.game-menu-info-row button{font-size:.8rem}.game-menu-actions .game-menu-exit{margin-top:5px;border-color:rgba(232,185,79,.35);color:#e8c46c}
-      .game-menu-visibility{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:3px 0;padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:rgba(255,255,255,.035)}.game-menu-visibility legend{padding:0 5px;color:#d7bc7f;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.game-menu-visibility label{display:flex;align-items:center;gap:7px;min-width:0;font-size:.76rem}.game-menu-visibility input{width:17px;height:17px;accent-color:#e8b94f;flex:none}@media(max-width:420px){.game-menu-visibility{grid-template-columns:1fr}.game-menu-card{padding:22px}}
+      .game-menu-visibility{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:3px 0;padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:rgba(255,255,255,.035)}.game-menu-visibility legend{padding:0 5px;color:#d7bc7f;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.game-menu-visibility label{display:flex;align-items:center;gap:7px;min-width:0;font-size:.76rem}.game-menu-visibility input{width:17px;height:17px;accent-color:#e8b94f;flex:none}@media(max-width:420px){.game-menu-visibility{grid-template-columns:1fr}.game-menu-card{padding:22px}}
     `;
     document.head.appendChild(style);
 
@@ -105,6 +107,8 @@ if (params.get('play') === '1') {
           heading: overlay.querySelector<HTMLInputElement>('#show-heading-vector')!.checked,
           track: overlay.querySelector<HTMLInputElement>('#show-track-vector')!.checked,
           trail: overlay.querySelector<HTMLInputElement>('#show-course-trail')!.checked,
+          wind: overlay.querySelector<HTMLInputElement>('#show-wind-field')!.checked,
+          current: overlay.querySelector<HTMLInputElement>('#show-current-field')!.checked,
         },
       }));
     };
