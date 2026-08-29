@@ -152,6 +152,8 @@ window.addEventListener('keydown', (event) => {
   if (action === 'anchor') document.querySelector<HTMLButtonElement>('#coastal-controls [data-anchor]:not([hidden])')?.click();
   if (action === 'camera') document.querySelector<HTMLButtonElement>('.camera-mode-button')?.click();
   if (action === 'navigation') document.querySelector<HTMLButtonElement>('.route-button')?.click();
+  if (action === 'zoomIn') window.dispatchEvent(new CustomEvent('elcano:camera-zoom', { detail: 1.25 }));
+  if (action === 'zoomOut') window.dispatchEvent(new CustomEvent('elcano:camera-zoom', { detail: .8 }));
   if (action === 'pauseResume') setTimeScale(timeScale === 0 ? 1 : 0);
   if (action === 'speed1') setTimeScale(1);
   if (action === 'speed4') setTimeScale(4);
