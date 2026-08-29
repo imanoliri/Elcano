@@ -42,6 +42,20 @@ Storms principally alter wind. Their current effect is only 0.8% of their local 
 | South Pacific | Southeast trades and South Pacific gyre; stronger westerlies south of about 30°S. | Compact southwest-Pacific tropical cyclones November–April, strongest and most frequent in January–March. |
 | Southern Ocean | Persistent, fast eastward westerlies and the Antarctic Circumpolar Current. | The most persistent and severe belt: two fast, large low tracks in austral summer and six in austral winter, with the highest gale/severe-storm share. |
 
+### Storm profile quick reference
+
+| Sea / basin | Short gameplay identity |
+|---|---|
+| North Atlantic | Quiet, weaker summer track; strong and crowded winter lows. |
+| South Atlantic | Broad westerly lows, especially powerful in austral winter. |
+| North Pacific | Strong western winter track with a weaker eastern branch. |
+| East Pacific | Summer-to-autumn tropical cyclones, peaking late in the season. |
+| North Indian Ocean | Compact pre- and post-monsoon cyclones. |
+| Southwest Indian Ocean | November–April cyclones, strongest in January–March. |
+| Australian waters | November–April tropical cyclones, strongest in January–March. |
+| South Pacific | Southwest-Pacific tropical cyclones during the southern summer. |
+| Southern Ocean | Fast, large, persistent, and the most severe storm belt. |
+
 ## Storm model
 
 Every generated system is a low-pressure circulation:
