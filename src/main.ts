@@ -149,6 +149,9 @@ window.addEventListener('keydown', (event) => {
   if (action === 'sailsRaise') sails.value = String(Math.min(100, Number(sails.value) + 5));
   if (action === 'sailsLower') sails.value = String(Math.max(0, Number(sails.value) - 5));
   if (action === 'centerHelm') rudder.value = '0';
+  if (action === 'anchor') document.querySelector<HTMLButtonElement>('#coastal-controls [data-anchor]:not([hidden])')?.click();
+  if (action === 'camera') document.querySelector<HTMLButtonElement>('.camera-mode-button')?.click();
+  if (action === 'navigation') document.querySelector<HTMLButtonElement>('.route-button')?.click();
   if (action === 'pauseResume') setTimeScale(timeScale === 0 ? 1 : 0);
   if (action === 'speed1') setTimeScale(1);
   if (action === 'speed4') setTimeScale(4);
