@@ -92,7 +92,7 @@ app.innerHTML = `
         <div class="vector-legend"><span class="wind-key">Wind</span><span class="current-key">Current</span><span class="track-key">Track</span></div>
       </div>
 
-      <div class="time-mode-control"><button id="navigation-mode-toggle" type="button">Ocean mode</button><div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div></div>
+      <div class="time-mode-control"><button id="navigation-mode-toggle" type="button">Ocean mode</button><button id="maneuver-drive-toggle" type="button" hidden>Rowing: On</button><div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div></div>
     </section>
 
     <div id="modal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -123,6 +123,7 @@ let reached = false;
 let tutorialStage = 0;
 let timeScale = 0;
 let navigationMode: 'ocean' | 'maneuvering' = 'ocean';
+let maneuveringDriveEnabled = true;
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
@@ -134,15 +135,17 @@ function setTimeScale(value: number) {
 }
 function setNavigationMode(mode: 'ocean' | 'maneuvering') {
   navigationMode = mode;
-  setManeuveringDriveActive(mode === 'maneuvering');
+  setManeuveringDriveActive(mode === 'maneuvering' && maneuveringDriveEnabled);
   const values = mode === 'ocean' ? [0, 1, 4, 8, 16] : [0, .1, .25, .5, 1];
   document.querySelectorAll<HTMLButtonElement>('.time-button').forEach((button, index) => { const value = values[index]; button.hidden = value === undefined; if (value !== undefined) { button.dataset.time = String(value); button.textContent = index ? `${value}×` : 'Pause'; } });
   document.querySelector<HTMLButtonElement>('#navigation-mode-toggle')!.textContent = mode === 'ocean' ? 'Ocean mode' : 'Manoeuvring mode';
+  document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle')!.hidden = mode !== 'maneuvering';
   setTimeScale(0);
 }
 
 timeButtons.forEach((button) => button.addEventListener('click', () => setTimeScale(Number(button.dataset.time))));
 document.querySelector<HTMLButtonElement>('#navigation-mode-toggle')!.addEventListener('click', () => setNavigationMode(navigationMode === 'ocean' ? 'maneuvering' : 'ocean'));
+document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle')!.addEventListener('click', () => { maneuveringDriveEnabled = !maneuveringDriveEnabled; const button = document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle')!; button.textContent = `Rowing: ${maneuveringDriveEnabled ? 'On' : 'Off'}`; setManeuveringDriveActive(navigationMode === 'maneuvering' && maneuveringDriveEnabled); });
 rudder.addEventListener('input', updateControlReadouts);
 sails.addEventListener('input', updateControlReadouts);
 document.querySelector('#center-rudder')!.addEventListener('click', () => { rudder.value = '0'; updateControlReadouts(); });
