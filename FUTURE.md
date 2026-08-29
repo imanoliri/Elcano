@@ -188,9 +188,9 @@ Build on coastline collision, anchoring and manual waypoint routes without addin
 
 Make the campaign's most constrained historical passage feel distinct from open-ocean sailing.
 
-- Add deterministic tidal currents and channel jets.
-- Model wind funneling through narrow channels and more sheltered anchorages.
-- Make favorable passage windows possible through waiting, observation and route choice.
+- [x] Add deterministic tidal currents and channel jets.
+- [x] Model wind funneling through narrow channels and more sheltered anchorages.
+- [x] Make favorable passage windows possible through waiting, observation and route choice.
 - Keep this local system separate from the global weather/current layers and avoid adding damage, waves or opaque randomness.
 
 ## 7. Weather windows and route timing

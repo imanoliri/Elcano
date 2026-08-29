@@ -2,6 +2,7 @@ import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
 import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
 import { globalWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
+import { inMagellanStrait, straitCurrentAt, straitWindAt } from './strait-navigation';
 
 export type EnvironmentalSample = EastNorthVector;
 
@@ -58,6 +59,9 @@ export const climatologyEnvironment: EnvironmentProvider = {
 export const observedAtlanticEnvironment = createAtlanticClimatologyProvider(climatologyEnvironment);
 export const globalObservedEnvironment = createGlobalTiledEnvironment(observedAtlanticEnvironment);
 let activeEnvironment: EnvironmentProvider = globalObservedEnvironment;
+let straitNavigationActive = false;
+
+export function setStraitNavigationActive(active: boolean) { straitNavigationActive = active; }
 
 export function setEnvironmentProvider(provider: EnvironmentProvider) {
   activeEnvironment = provider;
@@ -70,12 +74,14 @@ export function prefetchEnvironmentBounds(bounds: EnvironmentBounds, time: Date)
 export function windAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.windAt(position, time);
   const weather = weatherWindInfluenceAt(position, time);
-  return { x: base.x + weather.x, y: base.y + weather.y };
+  const combined = { x: base.x + weather.x, y: base.y + weather.y };
+  return straitNavigationActive ? straitWindAt(position, time, combined) : combined;
 }
 
 export function currentAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.currentAt(position, time);
   const weather = weatherCurrentInfluenceAt(position, time);
+  if (straitNavigationActive && inMagellanStrait(position)) return straitCurrentAt(position, time);
   return { x: base.x + weather.x, y: base.y + weather.y };
 }
 

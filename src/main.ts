@@ -2,8 +2,10 @@ import './style.css';
 import {
   currentAt,
   distanceToDestination,
+  maneuveringDriveVelocity,
   sailingVelocity,
   stepWorld,
+  setManeuveringDriveActive,
   windAt,
   type Vec2,
   type WorldState,
@@ -21,8 +23,12 @@ import {
 import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedition-progress';
 import { shipPresetFromId } from './ship-selection';
 import { actionForKeyboardEvent } from './keyboard-controls';
+import { setStraitNavigationActive } from './world/environment';
+import { installStraitNavigationUi } from './strait-navigation-ui';
 
 const activeMission = missionFromUrl();
+const isStraitMission = activeMission.id === 'loaisa-7';
+setStraitNavigationActive(isStraitMission);
 const activeCampaign = campaignForMission(activeMission);
 const initialStep = activeMission.tutorialSteps?.[0];
 
@@ -51,6 +57,11 @@ app.innerHTML = `
       <div class="instrument progress-instrument"><span class="instrument-label">Voyage</span><strong id="distance">0 nm</strong><div class="meter"><span id="progress-bar" class="meter-fill progress-fill"></span></div><small id="elapsed">0.0 d</small></div>
     </section>
 
+    <div class="control-dock">
+      <section class="navigation-mode-control" aria-label="Navigation mode">
+        <button id="navigation-mode-toggle" class="navigation-mode-button" type="button">Ocean mode</button>
+        <button id="maneuver-drive-toggle" class="navigation-mode-button" type="button" hidden>Rowing: On</button>
+      </section>
     <section class="bottom-controls" aria-label="Ship controls">
       <div class="control-block helm-control">
         <div class="control-heading"><span>Helm</span><strong id="rudder-readout">Centered</strong></div>
@@ -89,6 +100,7 @@ app.innerHTML = `
 
       <div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div>
     </section>
+    </div>
 
     <div id="modal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-backdrop"></div>
@@ -117,16 +129,30 @@ let last = performance.now();
 let reached = false;
 let tutorialStage = 0;
 let timeScale = 0;
+let navigationMode: 'ocean' | 'maneuvering' = 'ocean';
+let maneuveringDriveEnabled = true;
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
+installStraitNavigationUi(() => state, isStraitMission);
 
 function setTimeScale(value: number) {
   timeScale = value;
   document.querySelectorAll<HTMLButtonElement>('.time-button').forEach((button) => button.classList.toggle('active', Number(button.dataset.time) === value));
 }
+function setNavigationMode(mode: 'ocean' | 'maneuvering') {
+  navigationMode = mode;
+  setManeuveringDriveActive(mode === 'maneuvering' && maneuveringDriveEnabled);
+  const values = mode === 'ocean' ? [0, 1, 4, 8, 16] : [0, .1, .25, .5, 1];
+  document.querySelectorAll<HTMLButtonElement>('.time-button').forEach((button, index) => { const value = values[index]; button.hidden = value === undefined; if (value !== undefined) { button.dataset.time = String(value); button.textContent = index ? `${value}×` : 'Pause'; } });
+  document.querySelector<HTMLButtonElement>('#navigation-mode-toggle')!.textContent = mode === 'ocean' ? 'Ocean mode' : 'Manoeuvring mode';
+  document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle')!.hidden = mode !== 'maneuvering';
+  setTimeScale(0);
+}
 
 timeButtons.forEach((button) => button.addEventListener('click', () => setTimeScale(Number(button.dataset.time))));
+document.querySelector<HTMLButtonElement>('#navigation-mode-toggle')!.addEventListener('click', () => setNavigationMode(navigationMode === 'ocean' ? 'maneuvering' : 'ocean'));
+document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle')!.addEventListener('click', () => { maneuveringDriveEnabled = !maneuveringDriveEnabled; const button = document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle')!; button.textContent = `Rowing: ${maneuveringDriveEnabled ? 'On' : 'Off'}`; setManeuveringDriveActive(navigationMode === 'maneuvering' && maneuveringDriveEnabled); });
 rudder.addEventListener('input', updateControlReadouts);
 sails.addEventListener('input', updateControlReadouts);
 document.querySelector('#center-rudder')!.addEventListener('click', () => { rudder.value = '0'; updateControlReadouts(); });
@@ -190,6 +216,10 @@ function resetMission() {
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
   setText('rudder-readout', r === 0 ? side : `${Math.abs(r)}° ${side}`); setText('sail-readout', `${sails.value}%`); wheel.style.transform = `rotate(${r * 3.5}deg)`;
+  const rowing = document.querySelector<HTMLButtonElement>('#maneuver-drive-toggle');
+  if (rowing && navigationMode === 'maneuvering') rowing.textContent = maneuveringDriveEnabled
+    ? Number(sails.value) <= 25 ? 'Rowing: On' : 'Rowing: furl sails'
+    : 'Rowing: Off';
 }
 
 function revealAroundShip() {
@@ -230,7 +260,7 @@ function draw() {
   const ship = project(state.ship.position);
   window.dispatchEvent(new CustomEvent('elcano:camera-target', { detail: target }));
   window.dispatchEvent(new CustomEvent('elcano:map-markers', {
-    detail: { target, ship, headingDeg: state.ship.headingDeg },
+    detail: { target, ship, headingDeg: state.ship.headingDeg, straitAnchorages: isStraitMission ? [{ name: 'Bahía Posesión', position: { lat: -52.42, lon: -69.05 } }, { name: 'Puerto del Hambre', position: { lat: -53.62, lon: -70.92 } }, { name: 'Bahía Fortescue', position: { lat: -53.70, lon: -72.35 } }] : [] },
   }));
   updateInstruments();
   window.dispatchEvent(new CustomEvent('elcano:simulation-time', { detail: state.time.toISOString() }));
@@ -247,7 +277,8 @@ function draw() {
 
 function updateInstruments() {
   const wind = windAt(state.ship.position, state.time); const current = currentAt(state.ship.position, state.time); const sail = sailingVelocity(state.ship.headingDeg, wind, Number(sails.value) / 100);
-  const ground = { x: sail.x + current.x, y: sail.y + current.y }; const apparent = { x: wind.x - ground.x, y: wind.y - ground.y };
+  const drive = maneuveringDriveVelocity(state.ship.headingDeg, wind, Number(sails.value) / 100);
+  const ground = { x: sail.x + drive.x + current.x, y: sail.y + drive.y + current.y }; const apparent = { x: wind.x - ground.x, y: wind.y - ground.y };
   const speed = Math.hypot(ground.x, ground.y); const windSpeed = Math.hypot(wind.x, wind.y); const currentSpeed = Math.hypot(current.x, current.y); const distance = distanceToDestination(state); const progress = Math.max(0, Math.min(1, 1 - distance / START_DISTANCE));
   setText('heading', formatSignedHeading(state.ship.headingDeg)); setText('speed', `${speed.toFixed(2)} kn`); setText('wind', windSpeed.toFixed(1)); setText('wind-bearing', bearing(wind)); setText('current', currentSpeed.toFixed(2)); setText('current-bearing', bearing(current)); setText('distance', `${distance.toFixed(0)} nm`); setText('elapsed', `${(state.elapsedHours / 24).toFixed(1)} d`);
   setWidth('speed-bar', speed / 10 * 100); setWidth('wind-bar', windSpeed / 25 * 100); setWidth('current-bar', currentSpeed / 1.5 * 100); setWidth('progress-bar', progress * 100); document.querySelector<HTMLElement>('#compass-needle')!.style.transform = `rotate(${state.ship.headingDeg}deg)`;
@@ -278,7 +309,7 @@ function updateTutorial() {
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, .1); last = now;
-  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); state.ship.headingDeg = (state.ship.headingDeg + r * .9 * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
+  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 

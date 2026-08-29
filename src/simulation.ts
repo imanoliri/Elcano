@@ -74,6 +74,10 @@ export let DEFAULT_RIG_POLAR: RigPolar = {
   ],
 };
 
+let maneuveringDriveActive = false;
+const MANEUVERING_DRIVE_KN: Record<string, number> = { 'lateen-hull': 1.4, 'caravel-hull': 1.1, 'nao-carrack': .8, 'galleon-hull': .6, 'square-hull': .5 };
+export function setManeuveringDriveActive(active: boolean) { maneuveringDriveActive = active; }
+
 export function configureDefaultShip(vessel: VesselType, rig: RigPolar) {
   DEFAULT_VESSEL = vessel;
   DEFAULT_RIG_POLAR = rig;
@@ -147,6 +151,16 @@ export function sailingVelocity(
   return { x: hx * speed, y: hy * speed };
 }
 
+export function maneuveringDriveVelocity(headingDeg: number, wind: Vec2, sailTrim = 1): Vec2 {
+  const sail = sailingVelocity(headingDeg, wind, sailTrim);
+  const sailingSpeed = Math.hypot(sail.x, sail.y);
+  const drive = maneuveringDriveActive && sailTrim <= .25 && sailingSpeed < 1.5
+    ? MANEUVERING_DRIVE_KN[DEFAULT_VESSEL.id] ?? .6
+    : 0;
+  const heading = headingDeg * DEG;
+  return { x: Math.sin(heading) * drive, y: Math.cos(heading) * drive };
+}
+
 export function stepWorld(state: WorldState, dtHours: number, sailTrim = 1): WorldState {
   const nextTime = new Date(state.time.getTime() + dtHours * 3_600_000);
 
@@ -163,8 +177,9 @@ export function stepWorld(state: WorldState, dtHours: number, sailTrim = 1): Wor
   const wind = windAt(state.ship.position, state.time);
   const current = currentAt(state.ship.position, state.time);
   const sail = sailingVelocity(state.ship.headingDeg, wind, sailTrim);
-  const vx = sail.x + current.x;
-  const vy = sail.y + current.y;
+  const drive = maneuveringDriveVelocity(state.ship.headingDeg, wind, sailTrim);
+  const vx = sail.x + drive.x + current.x;
+  const vy = sail.y + drive.y + current.y;
   const proposed = offsetByNauticalMiles(state.ship.position, vx * dtHours, vy * dtHours);
   const collision = resolveLandCollision(state.ship.position, proposed);
   reportCoastalState(collision.position, collision.collided);
