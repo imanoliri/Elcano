@@ -37,7 +37,7 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - The polar diagram has a simple default view and an optional detailed view with more angle and efficiency information.
 - The sailing model identifies the current point of sail, including the no-sail/dead-angle zone, close-hauled sailing, reaching, and running.
 - Helm control supports port/starboard rudder input and centering; sail control adjusts sail area from furled to full sail.
-- Desktop keyboard controls support both arrow keys and WASD by default: left/right steer, up/down raise or lower sails. `X` drops/raises the contextual coastal anchor, `C` toggles Static ↔ Follow ship camera, and `V` toggles Direct ↔ Waypoints navigation mode. They also cover centering the helm, pause/time speeds, restart, instructions, and the mission menu.
+- Desktop keyboard controls support both arrow keys and WASD by default: left/right steer, up/down raise or lower sails. `X` drops/raises the contextual coastal anchor, `C` toggles Static ↔ Follow ship camera, `V` toggles Direct ↔ Waypoints navigation mode, and `+`/`−` zoom the chart. They also cover centering the helm, pause/time speeds, restart, instructions, and the mission menu.
 - Keyboard bindings can be changed and restored to defaults from the voyage-selection screen or the in-mission menu; they remain saved in the browser.
 
 ## Real-world chart and exploration
