@@ -1,4 +1,4 @@
-export type KeyboardAction = 'helmPort' | 'helmStarboard' | 'sailsRaise' | 'sailsLower' | 'centerHelm' | 'anchor' | 'camera' | 'navigation' | 'pauseResume' | 'speed1' | 'speed4' | 'speed8' | 'speed16' | 'restart' | 'instructions' | 'missionMenu';
+export type KeyboardAction = 'helmPort' | 'helmStarboard' | 'sailsRaise' | 'sailsLower' | 'centerHelm' | 'anchor' | 'camera' | 'navigation' | 'zoomIn' | 'zoomOut' | 'pauseResume' | 'speed1' | 'speed4' | 'speed8' | 'speed16' | 'restart' | 'instructions' | 'missionMenu';
 type Definition = { id: KeyboardAction; label: string; hint: string; defaults: string[] };
 const STORAGE_KEY = 'elcano.keyboard-controls.v1';
 const controls: Definition[] = [
@@ -10,11 +10,13 @@ const controls: Definition[] = [
   { id: 'anchor', label: 'Drop / raise anchor', hint: 'Toggle the anchor in coastal water.', defaults: ['x'] },
   { id: 'camera', label: 'Camera mode', hint: 'Toggle static and follow-ship camera.', defaults: ['c'] },
   { id: 'navigation', label: 'Navigation mode', hint: 'Toggle direct and waypoint planning.', defaults: ['v'] },
-  { id: 'pauseResume', label: 'Pause / resume', hint: 'Pause, or resume at 1×.', defaults: [' '] },
+  { id: 'zoomIn', label: 'Zoom in', hint: 'Zoom the chart in around its centre.', defaults: ['+'] },
+  { id: 'zoomOut', label: 'Zoom out', hint: 'Zoom the chart out around its centre.', defaults: ['-'] },
+  { id: 'pauseResume', label: 'Pause / resume', hint: 'Pause, or resume at 1×.', defaults: [' ', '0'] },
   { id: 'speed1', label: 'Set 1× time', hint: 'Sail at normal time.', defaults: ['1'] },
-  { id: 'speed4', label: 'Set 4× time', hint: 'Sail at four times speed.', defaults: ['4'] },
-  { id: 'speed8', label: 'Set 8× time', hint: 'Sail at eight times speed.', defaults: ['8'] },
-  { id: 'speed16', label: 'Set 16× time', hint: 'Sail at sixteen times speed.', defaults: [] },
+  { id: 'speed4', label: 'Set 4× time', hint: 'Sail at four times speed.', defaults: ['2'] },
+  { id: 'speed8', label: 'Set 8× time', hint: 'Sail at eight times speed.', defaults: ['3'] },
+  { id: 'speed16', label: 'Set 16× time', hint: 'Sail at sixteen times speed.', defaults: ['4'] },
   { id: 'restart', label: 'Restart mission', hint: 'Restart the current mission.', defaults: ['r'] },
   { id: 'instructions', label: 'Mission instructions', hint: 'Open the current briefing.', defaults: ['?'] },
   { id: 'missionMenu', label: 'Mission menu', hint: 'Open the in-mission menu.', defaults: ['m'] },
