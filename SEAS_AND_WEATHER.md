@@ -83,7 +83,11 @@ The displayed local wind is the vector sum of the background field and that rota
 
 - high-pressure systems and fronts;
 - storm formation, dissipation and recurvature based on live atmospheric physics;
-- tides, coastal jets and terrain-driven wind;
+- tides, coastal jets and terrain-driven wind outside the dedicated Strait of Magellan local-navigation layer;
+
+## Strait of Magellan local navigation
+
+The Cape Virgenes → Cape Pillar mission uses plausible modern local navigation behaviour, not reconstructed 1526 weather. Primera Angostura has a 2–8 kn reversing spring–neap tide; Segunda Angostura has a separately phased tide up to 6 kn with a usable westbound handover. Elsewhere the unrelated global current is suppressed: Paso Tortuoso alone adds a crossing-current hazard up to 3.5 kn, while Cabo Pilar has a small southeastward ocean set. Regional westerly/NW wind is channelled along local reaches; Paso Tortuoso adds deterministic signalled gust periods.
 - waves, swell, rain, visibility or ship damage;
 - historical uncertainty: discovered water currently shows the live simulated field rather than a stale observation.
 

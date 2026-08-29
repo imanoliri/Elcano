@@ -1,5 +1,6 @@
 import './strait-navigation-ui.css';
-import { straitAnchorages, straitTideDescription } from './world/strait-navigation';
+import { straitAnchorages, straitPassageCondition } from './world/strait-navigation';
+import { windAt } from './world/environment';
 import type { WorldState } from './simulation';
 
 export function installStraitNavigationUi(getState: () => WorldState, active: boolean) {
@@ -11,10 +12,10 @@ export function installStraitNavigationUi(getState: () => WorldState, active: bo
   const close = () => modal.classList.remove('open');
   const open = () => {
     const state = getState();
-    const condition = straitTideDescription(state.ship.position, state.time);
+    const condition = straitPassageCondition(state.ship.position, state.time, windAt(state.ship.position, state.time));
     modal.querySelector<HTMLElement>('[data-strait-condition]')!.innerHTML = condition
-      ? `<strong>${condition.zone.name}</strong><b>${condition.phase} · ${condition.speed.toFixed(1)} kn</b><span>${condition.favourableInHours === 0 ? 'This is a favourable westbound window.' : `A westbound window returns in about ${condition.favourableInHours} hours.`}</span>`
-      : '<strong>Open water</strong><span>Chart the next narrow channel to read its local tide.</span>';
+      ? `<strong>${condition.zone?.name ?? 'Central Strait'}</strong><b>${condition.phase} · ${condition.speed.toFixed(1)} kn</b><span>Channel wind ${Math.hypot(condition.wind.x, condition.wind.y).toFixed(0)} kn${condition.gusty ? ' · gusts likely' : ''}.</span>`
+      : '';
     modal.classList.add('open');
   };
   modal.querySelector('.strait-close')!.addEventListener('click', close);

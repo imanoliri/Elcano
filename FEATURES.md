@@ -74,9 +74,9 @@ This is the inventory of features that are currently implemented in Elcano. It d
 
 ### Strait of Magellan passage
 
-- The dedicated Cape Virgenes → Cape Pillar mission has three deterministic local channel zones with independently reversing tidal currents.
+- The dedicated Cape Virgenes → Cape Pillar mission models Primera and Segunda Angostura as strong reversing tidal passages, Paso Tortuoso as a crossing-current hazard, and the remaining Strait as weak-flow water.
 - A compact passage-conditions chart uses approximate tide language—slack water, building or strong east/west set—so players can wait for a westbound window without a perfect global forecast.
-- Wind is locally funnelled along narrow channel axes, while three marked sheltered anchorages provide readable places to pause and observe.
+- Plausible modern westerly/NW winds are channelled through the Strait; Paso Tortuoso can add signalled gusty squalls. Three marked shelter anchorages provide readable places to pause and observe.
 
 - Land collision prevents normal sailing through coastlines and reports whether the ship is in deep water, coastal water, or aground.
 - In coastal water, the anchor control can stop the ship in place; raising it resumes normal movement.

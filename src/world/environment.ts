@@ -2,7 +2,7 @@ import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
 import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
 import { globalWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
-import { straitLocalEffects, straitWindModifier } from './strait-navigation';
+import { inMagellanStrait, straitCurrentAt, straitWindAt } from './strait-navigation';
 
 export type EnvironmentalSample = EastNorthVector;
 
@@ -75,14 +75,14 @@ export function windAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.windAt(position, time);
   const weather = weatherWindInfluenceAt(position, time);
   const combined = { x: base.x + weather.x, y: base.y + weather.y };
-  return straitNavigationActive ? straitWindModifier(position, combined) : combined;
+  return straitNavigationActive ? straitWindAt(position, time, combined) : combined;
 }
 
 export function currentAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.currentAt(position, time);
   const weather = weatherCurrentInfluenceAt(position, time);
-  const local = straitNavigationActive ? straitLocalEffects(position, time).current : { x: 0, y: 0 };
-  return { x: base.x + weather.x + local.x, y: base.y + weather.y + local.y };
+  if (straitNavigationActive && inMagellanStrait(position)) return straitCurrentAt(position, time);
+  return { x: base.x + weather.x, y: base.y + weather.y };
 }
 
 export { globalWeatherSystems };
