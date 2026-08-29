@@ -33,9 +33,9 @@ export function atlanticWeatherSystems(time: Date): WeatherSystem[] {
   const southernWinter = month >= 4 && month <= 9;
   const northernWinter = month <= 2 || month >= 10;
   const templates = [
-    { band: 'north', lat: northernWinter ? 47 : 53, lon: -62, eastPerHour: 0.28, northPerHour: 0.035, strength: northernWinter ? 13 : 9 },
-    { band: 'south', lat: southernWinter ? -51 : -45, lon: -64, eastPerHour: 0.34, northPerHour: 0.018, strength: southernWinter ? 15 : 11 },
-    { band: 'south', lat: southernWinter ? -39 : -35, lon: -28, eastPerHour: 0.22, northPerHour: -0.025, strength: southernWinter ? 11 : 8 },
+    { band: 'north', lat: northernWinter ? 47 : 53, lon: -62, eastPerHour: 0.28, northPerHour: 0.035, strength: northernWinter ? 28 : 23 },
+    { band: 'south', lat: southernWinter ? -51 : -45, lon: -64, eastPerHour: 0.34, northPerHour: 0.018, strength: southernWinter ? 32 : 27 },
+    { band: 'south', lat: southernWinter ? -39 : -35, lon: -28, eastPerHour: 0.22, northPerHour: -0.025, strength: southernWinter ? 25 : 20 },
   ];
   return templates.map((template, index) => {
     const seed = `${start}:${index}`;
@@ -50,7 +50,7 @@ export function atlanticWeatherSystems(time: Date): WeatherSystem[] {
         lon: template.lon + jitterLon + template.eastPerHour * progressHours,
       },
       radiusNm,
-      strengthKn: template.strength + hash(`${seed}:strength`) * 4,
+      strengthKn: template.strength + hash(`${seed}:strength`) * 5,
       rotation: template.band === 'north' ? 1 : -1,
     };
   });
@@ -76,5 +76,5 @@ export function weatherWindInfluenceAt(position: GeoPosition, time: Date): EastN
 
 export function weatherCurrentInfluenceAt(position: GeoPosition, time: Date): EastNorthVector {
   const wind = weatherWindInfluenceAt(position, time);
-  return { x: wind.x * .035, y: wind.y * .035 };
+  return { x: wind.x * .008, y: wind.y * .008 };
 }
