@@ -1,7 +1,7 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
 import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
-import { atlanticWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
+import { globalWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
 
 export type EnvironmentalSample = EastNorthVector;
 
@@ -79,4 +79,4 @@ export function currentAt(position: GeoPosition, time: Date) {
   return { x: base.x + weather.x, y: base.y + weather.y };
 }
 
-export { atlanticWeatherSystems };
+export { globalWeatherSystems };

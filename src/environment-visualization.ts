@@ -3,7 +3,7 @@ import { currentAt, windAt, type Vec2 } from './simulation';
 import { isWorldPointExplored } from './exploration';
 import { project, unproject } from './world/coordinates';
 import { prefetchEnvironmentBounds } from './world/environment';
-import { atlanticWeatherSystems } from './world/environment';
+import { globalWeatherSystems } from './world/environment';
 import { drawLandMask } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
@@ -93,7 +93,7 @@ if (ocean && shell) {
 
   function drawStormCenters(time: Date, value: Camera, visible: GeoBounds) {
     if (!ctx) return;
-    for (const storm of atlanticWeatherSystems(time)) {
+    for (const storm of globalWeatherSystems(time)) {
       const { lat, lon } = storm.center;
       if (lat < visible.minLat || lat > visible.maxLat || lon < visible.minLon || lon > visible.maxLon) continue;
       const world = project(storm.center);
