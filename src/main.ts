@@ -21,8 +21,12 @@ import {
 import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedition-progress';
 import { shipPresetFromId } from './ship-selection';
 import { actionForKeyboardEvent } from './keyboard-controls';
+import { setStraitNavigationActive } from './world/environment';
+import { installStraitNavigationUi } from './strait-navigation-ui';
 
 const activeMission = missionFromUrl();
+const isStraitMission = activeMission.id === 'loaisa-7';
+setStraitNavigationActive(isStraitMission);
 const activeCampaign = campaignForMission(activeMission);
 const initialStep = activeMission.tutorialSteps?.[0];
 
@@ -120,6 +124,7 @@ let timeScale = 0;
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
+installStraitNavigationUi(() => state, isStraitMission);
 
 function setTimeScale(value: number) {
   timeScale = value;
@@ -230,7 +235,7 @@ function draw() {
   const ship = project(state.ship.position);
   window.dispatchEvent(new CustomEvent('elcano:camera-target', { detail: target }));
   window.dispatchEvent(new CustomEvent('elcano:map-markers', {
-    detail: { target, ship, headingDeg: state.ship.headingDeg },
+    detail: { target, ship, headingDeg: state.ship.headingDeg, straitAnchorages: isStraitMission ? [{ name: 'Bahía Posesión', position: { lat: -52.42, lon: -69.05 } }, { name: 'Puerto del Hambre', position: { lat: -53.62, lon: -70.92 } }, { name: 'Bahía Fortescue', position: { lat: -53.70, lon: -72.35 } }] : [] },
   }));
   updateInstruments();
   window.dispatchEvent(new CustomEvent('elcano:simulation-time', { detail: state.time.toISOString() }));

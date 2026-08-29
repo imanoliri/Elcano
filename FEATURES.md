@@ -72,6 +72,12 @@ This is the inventory of features that are currently implemented in Elcano. It d
 
 ## Coastal navigation and route planning
 
+### Strait of Magellan passage
+
+- The dedicated Cape Virgenes → Cape Pillar mission has three deterministic local channel zones with independently reversing tidal currents.
+- A compact passage-conditions chart uses approximate tide language—slack water, building or strong east/west set—so players can wait for a westbound window without a perfect global forecast.
+- Wind is locally funnelled along narrow channel axes, while three marked sheltered anchorages provide readable places to pause and observe.
+
 - Land collision prevents normal sailing through coastlines and reports whether the ship is in deep water, coastal water, or aground.
 - In coastal water, the anchor control can stop the ship in place; raising it resumes normal movement.
 - A direct-destination mode lets the player tap the chart to set one autopilot target. A later tap replaces it.

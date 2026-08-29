@@ -1,5 +1,6 @@
 import './map-markers.css';
 import { virtualWorldPoint, visibleWorldRange } from './world-wrap';
+import { project } from './world/coordinates';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
 const shell = document.querySelector<HTMLElement>('.game-shell');
@@ -17,6 +18,7 @@ if (ocean && shell) {
     target: { x: number; y: number };
     ship: { x: number; y: number };
     headingDeg: number;
+    straitAnchorages?: { name: string; position: { lat: number; lon: number } }[];
   };
 
   let camera: Camera | null = null;
@@ -93,6 +95,14 @@ if (ocean && shell) {
     ctx.restore();
   }
 
+  function drawAnchorage(point: { x: number; y: number }, name: string, scale: number) {
+    if (!ctx) return;
+    ctx.save(); ctx.fillStyle = '#ead098'; ctx.font = `${Math.round(16 * scale)}px system-ui`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('⚓', point.x, point.y);
+    if (camera && camera.zoomMultiplier > 5) { ctx.font = `${Math.round(10 * scale)}px system-ui`; ctx.fillStyle = '#f4efe6'; ctx.fillText(name, point.x, point.y + 16 * scale); }
+    ctx.restore();
+  }
+
   function render() {
     scheduled = false;
     if (!ctx) return;
@@ -103,6 +113,7 @@ if (ocean && shell) {
 
     const scale = markerScale();
     for (const point of screenPoints(markers.target)) if (visible(point)) drawTarget(point, scale);
+    for (const anchorage of markers.straitAnchorages ?? []) for (const point of screenPoints(project(anchorage.position))) if (visible(point)) drawAnchorage(point, anchorage.name, scale);
     for (const point of screenPoints(markers.ship)) if (visible(point)) drawShip(point, markers.headingDeg, scale);
   }
 
