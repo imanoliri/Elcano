@@ -163,11 +163,14 @@ Turn completed voyages into a coherent expedition without preventing replay or m
 
 This makes exploration cumulative: a player who crossed the Atlantic on an earlier leg can use the charted waters while preparing a later voyage, but must still personally discover unfamiliar seas.
 
+### Implemented historical campaigns
+
+- [x] **Magellan–Elcano Circumnavigation (1519–1522)** — sixteen legs from Sanlúcar to Tenerife, Brazil, Patagonia, the Strait of Magellan, the Pacific, the Philippines, Tidore, Timor, the Cape of Good Hope, Cape Verde and Sanlúcar. It is listed before the Loaísa–Elcano campaign in the historical voyage selector.
+
 ### Later campaigns
 
 Possible future campaigns include:
 
-- Magellan–Elcano first circumnavigation;
 - Columbus;
 - Vasco da Gama;
 - Cabral;
