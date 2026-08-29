@@ -4,6 +4,7 @@ import {
   distanceToDestination,
   sailingVelocity,
   stepWorld,
+  setManeuveringDriveActive,
   windAt,
   type Vec2,
   type WorldState,
@@ -91,7 +92,7 @@ app.innerHTML = `
         <div class="vector-legend"><span class="wind-key">Wind</span><span class="current-key">Current</span><span class="track-key">Track</span></div>
       </div>
 
-      <div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div>
+      <div class="time-mode-control"><button id="navigation-mode-toggle" type="button">Ocean mode</button><div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div></div>
     </section>
 
     <div id="modal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -121,6 +122,7 @@ let last = performance.now();
 let reached = false;
 let tutorialStage = 0;
 let timeScale = 0;
+let navigationMode: 'ocean' | 'maneuvering' = 'ocean';
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
@@ -130,8 +132,17 @@ function setTimeScale(value: number) {
   timeScale = value;
   document.querySelectorAll<HTMLButtonElement>('.time-button').forEach((button) => button.classList.toggle('active', Number(button.dataset.time) === value));
 }
+function setNavigationMode(mode: 'ocean' | 'maneuvering') {
+  navigationMode = mode;
+  setManeuveringDriveActive(mode === 'maneuvering');
+  const values = mode === 'ocean' ? [0, 1, 4, 8, 16] : [0, .1, .25, .5, 1];
+  document.querySelectorAll<HTMLButtonElement>('.time-button').forEach((button, index) => { const value = values[index]; button.hidden = value === undefined; if (value !== undefined) { button.dataset.time = String(value); button.textContent = index ? `${value}×` : 'Pause'; } });
+  document.querySelector<HTMLButtonElement>('#navigation-mode-toggle')!.textContent = mode === 'ocean' ? 'Ocean mode' : 'Manoeuvring mode';
+  setTimeScale(0);
+}
 
 timeButtons.forEach((button) => button.addEventListener('click', () => setTimeScale(Number(button.dataset.time))));
+document.querySelector<HTMLButtonElement>('#navigation-mode-toggle')!.addEventListener('click', () => setNavigationMode(navigationMode === 'ocean' ? 'maneuvering' : 'ocean'));
 rudder.addEventListener('input', updateControlReadouts);
 sails.addEventListener('input', updateControlReadouts);
 document.querySelector('#center-rudder')!.addEventListener('click', () => { rudder.value = '0'; updateControlReadouts(); });
@@ -283,7 +294,7 @@ function updateTutorial() {
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, .1); last = now;
-  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); state.ship.headingDeg = (state.ship.headingDeg + r * .9 * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
+  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 
