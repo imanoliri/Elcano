@@ -205,6 +205,7 @@ function draw() {
     detail: { target, ship, headingDeg: state.ship.headingDeg },
   }));
   updateInstruments();
+  window.dispatchEvent(new CustomEvent('elcano:simulation-time', { detail: state.time.toISOString() }));
 
   if (!reached && distanceToDestination(state) < 20) {
     reached = true;

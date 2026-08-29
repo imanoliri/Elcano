@@ -59,6 +59,10 @@ The tutorial region deliberately does **not** require these network requests. It
 
 The global tile reference year is currently 2012 and the historical mission month selects the corresponding modern reference month. This gives geographically real wind/current structure without pretending that the data is literal weather from 1525.
 
+## Dynamic weather layer
+
+`src/world/weather.ts` adds a deterministic, basin-level low-pressure layer after the background provider is sampled. It affects wind strongly and current only lightly. The game generates year-round mid-latitude storm tracks in the Atlantic, North Pacific and Southern Ocean, then season-gated tropical systems in the Pacific and Indian basins. See [SEAS_AND_WEATHER.md](./SEAS_AND_WEATHER.md) for basin profiles, intensity classes, seasons and explicit gameplay abstractions.
+
 This runtime layer is intended as the first global implementation. A later production hardening step can preprocess the same global tiles into static CDN assets so historical/free-sail play can become fully network-independent again while retaining lazy viewport loading.
 
 ## Wind source
@@ -87,6 +91,8 @@ Provider order is now:
 1. baked high-resolution Bay of Biscay data when available;
 2. loaded global observed tile outside that region;
 3. deterministic analytic climatology as fallback.
+
+Weather-system influence is then composed with that sampled background. It is not an additional remote data request.
 
 ## Performance and caching
 

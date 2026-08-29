@@ -1,6 +1,7 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
 import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
+import { globalWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
 
 export type EnvironmentalSample = EastNorthVector;
 
@@ -67,9 +68,15 @@ export function prefetchEnvironmentBounds(bounds: EnvironmentBounds, time: Date)
 }
 
 export function windAt(position: GeoPosition, time: Date) {
-  return activeEnvironment.windAt(position, time);
+  const base = activeEnvironment.windAt(position, time);
+  const weather = weatherWindInfluenceAt(position, time);
+  return { x: base.x + weather.x, y: base.y + weather.y };
 }
 
 export function currentAt(position: GeoPosition, time: Date) {
-  return activeEnvironment.currentAt(position, time);
+  const base = activeEnvironment.currentAt(position, time);
+  const weather = weatherCurrentInfluenceAt(position, time);
+  return { x: base.x + weather.x, y: base.y + weather.y };
 }
+
+export { globalWeatherSystems };

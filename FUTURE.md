@@ -2,6 +2,8 @@
 
 Elcano should stay simple. New features should strengthen the core loop: choose a ship, read the wind and currents, pick a route, and complete a voyage.
 
+For the intentionally deferred weather/current roadmap, see [FUTURE_WEATHER.md](./FUTURE_WEATHER.md).
+
 ## 1. Real-world map
 
 Replace the abstract test world with real geography.
@@ -35,6 +37,41 @@ The player should eventually be able to navigate the real Atlantic and the wider
 - Keep historical missions explicit that modern observed/reanalysis data represents plausible prevailing conditions, not literal weather from the 16th century.
 
 For the current game, discovered environmental knowledge should remain intentionally arcade-readable: once an area has been explored, the player may inspect its current simulated wind/current field. Do not make this historically restrictive yet.
+
+### Dynamic weather and current simulation
+
+Evolve the environment from mostly static climatological vectors into a time-varying simulation that makes waiting, anchoring and route timing meaningful parts of navigation.
+
+- [x] Add deterministic global basin-level low-pressure systems: year-round mid-latitude tracks in the Atlantic, North Pacific and Southern Ocean, plus season-gated tropical systems in the Pacific and Indian oceans. Systems have ordinary-low, gale, or severe-storm intensity, with a calm centre, a broad peak-wind ring, and a sharp outer fall-off. A discovered storm centre is marked with 🌩️ on the chart. See `SEAS_AND_WEATHER.md` for the current model.
+
+Model the environment in three layers:
+
+1. **Background climate** — persistent regional wind patterns and major ocean currents derived from climatology.
+2. **Dynamic weather systems** — moving highs, lows, storms and eventually fronts with position, radius, strength, movement and rotational wind fields. These systems modify the background wind as they move across the map.
+3. **Local coastal and tidal effects** — coastlines, islands, channels and tides can alter currents independently of large-scale weather, especially in constrained waters such as the Strait of Magellan.
+
+Use a simple conceptual composition:
+
+- actual wind = prevailing wind + weather-system influence;
+- actual current = base ocean current + coastal/tidal influence + smaller weather influence.
+
+Do not make major ocean currents rotate wholesale around storms. Storms can alter surface flow, but persistent currents should retain their larger-scale structure.
+
+The gameplay goal is to create changing sailing windows. A passage that is difficult now may become favorable several hours or days later as a weather system moves and the local wind rotates. The player can anchor, wait, observe and then exploit a favorable window instead of simply forcing a route through adverse conditions.
+
+Keep the weather simulation separate from rendering/UI. Weather systems should be simulation objects queried through functions such as `weatherAt(lat, lon, time)`, while the map only visualizes the resulting local conditions.
+
+### Environmental knowledge and fog of war
+
+The simulation can know the conditions everywhere without giving the player perfect global knowledge.
+
+- Reuse the existing discovered/known-tile state for wind and current information.
+- Show environmental information only for discovered/known tiles rather than revealing the entire world.
+- Initially, known tiles can display current simulated conditions for simplicity.
+- In a later historical-uncertainty mode, tiles should retain the **last observed** wind/current state and become stale while the ship is elsewhere.
+- Unexplored waters should require actual exploration rather than providing perfect meteorological information in advance.
+
+This creates a progression from readable arcade navigation toward optional historical uncertainty without making the base game unnecessarily difficult.
 
 ## 3. Small ship roster and rig selection
 

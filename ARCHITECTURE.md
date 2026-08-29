@@ -144,6 +144,10 @@ Benefits:
 
 Any stochastic systems such as weather variation should use explicit seeded random generators. A save should include the seed/state required to reproduce future simulation behavior.
 
+### Dynamic weather
+
+Weather belongs to the world/simulation boundary, not the UI. Background environmental providers provide prevailing wind and current; deterministic basin-level systems then contribute a local weather vector. Rendering may show a discovered system centre and the resulting fields, but must not define, mutate or reveal undiscovered weather truth. The exact basin profiles and gameplay simplifications are documented in [SEAS_AND_WEATHER.md](./SEAS_AND_WEATHER.md).
+
 ## Coordinates and units
 
 This is the highest-priority foundational cleanup after the MVP.
