@@ -108,6 +108,7 @@ if (viewport) {
   ];
 
   const corridorLabels: MapLabel[] = currentCorridors.map(({ name, lat, lon, minZoom }) => ({ name, lat, lon, minZoom, priority: 36, kind: 'current' }));
+  const corridorIsKnown = (name: string) => currentCorridors.find((corridor) => corridor.name === name)?.revealPoints.some((point) => isWorldPointExplored(project(point))) ?? false;
 
   let camera: Camera = { x: 0, y: 0, scale: 1, zoomMultiplier: 1 };
 
@@ -157,7 +158,7 @@ if (viewport) {
     const placed: DOMRect[] = [];
     const candidates = [...labels, ...corridorLabels]
       .filter((label) => zoom >= label.minZoom)
-      .filter((label) => label.kind !== 'current' || isWorldPointExplored(project(label)))
+      .filter((label) => label.kind !== 'current' || corridorIsKnown(label.name))
       .map((label) => ({ label, point: nearestWrappedScreenPoint(project(label), width, height) }))
       .filter(({ point }) => point.x > -100 && point.x < width + 100 && point.y > -50 && point.y < height + 50)
       .sort((a, b) => b.label.priority - a.label.priority);
