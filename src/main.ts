@@ -57,6 +57,11 @@ app.innerHTML = `
       <div class="instrument progress-instrument"><span class="instrument-label">Voyage</span><strong id="distance">0 nm</strong><div class="meter"><span id="progress-bar" class="meter-fill progress-fill"></span></div><small id="elapsed">0.0 d</small></div>
     </section>
 
+    <div class="control-dock">
+      <section class="navigation-mode-control" aria-label="Navigation mode">
+        <button id="navigation-mode-toggle" class="navigation-mode-button" type="button">Ocean mode</button>
+        <button id="maneuver-drive-toggle" class="navigation-mode-button" type="button" hidden>Rowing: On</button>
+      </section>
     <section class="bottom-controls" aria-label="Ship controls">
       <div class="control-block helm-control">
         <div class="control-heading"><span>Helm</span><strong id="rudder-readout">Centered</strong></div>
@@ -93,8 +98,9 @@ app.innerHTML = `
         <div class="vector-legend"><span class="wind-key">Wind</span><span class="current-key">Current</span><span class="track-key">Track</span></div>
       </div>
 
-      <div class="time-mode-control"><button id="navigation-mode-toggle" type="button">Ocean mode</button><button id="maneuver-drive-toggle" type="button" hidden>Rowing: On</button><div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div></div>
+      <div class="time-control"><button data-time="0" class="time-button active">Pause</button><button data-time="1" class="time-button">1×</button><button data-time="4" class="time-button">4×</button><button data-time="16" class="time-button">16×</button></div>
     </section>
+    </div>
 
     <div id="modal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div class="modal-backdrop"></div>
