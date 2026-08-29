@@ -15,9 +15,19 @@ export function inMagellanStrait(position: GeoPosition) { return position.lat > 
 export function straitZoneAt(position: GeoPosition) { return straitZones.map((zone) => ({ zone, distance: distanceNm(position, zone.center) })).filter(({ zone, distance }) => distance <= zone.radiusNm).sort((a, b) => a.distance - b.distance)[0]?.zone ?? null; }
 export function straitCurrentAt(position: GeoPosition, time: Date) {
   if (!inMagellanStrait(position)) return { x: 0, y: 0 };
-  const zone = straitZoneAt(position); if (!zone) return position.lon < -74.2 ? vector(135, .75) : { x: 0, y: 0 };
-  const hours = time.getTime() / HOUR, spring = .5 + .5 * Math.sin(hours / SPRING_NEAP_HOURS * Math.PI * 2), peak = zone.minCurrentKn + (zone.maxCurrentKn - zone.minCurrentKn) * spring;
-  return vector(zone.axisBearing, Math.sin((hours + zone.phaseHours) / TIDE_HOURS * Math.PI * 2) * peak);
+  const hours = time.getTime() / HOUR;
+  const tide = Math.sin(hours / TIDE_HOURS * Math.PI * 2);
+  const spring = .5 + .5 * Math.sin(hours / SPRING_NEAP_HOURS * Math.PI * 2);
+  // The entire passage has a modest reversing tidal set. This keeps waiting
+  // meaningful everywhere instead of creating isolated circles a route can miss.
+  const throughStrait = vector(270, tide * (.7 + spring * .8));
+  const zone = straitZoneAt(position);
+  if (!zone) return position.lon < -74.2
+    ? { x: throughStrait.x + vector(135, .75).x, y: throughStrait.y + vector(135, .75).y }
+    : throughStrait;
+  const peak = zone.minCurrentKn + (zone.maxCurrentKn - zone.minCurrentKn) * spring;
+  const local = vector(zone.axisBearing, Math.sin((hours + zone.phaseHours) / TIDE_HOURS * Math.PI * 2) * peak);
+  return { x: throughStrait.x + local.x, y: throughStrait.y + local.y };
 }
 export function straitWindAt(position: GeoPosition, time: Date, globalWind: EastNorthVector) {
   if (!inMagellanStrait(position)) return globalWind;
