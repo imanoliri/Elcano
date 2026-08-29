@@ -25,7 +25,10 @@ if (viewport) {
 
   const labels: MapLabel[] = [
     // Campaign and tutorial anchors. These are intentionally always the highest-priority labels.
+    { name: 'Sanlúcar de Barrameda', lat: 36.7783, lon: -6.3515, kind: 'mission', minZoom: 8, priority: 100 },
     { name: 'San Sebastián', lat: 43.3183, lon: -1.9812, kind: 'mission', minZoom: 8, priority: 100 },
+    { name: 'Rio de Janeiro', lat: -22.9068, lon: -43.1729, kind: 'mission', minZoom: 8, priority: 100 },
+    { name: 'Puerto San Julián', lat: -49.306, lon: -67.728, kind: 'mission', minZoom: 8, priority: 100 },
     { name: 'A Coruña', lat: 43.3623, lon: -8.4115, kind: 'mission', minZoom: 8, priority: 100 },
     { name: 'La Gomera', lat: 28.0916, lon: -17.1133, kind: 'mission', minZoom: 6, priority: 100 },
     { name: 'Annobón / San Mateo', lat: -1.434, lon: 5.632, kind: 'mission', minZoom: 6, priority: 100 },
@@ -35,12 +38,16 @@ if (viewport) {
     { name: 'Cape Virgenes', lat: -52.33, lon: -68.35, kind: 'mission', minZoom: 10, priority: 100 },
     { name: 'Cape Pillar', lat: -52.72, lon: -74.67, kind: 'mission', minZoom: 10, priority: 100 },
     { name: 'Maloelap / San Bartolomé', lat: 8.77, lon: 171.03, kind: 'mission', minZoom: 7, priority: 100 },
+    { name: 'Homonhon', lat: 10.743, lon: 125.722, kind: 'mission', minZoom: 10, priority: 100 },
     { name: 'Guam', lat: 13.4443, lon: 144.7937, kind: 'mission', minZoom: 7, priority: 100 },
     { name: 'Mindanao', lat: 8.0, lon: 125.0, kind: 'mission', minZoom: 7, priority: 100 },
+    { name: 'Bohol', lat: 9.85, lon: 124.14, kind: 'mission', minZoom: 10, priority: 100 },
     { name: 'Cebu', lat: 10.3157, lon: 123.8854, kind: 'mission', minZoom: 9, priority: 100 },
     { name: 'Talao / Celebes', lat: 2.75, lon: 125.37, kind: 'mission', minZoom: 10, priority: 100 },
     { name: 'Gilolo / Halmahera', lat: 1.2, lon: 127.9, kind: 'mission', minZoom: 10, priority: 100 },
     { name: 'Zamaso', lat: 1.05, lon: 127.65, kind: 'mission', minZoom: 16, priority: 100 },
+    { name: 'Timor', lat: -10.17, lon: 123.61, kind: 'mission', minZoom: 9, priority: 100 },
+    { name: 'Cape of Good Hope', lat: -34.3568, lon: 18.474, kind: 'mission', minZoom: 8, priority: 100 },
     { name: 'Tidore', lat: 0.683, lon: 127.4, kind: 'mission', minZoom: 12, priority: 100 },
 
     // Iberia and Atlantic ports useful around the opening legs.
