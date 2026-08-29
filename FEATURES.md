@@ -37,6 +37,8 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - The polar diagram has a simple default view and an optional detailed view with more angle and efficiency information.
 - The sailing model identifies the current point of sail, including the no-sail/dead-angle zone, close-hauled sailing, reaching, and running.
 - Helm control supports port/starboard rudder input and centering; sail control adjusts sail area from furled to full sail.
+- Navigation is always selectable during a voyage. Ocean mode keeps the rapid voyage clock (1×, 4×, 8×, 16×); Manoeuvring mode pauses on entry and offers 0.1×, 0.25×, 0.5×, and 1× for confined water, with a more responsive helm.
+- In Manoeuvring mode, each vessel has a small ship-type-dependent auxiliary drive when sails are furled or nearly furled and sailing speed is below 1.5 kn. It is enabled by default, shown as **Rowing**, and can be switched off at any time; it is not a replacement for sail power.
 - Desktop keyboard controls support both arrow keys and WASD by default: left/right steer, up/down raise or lower sails. `X` drops/raises the contextual coastal anchor, `C` toggles Static ↔ Follow ship camera, `V` toggles Direct ↔ Waypoints navigation mode, and `+`/`−` zoom the chart. They also cover centering the helm, pause/time speeds, restart, instructions, and the mission menu.
 - Keyboard bindings can be changed and restored to defaults from the voyage-selection screen or the in-mission menu; they remain saved in the browser.
 
