@@ -3,6 +3,7 @@ import type { EastNorthVector, GeoPosition } from './coordinates';
 export type WeatherSystem = {
   id: string;
   kind: 'storm';
+  intensity: 'low' | 'gale' | 'severe';
   center: GeoPosition;
   radiusNm: number;
   strengthKn: number;
@@ -33,24 +34,33 @@ export function atlanticWeatherSystems(time: Date): WeatherSystem[] {
   const southernWinter = month >= 4 && month <= 9;
   const northernWinter = month <= 2 || month >= 10;
   const templates = [
-    { band: 'north', lat: northernWinter ? 47 : 53, lon: -62, eastPerHour: 0.28, northPerHour: 0.035, strength: northernWinter ? 28 : 23 },
-    { band: 'south', lat: southernWinter ? -51 : -45, lon: -64, eastPerHour: 0.34, northPerHour: 0.018, strength: southernWinter ? 32 : 27 },
-    { band: 'south', lat: southernWinter ? -39 : -35, lon: -28, eastPerHour: 0.22, northPerHour: -0.025, strength: southernWinter ? 25 : 20 },
+    { band: 'north', lat: northernWinter ? 47 : 53, lon: -62, eastPerHour: 0.28, northPerHour: 0.035, winter: northernWinter },
+    { band: 'south', lat: southernWinter ? -51 : -45, lon: -64, eastPerHour: 0.34, northPerHour: 0.018, winter: southernWinter },
+    { band: 'south', lat: southernWinter ? -39 : -35, lon: -28, eastPerHour: 0.22, northPerHour: -0.025, winter: southernWinter },
   ];
   return templates.map((template, index) => {
     const seed = `${start}:${index}`;
     const jitterLat = (hash(`${seed}:lat`) - .5) * 8;
     const jitterLon = (hash(`${seed}:lon`) - .5) * 18;
     const radiusNm = 210 + hash(`${seed}:radius`) * 170;
+    const draw = hash(`${seed}:intensity`);
+    const intensity = draw < .55 ? 'low' : draw < .88 ? 'gale' : 'severe';
+    const winterBonus = template.winter ? 2 : 0;
+    const strengthKn = intensity === 'low'
+      ? 10 + winterBonus + hash(`${seed}:strength`) * 8
+      : intensity === 'gale'
+        ? 18 + winterBonus + hash(`${seed}:strength`) * 12
+        : 30 + winterBonus + hash(`${seed}:strength`) * 10;
     return {
       id: `atlantic-storm-${start}-${index}`,
       kind: 'storm',
+      intensity,
       center: {
         lat: template.lat + jitterLat + template.northPerHour * progressHours,
         lon: template.lon + jitterLon + template.eastPerHour * progressHours,
       },
       radiusNm,
-      strengthKn: template.strength + hash(`${seed}:strength`) * 5,
+      strengthKn,
       rotation: template.band === 'north' ? 1 : -1,
     };
   });
@@ -61,7 +71,12 @@ function influence(system: WeatherSystem, position: GeoPosition): EastNorthVecto
   const east = (position.lon - system.center.lon) * 60 * Math.max(.2, Math.cos(position.lat * Math.PI / 180));
   const distance = Math.hypot(east, north);
   if (distance >= system.radiusNm || distance < 0.001) return { x: 0, y: 0 };
-  const falloff = (1 - distance / system.radiusNm) ** .65;
+  const normalizedDistance = distance / system.radiusNm;
+  // Calm at the low's centre; wind builds gradually to a broad peak ring at
+  // 70% of the radius, then drops quickly at the system's outer boundary.
+  const falloff = normalizedDistance <= .7
+    ? normalizedDistance / .7
+    : (1 - normalizedDistance) / .3;
   const tangentEast = -north / distance * system.rotation;
   const tangentNorth = east / distance * system.rotation;
   return { x: tangentEast * system.strengthKn * falloff, y: tangentNorth * system.strengthKn * falloff };
