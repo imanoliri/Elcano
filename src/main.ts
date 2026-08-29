@@ -21,6 +21,7 @@ import {
 import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedition-progress';
 import { shipPresetFromId } from './ship-selection';
 import { actionForKeyboardEvent } from './keyboard-controls';
+import { installWeatherForecast } from './weather-forecast';
 
 const activeMission = missionFromUrl();
 const activeCampaign = campaignForMission(activeMission);
@@ -120,6 +121,8 @@ let timeScale = 0;
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
+
+installWeatherForecast(() => state);
 
 function setTimeScale(value: number) {
   timeScale = value;

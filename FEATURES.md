@@ -69,6 +69,7 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - Deterministic basin-scale weather systems move through the North and South Atlantic, North Pacific, Southern Ocean, and seasonally active tropical basins.
 - Weather systems alter local wind and apply a smaller surface-current influence while persistent large-scale currents remain in place.
 - A discovered storm centre is marked on the chart with a storm symbol. Storms have a calm centre, strongest winds in a surrounding ring, and intensity variation from ordinary lows to severe storms.
+- The in-mission Sailing forecast compares deterministic wind and current at the ship's known position now and over the next 48 hours. It also reports only already-charted nearby storm centres, so waiting at anchor can be a deliberate route decision without revealing hidden weather.
 
 ## Coastal navigation and route planning
 

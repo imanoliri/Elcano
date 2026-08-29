@@ -197,7 +197,7 @@ Make the campaign's most constrained historical passage feel distinct from open-
 
 Build on moving deterministic weather systems so anchoring and time acceleration become meaningful route decisions.
 
-- Add a small, readable forecast for conditions the player has already discovered: local wind/current trend and nearby known storm movement over a limited future window.
+- [x] Add a small, readable forecast for conditions the player has already discovered: local wind/current trend and nearby known storm movement over a limited future window.
 - Do not reveal undiscovered weather systems or create a perfect global forecast.
 - Make it clear when waiting at anchor could produce a better departure window than forcing an unfavorable passage.
 - Preserve deterministic results so forecasts, replays and tests remain reproducible.

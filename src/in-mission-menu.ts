@@ -65,6 +65,7 @@ if (params.get('play') === '1') {
             <button id="game-briefing" type="button">Mission briefing</button>
             <button id="game-sailing-guide" type="button">Sailing guide</button>
           </div>
+          <button id="game-weather-forecast" type="button">Sailing forecast</button>
           <details class="game-menu-visibility">
             <summary>Navigation display</summary>
             <div class="game-menu-visibility-options">
@@ -123,6 +124,10 @@ if (params.get('play') === '1') {
     overlay.querySelector('#game-resume')!.addEventListener('click', close);
     overlay.querySelector('#game-briefing')!.addEventListener('click', () => openExistingModal('#modal'));
     overlay.querySelector('#game-sailing-guide')!.addEventListener('click', () => openExistingModal('#sailing-guide-modal'));
+    overlay.querySelector('#game-weather-forecast')!.addEventListener('click', () => {
+      close();
+      window.dispatchEvent(new CustomEvent('elcano:open-weather-forecast'));
+    });
     overlay.querySelector('#game-keyboard-controls')!.append(createKeyboardControlsPanel());
     overlay.querySelector('#game-restart')!.addEventListener('click', () => window.location.reload());
     overlay.querySelector('#game-exit')!.addEventListener('click', exitMission);
