@@ -22,7 +22,7 @@ The branch currently includes:
 - a camera target supplied by projected game data rather than hard-coded canvas coordinates;
 - static Netlify-compatible deployment.
 
-See [WORLD_DATA.md](./WORLD_DATA.md) for the real-world geography, wind and current data strategy.
+See [WORLD_DATA.md](./WORLD_DATA.md) for the real-world geography, wind and current data strategy, and [SEAS_AND_WEATHER.md](./SEAS_AND_WEATHER.md) for the gameplay reference to prevailing conditions and dynamic storms.
 
 ## Vision
 

@@ -40,7 +40,7 @@ For the current game, discovered environmental knowledge should remain intention
 
 Evolve the environment from mostly static climatological vectors into a time-varying simulation that makes waiting, anchoring and route timing meaningful parts of navigation.
 
-- [x] Add a first deterministic Atlantic-basin layer: a small population of moving low-pressure systems, seeded by time rather than mission, that modifies local wind and lightly nudges surface current. Systems have ordinary-low, gale, or severe-storm intensity, with a calm centre, a broad peak-wind ring, and a sharp outer fall-off. A discovered storm centre is marked with 🌩️ on the chart.
+- [x] Add deterministic global basin-level low-pressure systems: year-round mid-latitude tracks in the Atlantic, North Pacific and Southern Ocean, plus season-gated tropical systems in the Pacific and Indian oceans. Systems have ordinary-low, gale, or severe-storm intensity, with a calm centre, a broad peak-wind ring, and a sharp outer fall-off. A discovered storm centre is marked with 🌩️ on the chart. See `SEAS_AND_WEATHER.md` for the current model.
 
 Model the environment in three layers:
 
