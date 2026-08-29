@@ -3,6 +3,7 @@ import { currentAt, windAt, type Vec2 } from './simulation';
 import { isWorldPointExplored } from './exploration';
 import { project, unproject } from './world/coordinates';
 import { prefetchEnvironmentBounds } from './world/environment';
+import { atlanticWeatherSystems } from './world/environment';
 import { drawLandMask } from './world/geography';
 
 const ocean = document.querySelector<HTMLCanvasElement>('#ocean');
@@ -69,6 +70,7 @@ if (ocean && shell) {
   type GeoBounds = { minLat: number; maxLat: number; minLon: number; maxLon: number };
   let camera: Camera | null = null;
   let prefetchTimer = 0;
+  let latestSimulationTime: Date | null = null;
   const visibility: Record<FieldId, boolean> = { wind: true, current: true };
 
   function resizeOverlay() {
@@ -83,9 +85,27 @@ if (ocean && shell) {
   }
 
   function simulationTime() {
+    if (latestSimulationTime) return latestSimulationTime;
     const elapsedText = document.querySelector<HTMLElement>('#elapsed')?.textContent ?? '0';
     const elapsedHours = Number.parseFloat(elapsedText) || 0;
     return new Date(Date.UTC(1525, 6, 1, 12) + elapsedHours * 3_600_000);
+  }
+
+  function drawStormCenters(time: Date, value: Camera, visible: GeoBounds) {
+    if (!ctx) return;
+    for (const storm of atlanticWeatherSystems(time)) {
+      const { lat, lon } = storm.center;
+      if (lat < visible.minLat || lat > visible.maxLat || lon < visible.minLon || lon > visible.maxLon) continue;
+      const world = project(storm.center);
+      if (!isWorldPointExplored(world)) continue;
+      const x = value.x + world.x * value.scale;
+      const y = value.y + world.y * value.scale;
+      ctx.save();
+      ctx.font = '22px "Apple Color Emoji", "Segoe UI Emoji", sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🌩️', x, y);
+      ctx.restore();
+    }
   }
 
   function displayStep(field: Field, value: Camera) {
@@ -194,6 +214,7 @@ if (ocean && shell) {
     const time = simulationTime();
     const visible = visibleGeoBounds(camera);
     for (const field of fields) drawField(field, time, camera, visible);
+    drawStormCenters(time, camera, visible);
     eraseLand(camera);
   }
 
@@ -212,6 +233,11 @@ if (ocean && shell) {
   });
 
   window.addEventListener('elcano:environment-data-change', scheduleRender);
+  window.addEventListener('elcano:simulation-time', (event) => {
+    const value = (event as CustomEvent<string>).detail;
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) latestSimulationTime = parsed;
+  });
   window.addEventListener('elcano:exploration-change', scheduleRender);
   window.addEventListener('elcano:navigation-visibility', (event) => {
     const detail = (event as CustomEvent<{ wind?: boolean; current?: boolean }>).detail;
