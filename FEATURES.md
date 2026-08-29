@@ -47,7 +47,15 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - The chart wraps continuously at its edges, allowing uninterrupted long-distance exploration rather than stopping at a map boundary.
 - Higher-detail coastline geometry loads at close zoom without making normal camera movement heavy.
 - Zoom-aware labels identify mission locations, ports, cities, islands, straits, seas, and major ocean regions while suppressing collisions between labels.
-- Fog of war hides unexplored waters. Sailing reveals a persistent area around the ship; restarting a mission clears that mission’s explored chart.
+- Fog of war hides unexplored waters. Sailing reveals chart cells around the ship, and discovered cells remain charted across later missions and campaigns in this browser.
+
+## Expedition progress and voyage logbook
+
+- Completed missions are remembered locally, with completion date, latest voyage time, best voyage time, distance sailed, selected ship, and a compact sampled route.
+- Campaign and mission selectors show completed missions and campaign progress while leaving every mission selectable for replay.
+- The Voyage logbook in voyage setup groups completed legs by campaign and makes replay results clear: one mission record has a latest result and best time.
+- A deliberate confirmed reset clears expedition records, results, route history, and accumulated chart knowledge; restarting a mission does not.
+- The logbook can export or import the entire local expedition as a JSON file through the device’s normal download and file-picker flow.
 
 ## Wind, currents, and weather
 

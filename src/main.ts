@@ -12,11 +12,14 @@ import { campaignForMission, missionFromUrl, worldStateForMission } from './miss
 import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
 import { drawLand } from './world/geography';
 import {
-  clearExploration,
   EXPLORATION_CELL,
   isWorldPointExplored,
   revealAroundWorldPoint,
+  restoreExploration,
+  exploredCells,
 } from './exploration';
+import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedition-progress';
+import { shipPresetFromId } from './ship-selection';
 
 const activeMission = missionFromUrl();
 const activeCampaign = campaignForMission(activeMission);
@@ -113,6 +116,8 @@ let last = performance.now();
 let reached = false;
 let tutorialStage = 0;
 let timeScale = 0;
+let distanceSailedNm = 0;
+let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
 
 function setTimeScale(value: number) {
@@ -157,7 +162,7 @@ function openHelp() {
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; clearExploration(); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted');
+  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
 }
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
@@ -210,8 +215,9 @@ function draw() {
   if (!reached && distanceToDestination(state) < 20) {
     reached = true;
     setTimeScale(0);
+    recordVoyage(activeMission.id, { completedAt: new Date().toISOString(), elapsedHours: state.elapsedHours, distanceNm: distanceSailedNm, shipId: shipPresetFromId(new URLSearchParams(window.location.search).get('ship')).id, route });
     missionTitle.textContent = 'Mission complete';
-    showToast(`${activeMission.to} · ${formatElapsedDays(state.elapsedHours)}`);
+    showToast(`${activeMission.to} · logbook updated`);
     openHelp();
   }
 }
@@ -249,10 +255,12 @@ function updateTutorial() {
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, .1); last = now;
-  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); state.ship.headingDeg = (state.ship.headingDeg + r * .9 * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); }
+  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); state.ship.headingDeg = (state.ship.headingDeg + r * .9 * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 
+restoreExploration(getExpeditionProgress().exploredCells);
+window.addEventListener('elcano:exploration-change', () => saveExploredCells(exploredCells));
 modalText.textContent = tutorial[0].text;
 revealAroundShip();
 updateControlReadouts();

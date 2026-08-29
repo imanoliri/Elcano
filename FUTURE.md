@@ -158,12 +158,6 @@ Mission endpoints are gameplay waypoints representing major historical legs, not
 
 Turn completed voyages into a coherent expedition without preventing replay or making the game grindy.
 
-- Store campaign progress locally: completed missions, completion date, voyage time, distance sailed, chosen ship and best result for each leg.
-- Add a voyage logbook that lets the player review completed legs, their route, basic results and previous attempts.
-- Mark completed legs in the campaign selector, but keep every mission replayable and selectable for practice.
-- Persist player chart knowledge across missions and campaigns. Water tiles discovered during an earlier voyage should remain visible on later voyages rather than returning to fog.
-- Persist only **player knowledge**—explored tiles and later, possibly, recorded observations—not the full hidden world state. New missions must still begin with undiscovered waters outside the accumulated chart.
-- Keep a deliberate reset option for players who want a fresh expedition/chart.
 
 This makes exploration cumulative: a player who crossed the Atlantic on an earlier leg can use the charted waters while preparing a later voyage, but must still personally discover unfamiliar seas.
 

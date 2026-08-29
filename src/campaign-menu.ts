@@ -1,4 +1,5 @@
 import { campaignForMission, campaigns, missionFromUrl, type Campaign } from './missions';
+import { voyageForMission } from './expedition-progress';
 
 const activeMission = missionFromUrl();
 const activeCampaign = campaignForMission(activeMission);
@@ -68,7 +69,7 @@ function mountCampaignMenu() {
     content.innerHTML = `<div class="campaign-choice-list">${campaigns.map((campaign) => `
       <button class="campaign-choice ${campaign.id === activeCampaign.id ? 'active-campaign' : ''}" data-campaign-id="${campaign.id}" type="button">
         <span class="campaign-choice-copy"><span>${campaign.subtitle}</span><h3>${campaign.title}</h3><p>${campaign.description}</p></span>
-        <span class="campaign-choice-count">${campaign.missions.length} ${campaign.missions.length === 1 ? 'mission' : 'missions'} ›</span>
+        <span class="campaign-choice-count">${campaign.missions.filter((mission) => voyageForMission(mission.id)).length} / ${campaign.missions.length} completed ›</span>
       </button>
     `).join('')}</div>`;
     content.querySelectorAll<HTMLButtonElement>('.campaign-choice').forEach((choice) => {
@@ -85,9 +86,9 @@ function mountCampaignMenu() {
     back.classList.add('visible');
     content.innerHTML = `<div class="mission-scroll">${campaign.missions.map((mission) => `
       <button class="mission-row ${mission.id === activeMission.id ? 'active-mission' : ''}" data-mission-id="${mission.id}" type="button">
-        <span class="mission-number">${mission.number}</span>
+        <span class="mission-number">${voyageForMission(mission.id) ? '✓' : mission.number}</span>
         <span class="mission-copy"><strong>${mission.title}</strong><small>${mission.from} → ${mission.to}</small></span>
-        ${mission.id === activeMission.id ? '<span class="mission-current">Current</span>' : '<span class="mission-play">Sail ›</span>'}
+        ${mission.id === activeMission.id ? '<span class="mission-current">Current</span>' : voyageForMission(mission.id) ? '<span class="mission-play">Replay ›</span>' : '<span class="mission-play">Sail ›</span>'}
       </button>
     `).join('')}</div>`;
     content.querySelectorAll<HTMLButtonElement>('.mission-row').forEach((row) => {
