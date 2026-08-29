@@ -90,7 +90,10 @@ if (!isPlaying) {
     logbookContent.querySelector('#export-expedition')?.addEventListener('click', () => {
       const blob = new Blob([exportExpeditionProgress()], { type: 'application/json' });
       const url = URL.createObjectURL(blob); const link = document.createElement('a');
-      link.href = url; link.download = `elcano-expedition-${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(link); link.click(); link.remove();
+      const now = new Date();
+      const part = (value: number) => String(value).padStart(2, '0');
+      const timestamp = `${now.getFullYear()}-${part(now.getMonth() + 1)}-${part(now.getDate())} ${part(now.getHours())}-${part(now.getMinutes())}-${part(now.getSeconds())}`;
+      link.href = url; link.download = `Elcano Game - ${timestamp}.json`; document.body.appendChild(link); link.click(); link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
     const importInput = logbookContent.querySelector<HTMLInputElement>('#import-expedition-file')!;
