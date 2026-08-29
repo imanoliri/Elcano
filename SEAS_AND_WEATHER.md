@@ -32,15 +32,15 @@ Storms principally alter wind. Their current effect is only 0.8% of their local 
 
 | Region | Prevailing wind/current character | Dynamic systems in Elcano |
 |---|---|---|
-| North Atlantic | Trades in the subtropics; westerlies north of them. North Atlantic gyre, Gulf Stream/North Atlantic Drift and Canary Current shape currents. | A year-round eastbound mid-latitude low; stronger in northern winter. |
-| South Atlantic | Southeast trades north of the subtropical high; strong westerlies toward Patagonia. Brazil, Benguela and South Atlantic currents form the gyre. | A south-Atlantic low plus Southern-Ocean influence; strongest in austral winter. Tropical cyclones are not generated here. |
-| North Pacific | Trades in the subtropics; vigorous westerly storm track farther north. Kuroshio, North Pacific Drift and California Current shape the gyre. | Two year-round eastbound mid-latitude lows, strongest in northern winter; a western-Pacific typhoon system can occur year-round. |
-| East Pacific | Northeast trades and the California Current in the north; tropical eastward/westward variations near Central America. | Tropical cyclone system only June–November, moving broadly west before later recurvature is modelled. |
-| North Indian Ocean | Monsoon reversal is important: southwest monsoon in boreal summer and northeast monsoon in winter. Currents reverse with it. | Tropical system only in the pre- and post-monsoon windows: April–May and October–December. |
-| Southwest Indian Ocean | Southeast trades and subtropical gyre; Agulhas Current is the dominant southwest-bound boundary current near Africa. | Tropical cyclones during November–April, moving broadly west/southwest in the initial model. |
-| Australian / Southeast Indian | Trade-wind and monsoonal region north of Australia; Leeuwin and broader subtropical circulation affect surface flow. | Tropical cyclones November–April. |
-| South Pacific | Southeast trades and South Pacific gyre; stronger westerlies south of about 30°S. | Tropical cyclones November–April, especially in the southwest tropical Pacific. |
-| Southern Ocean | Persistent, fast eastward westerlies and the Antarctic Circumpolar Current. | Two fast, year-round eastbound low-pressure tracks; strongest in austral winter. |
+| North Atlantic | Trades in the subtropics; westerlies north of them. North Atlantic gyre, Gulf Stream/North Atlantic Drift and Canary Current shape currents. | Overlapping eastbound mid-latitude lows: two in summer and three in northern winter. Each forms, intensifies, and dissipates on a deterministic ten-day track. |
+| South Atlantic | Southeast trades north of the subtropical high; strong westerlies toward Patagonia. Brazil, Benguela and South Atlantic currents form the gyre. | Two overlapping eastbound mid-latitude lows in the milder season and three in austral winter. Tropical cyclones are not generated here. |
+| North Pacific | Trades in the subtropics; vigorous westerly storm track farther north. Kuroshio, North Pacific Drift and California Current shape the gyre. | Two year-round eastbound tracks, each with two overlapping lows in summer and three in northern winter; a western-Pacific typhoon track can occur year-round. |
+| East Pacific | Northeast trades and the California Current in the north; tropical eastward/westward variations near Central America. | Short-lived overlapping tropical systems only June–November, moving broadly west before later recurvature is modelled. |
+| North Indian Ocean | Monsoon reversal is important: southwest monsoon in boreal summer and northeast monsoon in winter. Currents reverse with it. | Short-lived overlapping tropical systems only in the pre- and post-monsoon windows: April–May and October–December. |
+| Southwest Indian Ocean | Southeast trades and subtropical gyre; Agulhas Current is the dominant southwest-bound boundary current near Africa. | Short-lived overlapping tropical systems during November–April, moving broadly west/southwest in the initial model. |
+| Australian / Southeast Indian | Trade-wind and monsoonal region north of Australia; Leeuwin and broader subtropical circulation affect surface flow. | Short-lived overlapping tropical systems November–April. |
+| South Pacific | Southeast trades and South Pacific gyre; stronger westerlies south of about 30°S. | Short-lived overlapping tropical systems November–April, especially in the southwest tropical Pacific. |
+| Southern Ocean | Persistent, fast eastward westerlies and the Antarctic Circumpolar Current. | Two fast year-round eastbound tracks, each with two overlapping lows in the milder season and three in austral winter. |
 
 ## Storm model
 
@@ -52,6 +52,8 @@ Every generated system is a low-pressure circulation:
 - gradually stronger from the centre to a broad peak-wind ring at 70% of its radius;
 - sharply weaker between that ring and the outer edge;
 - moving through its basin on a deterministic track, usually about 10–13 kn eastward for mid-latitude lows.
+
+Every procedural basin now uses the same lifecycle model. Mid-latitude lows last ten game-days and their wind contribution rises from zero, peaks halfway through, then fades to zero. A new low starts every six days in the milder season and every four days in that hemisphere's winter, leaving two or three systems active along each track. Tropical systems last eight game-days and start every seven days while their basin's seasonal profile is active. This produces a short handover overlap rather than an abrupt replacement.
 
 ### Intensity classes
 
