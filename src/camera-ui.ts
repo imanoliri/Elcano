@@ -63,6 +63,10 @@ if (canvas && viewport) {
     return { width: viewport.clientWidth, height: viewport.clientHeight };
   }
 
+  function renderDpr() {
+    return Math.min(MAX_WRAP_DPR, Math.max(1, window.devicePixelRatio || 1));
+  }
+
   function positiveModulo(value: number, modulus: number) {
     return ((value % modulus) + modulus) % modulus;
   }
@@ -75,7 +79,7 @@ if (canvas && viewport) {
   }
 
   function resizeWrapLayer() {
-    const dpr = Math.min(MAX_WRAP_DPR, Math.max(1, window.devicePixelRatio || 1));
+    const dpr = renderDpr();
     const { width, height } = viewportSize();
     const pixelWidth = Math.max(1, Math.round(width * dpr));
     const pixelHeight = Math.max(1, Math.round(height * dpr));
@@ -179,8 +183,14 @@ if (canvas && viewport) {
   function centerOnPoint(point: { x: number; y: number }) {
     const { width, height } = viewportSize();
     const current = nearestWrappedScreenPoint(point);
-    offsetX += width / 2 - current.x;
-    offsetY += height / 2 - current.y;
+    // The follow camera updates continuously. Leaving its canvas destination on
+    // fractional physical pixels makes the browser interpolate every frame and
+    // visibly softens coastlines on laptop displays. Keep the world on the
+    // render canvas's physical-pixel grid; the ship remains centred to within
+    // half a physical pixel.
+    const dpr = renderDpr();
+    offsetX = Math.round((offsetX + width / 2 - current.x) * dpr) / dpr;
+    offsetY = Math.round((offsetY + height / 2 - current.y) * dpr) / dpr;
     applyCamera();
   }
 
