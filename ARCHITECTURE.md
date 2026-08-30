@@ -146,7 +146,7 @@ Any stochastic systems such as weather variation should use explicit seeded rand
 
 ### Dynamic weather
 
-Weather belongs to the world/simulation boundary, not the UI. Background environmental providers provide monthly prevailing wind and current. A deterministic, spatially coherent synoptic layer advects broad ordinary-weather anomalies across the prevailing wind before explicit basin-level weather systems contribute their local wind/current influence; local systems such as the Strait of Magellan may then channel that result. Rendering may show discovered conditions and system centres, but must not define, mutate or reveal undiscovered weather truth. The exact regime ranges, basin profiles and gameplay simplifications are documented in [SEAS_AND_WEATHER.md](./SEAS_AND_WEATHER.md).
+Weather belongs to the world/simulation boundary, not the UI. Background environmental providers provide monthly prevailing wind and current. A deterministic, spatially coherent synoptic layer can advect broad ordinary-weather anomalies across the prevailing wind before explicit basin-level weather systems contribute their local wind/current influence; the application may disable this ordinary-weather layer through a persisted player setting without disabling the underlying climatology or explicit weather systems; local systems such as the Strait of Magellan may then channel that result. Rendering may show discovered conditions and system centres, but must not define, mutate or reveal undiscovered weather truth. The exact regime ranges, basin profiles and gameplay simplifications are documented in [SEAS_AND_WEATHER.md](./SEAS_AND_WEATHER.md).
 
 ## Coordinates and units
 
