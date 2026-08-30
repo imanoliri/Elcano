@@ -2,22 +2,23 @@ import type { EastNorthVector, GeoPosition } from './coordinates';
 
 const DAY_MS = 86_400_000;
 const WEATHER_EPOCH_MS = Date.UTC(1500, 0, 1);
-const CELL_DEG = 18;
-const LON_CELLS = 360 / CELL_DEG;
-const LAT_CELLS = 180 / CELL_DEG;
+const PRIMARY_CELL_DEG = 18;
+const SECONDARY_CELL_DEG = 30;
 const DEG = Math.PI / 180;
 
 type VariationProfile = {
   speedAmplitude: number;
   directionAmplitudeDeg: number;
+  /** Positive moves anomalies east, negative moves them west. */
+  driftKn: number;
 };
 
 const PROFILES = {
-  doldrums: { speedAmplitude: 0.70, directionAmplitudeDeg: 55 },
-  trades: { speedAmplitude: 0.25, directionAmplitudeDeg: 12 },
-  westerlies: { speedAmplitude: 0.45, directionAmplitudeDeg: 32 },
-  monsoon: { speedAmplitude: 0.35, directionAmplitudeDeg: 22 },
-  southernOcean: { speedAmplitude: 0.35, directionAmplitudeDeg: 20 },
+  doldrums: { speedAmplitude: 0.70, directionAmplitudeDeg: 55, driftKn: -3 },
+  trades: { speedAmplitude: 0.25, directionAmplitudeDeg: 12, driftKn: -7 },
+  westerlies: { speedAmplitude: 0.45, directionAmplitudeDeg: 32, driftKn: 12 },
+  monsoon: { speedAmplitude: 0.35, directionAmplitudeDeg: 22, driftKn: -4 },
+  southernOcean: { speedAmplitude: 0.35, directionAmplitudeDeg: 20, driftKn: 15 },
 } as const satisfies Record<string, VariationProfile>;
 
 function hashUnit(value: string) {
@@ -32,6 +33,10 @@ function hashUnit(value: string) {
   state = Math.imul(state, 0xc2b2ae35);
   state ^= state >>> 16;
   return (state >>> 0) / 2 ** 32;
+}
+
+function signedHash(value: string) {
+  return hashUnit(value) * 2 - 1;
 }
 
 function clamp01(value: number) {
@@ -56,6 +61,7 @@ function blendProfile(a: VariationProfile, b: VariationProfile, t: number): Vari
   return {
     speedAmplitude: lerp(a.speedAmplitude, b.speedAmplitude, amount),
     directionAmplitudeDeg: lerp(a.directionAmplitudeDeg, b.directionAmplitudeDeg, amount),
+    driftKn: lerp(a.driftKn, b.driftKn, amount),
   };
 }
 
@@ -68,32 +74,31 @@ function normalizedLongitude(lon: number) {
 }
 
 /**
- * Regime-aware variability is blended at its boundaries so the chart never has
- * an artificial latitude/longitude seam where one wind regime becomes another.
+ * Regime-aware variability and anomaly motion are blended at their boundaries so
+ * the chart never has an artificial seam where one wind regime becomes another.
  */
 function variationProfileAt(position: GeoPosition): VariationProfile {
   const absLat = Math.abs(position.lat);
   let profile: VariationProfile = PROFILES.trades;
 
-  // The ITCZ/doldrums are most variable close to the Equator, fading smoothly
-  // into the steadier trades between about 5 and 10 degrees latitude.
+  // The ITCZ/doldrums are fickle and relatively slow-moving, fading smoothly
+  // into the steadier westward-moving trade-wind regime.
   const doldrumsWeight = 1 - smoothstep((absLat - 5) / 5);
   profile = blendProfile(profile, PROFILES.doldrums, doldrumsWeight);
 
-  // Trades give way gradually to the more changeable mid-latitude westerlies.
+  // Trades give way gradually to eastward-moving, more changeable westerlies.
   const westerlyWeight = smoothstep((absLat - 26) / 8);
   profile = blendProfile(profile, PROFILES.westerlies, westerlyWeight);
 
-  // South of the mid-30s the strong Southern Ocean baseline is somewhat steadier
-  // than northern/mid-latitude westerlies; storms provide the large extremes.
+  // Southern Ocean anomalies move faster eastward than ordinary westerly weather.
   if (position.lat < 0) {
     const southernOceanWeight = smoothstep((absLat - 34) / 10);
     profile = blendProfile(profile, PROFILES.southernOcean, southernOceanWeight);
   }
 
   // The monthly climatology already carries the monsoon's seasonal reversal.
-  // Here we only give monsoon-dominated waters their characteristic day-scale
-  // variability. Feathered regional weights prevent hard geographic edges.
+  // Day-scale monsoon anomalies drift more slowly and mainly westward in this
+  // readable abstraction; the monthly field remains the dominant seasonal signal.
   const lon = normalizedLongitude(position.lon);
   const northIndian = bandWeight(position.lat, 5, 30, 5) * bandWeight(lon, 40, 120, 8);
   const maritimeAsia = bandWeight(position.lat, -15, 20, 5) * bandWeight(lon, 90, 150, 8);
@@ -103,49 +108,66 @@ function variationProfileAt(position: GeoPosition): VariationProfile {
   return profile;
 }
 
-function cornerWave(channel: string, x: number, y: number, days: number) {
-  const phaseA = hashUnit(`${channel}:${x}:${y}:phase-a`) * Math.PI * 2;
-  const phaseB = hashUnit(`${channel}:${x}:${y}:phase-b`) * Math.PI * 2;
-  const periodA = 2.6 + hashUnit(`${channel}:${x}:${y}:period-a`) * 1.8;
-  const periodB = 5.5 + hashUnit(`${channel}:${x}:${y}:period-b`) * 3;
-
-  return (
-    Math.sin(days / periodA * Math.PI * 2 + phaseA) * 0.72
-    + Math.sin(days / periodB * Math.PI * 2 + phaseB) * 0.28
-  );
+function advectedLongitude(position: GeoPosition, days: number, driftKn: number) {
+  const cosLat = Math.max(0.25, Math.cos(position.lat * DEG));
+  const degreesPerDay = driftKn * 24 / (60 * cosLat);
+  // Sample the upstream source point so a positive drift makes patterns move east.
+  return position.lon - degreesPerDay * days;
 }
 
 /**
- * Broad deterministic synoptic variation.
- *
- * Eighteen-degree cells are roughly 1,000 nautical miles north/south. Bilinear
- * interpolation keeps neighbouring waters coherent. Each cell combines a
- * dominant 2.6–4.4 day cycle with a slower 5.5–8.5 day component, guaranteeing
- * smooth short-term evolution without midnight jumps or independent daily rolls.
+ * Smooth deterministic value noise sampled from a wrapped longitude grid.
  */
-function synopticNoise(channel: string, position: GeoPosition, time: Date) {
+function spatialNoise(channel: string, position: GeoPosition, cellDeg: number) {
+  const lonCells = Math.round(360 / cellDeg);
+  const latCells = Math.round(180 / cellDeg);
   const longitude = ((position.lon + 180) % 360 + 360) % 360;
   const latitude = Math.max(-89.999, Math.min(89.999, position.lat));
 
-  const gx = longitude / CELL_DEG;
-  const gy = (latitude + 90) / CELL_DEG;
+  const gx = longitude / cellDeg;
+  const gy = (latitude + 90) / cellDeg;
   const xFloor = Math.floor(gx);
   const yFloor = Math.floor(gy);
-  const x0 = wrapIndex(xFloor, LON_CELLS);
-  const x1 = wrapIndex(x0 + 1, LON_CELLS);
-  const y0 = Math.max(0, Math.min(LAT_CELLS - 1, yFloor));
-  const y1 = Math.max(0, Math.min(LAT_CELLS - 1, y0 + 1));
+  const x0 = wrapIndex(xFloor, lonCells);
+  const x1 = wrapIndex(x0 + 1, lonCells);
+  const y0 = Math.max(0, Math.min(latCells - 1, yFloor));
+  const y1 = Math.max(0, Math.min(latCells - 1, y0 + 1));
   const fx = smoothstep(gx - xFloor);
   const fy = smoothstep(gy - yFloor);
 
-  const days = (time.getTime() - WEATHER_EPOCH_MS) / DAY_MS;
-
-  const a = cornerWave(channel, x0, y0, days);
-  const b = cornerWave(channel, x1, y0, days);
-  const c = cornerWave(channel, x0, y1, days);
-  const d = cornerWave(channel, x1, y1, days);
+  const a = signedHash(`${channel}:${x0}:${y0}`);
+  const b = signedHash(`${channel}:${x1}:${y0}`);
+  const c = signedHash(`${channel}:${x0}:${y1}`);
+  const d = signedHash(`${channel}:${x1}:${y1}`);
 
   return lerp(lerp(a, b, fx), lerp(c, d, fx), fy);
+}
+
+/**
+ * Broad moving synoptic anomalies.
+ *
+ * Rather than oscillating in place, two deterministic spatial fields are
+ * advected across the ocean. A primary ~1,000 nm field carries most of the
+ * signal; a broader secondary field moves at a different speed so anomalies
+ * gradually change shape as they pass. This gives recognisable multi-day weather
+ * evolution without simulating pressure equations or fronts.
+ */
+function synopticNoise(channel: string, position: GeoPosition, time: Date, driftKn: number) {
+  const days = (time.getTime() - WEATHER_EPOCH_MS) / DAY_MS;
+
+  const primary: GeoPosition = {
+    lat: position.lat,
+    lon: advectedLongitude(position, days, driftKn),
+  };
+  const secondary: GeoPosition = {
+    lat: position.lat,
+    lon: advectedLongitude(position, days, driftKn * 0.55),
+  };
+
+  return (
+    spatialNoise(`${channel}:primary-v3`, primary, PRIMARY_CELL_DEG) * 0.72
+    + spatialNoise(`${channel}:secondary-v3`, secondary, SECONDARY_CELL_DEG) * 0.28
+  );
 }
 
 export type DailyWindVariation = {
@@ -163,8 +185,8 @@ export type DailyWindVariation = {
  */
 export function dailyWindVariationAt(position: GeoPosition, time: Date): DailyWindVariation {
   const profile = variationProfileAt(position);
-  const speedNoise = synopticNoise('daily-wind-speed-v2', position, time);
-  const directionNoise = synopticNoise('daily-wind-direction-v2', position, time);
+  const speedNoise = synopticNoise('daily-wind-speed', position, time, profile.driftKn);
+  const directionNoise = synopticNoise('daily-wind-direction', position, time, profile.driftKn);
 
   return {
     speedFactor: 1 + speedNoise * profile.speedAmplitude,
