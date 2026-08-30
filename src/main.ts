@@ -27,7 +27,7 @@ import { setStraitNavigationActive } from './world/environment';
 import { installStraitNavigationUi } from './strait-navigation-ui';
 
 const activeMission = missionFromUrl();
-const isStraitMission = activeMission.id === 'loaisa-7';
+const isStraitMission = Boolean(activeMission.isStraitPassage);
 setStraitNavigationActive(isStraitMission);
 const activeCampaign = campaignForMission(activeMission);
 const initialStep = activeMission.tutorialSteps?.[0];
