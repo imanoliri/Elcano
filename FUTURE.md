@@ -125,6 +125,26 @@ A later historical-navigation layer may deliberately separate **world truth** fr
 
 This should be an optional later direction, not a requirement for the current core game. First make the arcade navigation, exploration, environmental reading and historical missions consistently fun and clear.
 
+### Navigation and history learning layer
+
+Use the simulation to explain *why* a route worked or failed, rather than adding information panels that merely describe history. Keep every learning element optional, short and tied to a real player decision.
+
+1. **Post-voyage navigation debriefs** — route map, time, distance, weather encountered, personal best, and plain-language explanations of decisive route gains or losses.
+2. **Mission-specific learning objectives** — one to three explicit skills per leg, such as using trade winds, avoiding a current, finding westerlies or waiting for tidal slack.
+3. **Contextual “why this worked” cards** — optional, event-triggered explanations of monsoons, the *volta do mar*, westerlies, gyres, tides and fog banks.
+4. **Historical-route comparison** — reveal the expedition’s broad documented route after completion, clearly separating known track from gameplay checkpoints and compressed legs.
+5. **Interactive navigation lessons** — short exercises for tacking, jibing, points of sail, apparent wind, drift/leeway and course over ground.
+6. **Weather-window tutorial and forecast view** — teach observing a limited known forecast, anchoring, waiting, and departing in favourable wind or tide without exposing a perfect global forecast.
+7. **Campaign-specific expedition context** — compact chapters between missions covering purpose, leadership, losses, ports, political setting and consequences.
+8. **Current-corridor lessons** — explain named currents when a player enters or exploits them, including their historical effect on the route.
+9. **Seasonal wind-system lessons** — make monsoons, trade-wind shifts and seasonal North Atlantic behaviour explicit and teachable.
+10. **Optional historical-navigation mode** — the uncertainty mechanics above: dead reckoning, latitude observations, accumulating current error and stale observations.
+11. **Coastal pilotage and landmarks** — capes, islands, soundings, shoals, safe channels, harbour approaches and visual landmarks as meaningful local-navigation information.
+12. **Standalone scenario challenges** — concise lessons such as crossing the Bay of Biscay, finding Urdaneta’s westerlies, or escaping an adverse Strait tide.
+13. **Ship-choice briefings** — explain how each rig changes the route and the lesson it supports before a voyage begins.
+14. **Accessible glossary** — tap any nautical term for a plain-language definition and a tiny supporting diagram.
+15. **Route replay** — replay a completed voyage with wind, current, decisions, anchoring and speed changes over time.
+
 ## 5. Historical campaigns and missions
 
 Historical voyages should be organized as **Campaign → Missions**.
