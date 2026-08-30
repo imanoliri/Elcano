@@ -18,7 +18,7 @@ local wind            = varied background wind + weather-system wind
 local current         = monthly background current + small weather-driven deflection
 ```
 
-The ordinary variation layer changes only the prevailing wind. Storms are added afterwards, so ordinary variability cannot weaken the storm model itself. Storm current influence remains only 0.8% of the local rotating storm-wind contribution, preserving major ocean-current structure.
+The ordinary variation layer changes only the prevailing wind. Storms are added afterwards, so ordinary variability cannot weaken the storm model itself. Players may disable **Day-to-day wind variation** from the in-mission **Simulation** section; this bypasses the ordinary anomaly layer but leaves the monthly climatology and explicit storms active. The preference is remembered in the browser. Storm current influence remains only 0.8% of the local rotating storm-wind contribution, preserving major ocean-current structure.
 
 ## Ordinary day-to-day wind variation
 
