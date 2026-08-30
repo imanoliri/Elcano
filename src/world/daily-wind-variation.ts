@@ -1,8 +1,7 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 
 const DAY_MS = 86_400_000;
-const SYNOPTIC_PERIOD_DAYS = 3;
-const SYNOPTIC_PERIOD_MS = SYNOPTIC_PERIOD_DAYS * DAY_MS;
+const WEATHER_EPOCH_MS = Date.UTC(1500, 0, 1);
 const CELL_DEG = 18;
 const LON_CELLS = 360 / CELL_DEG;
 const LAT_CELLS = 180 / CELL_DEG;
@@ -27,11 +26,12 @@ function hashUnit(value: string) {
     state ^= character.charCodeAt(0);
     state = Math.imul(state, 16777619);
   }
+  state ^= state >>> 16;
+  state = Math.imul(state, 0x85ebca6b);
+  state ^= state >>> 13;
+  state = Math.imul(state, 0xc2b2ae35);
+  state ^= state >>> 16;
   return (state >>> 0) / 2 ** 32;
-}
-
-function signedHash(value: string) {
-  return hashUnit(value) * 2 - 1;
 }
 
 function clamp01(value: number) {
@@ -103,20 +103,25 @@ function variationProfileAt(position: GeoPosition): VariationProfile {
   return profile;
 }
 
-function temporalCornerNoise(channel: string, x: number, y: number, period: number, fraction: number) {
-  const blend = smoothstep(fraction);
-  const current = signedHash(`${channel}:${x}:${y}:${period}`);
-  const next = signedHash(`${channel}:${x}:${y}:${period + 1}`);
-  return lerp(current, next, blend);
+function cornerWave(channel: string, x: number, y: number, days: number) {
+  const phaseA = hashUnit(`${channel}:${x}:${y}:phase-a`) * Math.PI * 2;
+  const phaseB = hashUnit(`${channel}:${x}:${y}:phase-b`) * Math.PI * 2;
+  const periodA = 2.6 + hashUnit(`${channel}:${x}:${y}:period-a`) * 1.8;
+  const periodB = 5.5 + hashUnit(`${channel}:${x}:${y}:period-b`) * 3;
+
+  return (
+    Math.sin(days / periodA * Math.PI * 2 + phaseA) * 0.72
+    + Math.sin(days / periodB * Math.PI * 2 + phaseB) * 0.28
+  );
 }
 
 /**
- * Broad deterministic synoptic noise.
+ * Broad deterministic synoptic variation.
  *
  * Eighteen-degree cells are roughly 1,000 nautical miles north/south. Bilinear
- * interpolation makes neighbouring waters coherent, while three-day temporal
- * interpolation produces gradual evolution instead of daily dice rolls or
- * midnight discontinuities.
+ * interpolation keeps neighbouring waters coherent. Each cell combines a
+ * dominant 2.6–4.4 day cycle with a slower 5.5–8.5 day component, guaranteeing
+ * smooth short-term evolution without midnight jumps or independent daily rolls.
  */
 function synopticNoise(channel: string, position: GeoPosition, time: Date) {
   const longitude = ((position.lon + 180) % 360 + 360) % 360;
@@ -133,14 +138,12 @@ function synopticNoise(channel: string, position: GeoPosition, time: Date) {
   const fx = smoothstep(gx - xFloor);
   const fy = smoothstep(gy - yFloor);
 
-  const periodFloat = time.getTime() / SYNOPTIC_PERIOD_MS;
-  const period = Math.floor(periodFloat);
-  const periodFraction = periodFloat - period;
+  const days = (time.getTime() - WEATHER_EPOCH_MS) / DAY_MS;
 
-  const a = temporalCornerNoise(channel, x0, y0, period, periodFraction);
-  const b = temporalCornerNoise(channel, x1, y0, period, periodFraction);
-  const c = temporalCornerNoise(channel, x0, y1, period, periodFraction);
-  const d = temporalCornerNoise(channel, x1, y1, period, periodFraction);
+  const a = cornerWave(channel, x0, y0, days);
+  const b = cornerWave(channel, x1, y0, days);
+  const c = cornerWave(channel, x0, y1, days);
+  const d = cornerWave(channel, x1, y1, days);
 
   return lerp(lerp(a, b, fx), lerp(c, d, fx), fy);
 }
