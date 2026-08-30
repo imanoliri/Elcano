@@ -90,6 +90,9 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - Wind and current arrows appear only in waters the player has explored. Once revealed, those chart cells remain known for the voyage.
 - Wind and current overlays are independently toggleable from the in-mission menu.
 - Arrow density adapts to zoom: close views show a finer field without flooding the chart at world scale.
+- Monthly prevailing wind now has deterministic ordinary-weather variation: broad roughly 1,000 nm wind patches evolve smoothly over about three days, so nearby waters change coherently rather than rerolling at midnight.
+- The variation follows wind regime rather than using one global random range: trades stay comparatively steady, mid-latitude westerlies vary much more, doldrums are fickle and can become very light, monsoon regions keep their seasonal background direction while varying day to day, and Southern Ocean westerlies keep a strong comparatively stable baseline.
+- Speed variation remains centred on the monthly climatological wind and direction shifts remain centred on the prevailing bearing, so repeated ordinary-weather changes do not systematically rotate or weaken the climate.
 - Deterministic basin-scale weather systems move through the North and South Atlantic, North Pacific, Southern Ocean, and seasonally active tropical basins.
 - Weather systems alter local wind and apply a smaller surface-current influence while persistent large-scale currents remain in place.
 - A discovered storm centre is marked on the chart with a storm symbol. Storms have a calm centre, strongest winds in a surrounding ring, and intensity variation from ordinary lows to severe storms.
