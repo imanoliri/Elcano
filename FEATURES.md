@@ -68,6 +68,7 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - The game world uses latitude/longitude positions, real coastlines and islands, and a Web Mercator chart projection.
 - Geography is bundled in the static app: no map API or mandatory online map service is required to sail.
 - The chart can be panned and zoomed with mouse, touch drag, wheel/trackpad, and pinch gestures.
+- Close-pilotage zoom reaches 1024× the fitted-world scale, so straits, harbour approaches and dense island passages can be inspected well beyond the normal ocean view.
 - The camera can switch between a static view and follow-ship view.
 - The chart wraps continuously at its edges, allowing uninterrupted long-distance exploration rather than stopping at a map boundary.
 - Higher-detail coastline geometry loads at close zoom without making normal camera movement heavy.
