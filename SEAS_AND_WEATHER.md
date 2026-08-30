@@ -26,7 +26,7 @@ The monthly wind field describes the prevailing climate, not identical weather e
 
 - the field is generated from simulation position and time, so replaying the same place at the same simulated time gives the same wind;
 - broad patches are about 18° across north/south — roughly 1,000 nautical miles — and neighbouring waters are blended together;
-- successive deterministic states are three days apart and smoothly interpolated, so there is no midnight reset or daily dice roll;
+- every broad cell evolves continuously through a dominant roughly **2.6–4.4 day** cycle plus a slower **5.5–8.5 day** component; there is no midnight reset, no independent daily dice roll, and no location can remain accidentally locked to one hashed daily state;
 - speed multipliers are centred on **1.0×** and direction changes on **0°**, preserving the monthly climatology as the long-term centre;
 - regime boundaries are feathered rather than hard-edged, so crossing a latitude or longitude does not create an artificial wind discontinuity;
 - this layer represents ordinary calms, freshening and directional shifts. Major gale/storm extremes remain the job of the explicit weather-system layer.
