@@ -61,8 +61,17 @@ export const observedAtlanticEnvironment = createAtlanticClimatologyProvider(cli
 export const globalObservedEnvironment = createGlobalTiledEnvironment(observedAtlanticEnvironment);
 let activeEnvironment: EnvironmentProvider = globalObservedEnvironment;
 let straitNavigationActive = false;
+let dailyWindVariationActive = true;
 
 export function setStraitNavigationActive(active: boolean) { straitNavigationActive = active; }
+
+export function setDailyWindVariationActive(active: boolean) {
+  dailyWindVariationActive = active;
+}
+
+export function isDailyWindVariationActive() {
+  return dailyWindVariationActive;
+}
 
 export function setEnvironmentProvider(provider: EnvironmentProvider) {
   activeEnvironment = provider;
@@ -74,7 +83,7 @@ export function prefetchEnvironmentBounds(bounds: EnvironmentBounds, time: Date)
 
 export function windAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.windAt(position, time);
-  const variedBackground = applyDailyWindVariation(base, position, time);
+  const variedBackground = dailyWindVariationActive ? applyDailyWindVariation(base, position, time) : base;
   const weather = weatherWindInfluenceAt(position, time);
   const combined = { x: variedBackground.x + weather.x, y: variedBackground.y + weather.y };
   return straitNavigationActive ? straitWindAt(position, time, combined) : combined;
