@@ -186,6 +186,14 @@ Recommended order: Vasco da Gama, Urdaneta, Columbus, Zheng He. Keep Drake after
 - Cabral;
 - shorter regional or Atlantic navigation challenges.
 
+## 5a. Historical-era expansions
+
+Elcano can later expand beyond the Age of Sail’s Iberian expeditions without losing its core identity: each era should add ships and campaign contexts that make wind, currents, geography and route planning feel different, not merely reskin the same voyage.
+
+- **Viking / Norse expansion** — introduce a playable **drakkar**-style Norse vessel and a North Atlantic campaign such as Greenland → Helluland → Markland → Vinland, c. 1000. Emphasize following winds, cold currents, fog, sea ice and island/coastal navigation. Historical text should distinguish securely attested Norse presence in North America from uncertain details of individual routes and landfalls.
+- **Greek and Roman expansion** — introduce Mediterranean-era merchant and warship-inspired vessels, with regional campaigns shaped by seasonal winds, short open-water crossings, coastal landmarks, island chains, straits and harbours.
+- Future eras should earn new hull/rig performance profiles, environmental contexts and navigation decisions. Do not add combat, empire management or generic historical reskins merely because a period is available.
+
 ## 6. Coastal navigation phase 2
 
 Build on coastline collision, anchoring and manual waypoint routes without adding automatic coast-hugging.
