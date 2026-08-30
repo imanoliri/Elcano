@@ -171,6 +171,16 @@ This makes exploration cumulative: a player who crossed the Atlantic on an earli
 
 Possible future campaigns include:
 
+1. **Vasco da Gama — India voyage (1497–1499)** — South Atlantic route choice, rounding the Cape of Good Hope, Indian Ocean monsoons and East African coastal legs. This is the preferred next campaign because it makes the Indian Ocean’s seasonal wind system central rather than repeating a circumnavigation.
+2. **Urdaneta — Manila to Acapulco, 1565** — Find the North Pacific westerlies by sailing far north, then descend the American coast. This is an especially strong navigation-first campaign: latitude choice and learned prevailing winds are the route.
+3. **Columbus — First voyage, 1492–1493** — A compact, accessible Atlantic campaign from the Canaries to the Bahamas and Hispaniola, returning through the North Atlantic westerlies. It can become the short beginner historical campaign after the tutorial.
+4. **Cabral — Brazil and India, 1500–1501** — Use the South Atlantic’s broad westward swing to reach Brazil, then recover the Cape route to India. A clear lesson in exploiting winds and currents rather than following the shortest line.
+5. **Zheng He — Indian Ocean voyages, 1405–1433** — Monsoon-timed port-to-port navigation from China through Southeast Asia and India to East Africa. Add this when the Indian Ocean needs a distinct non-European campaign and denser regional geography.
+6. **Basque whaling to Newfoundland, 16th century** — A smaller North Atlantic campaign from the Bay of Biscay to Newfoundland: seasonal winds, fog, fishing-bank approaches and the return passage. It is a natural regional campaign for Elcano’s Basque setting.
+7. **Drake’s circumnavigation, 1577–1580** — Atlantic, the Strait of Magellan, Pacific coast, global return. Defer it until later because it overlaps substantially with Magellan–Elcano’s already implemented route, despite its much stormier and more northerly character.
+
+Recommended order: Vasco da Gama, Urdaneta, Columbus, Zheng He. Keep Drake after those rather than making two early campaigns share the same circumnavigation structure.
+
 - Columbus;
 - Vasco da Gama;
 - Cabral;
