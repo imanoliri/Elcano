@@ -1,6 +1,7 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
 import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
+import { applyDailyWindVariation } from './daily-wind-variation';
 import { globalWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
 import { inMagellanStrait, straitCurrentAt, straitWindAt } from './strait-navigation';
 
@@ -73,8 +74,9 @@ export function prefetchEnvironmentBounds(bounds: EnvironmentBounds, time: Date)
 
 export function windAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.windAt(position, time);
+  const variedBackground = applyDailyWindVariation(base, position, time);
   const weather = weatherWindInfluenceAt(position, time);
-  const combined = { x: base.x + weather.x, y: base.y + weather.y };
+  const combined = { x: variedBackground.x + weather.x, y: variedBackground.y + weather.y };
   return straitNavigationActive ? straitWindAt(position, time, combined) : combined;
 }
 
