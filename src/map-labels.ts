@@ -3,6 +3,7 @@ import { project } from './world/coordinates';
 import { virtualWorldPoint, visibleWorldRange } from './world-wrap';
 import { isWorldPointExplored } from './exploration';
 import { currentCorridors } from './world/current-corridors';
+import { allMissions } from './missions';
 
 type Geo = { lat: number; lon: number };
 type Camera = { x: number; y: number; scale: number; zoomMultiplier?: number };
@@ -113,6 +114,19 @@ if (viewport) {
     { name: 'Pacific Ocean', lat: -5.0, lon: -150.0, kind: 'sea', minZoom: 3, priority: 20 },
     { name: 'Philippine Sea', lat: 17.0, lon: 132.0, kind: 'sea', minZoom: 8, priority: 25 },
   ];
+
+  // Campaign data remains the source of truth: every mission endpoint gets a readable
+  // chart label without requiring the static geography list to be updated per campaign.
+  const labelKeys = new Set(labels.map((label) => `${label.name}|${label.lat}|${label.lon}`));
+  for (const mission of allMissions) {
+    for (const [name, position] of [[mission.from, mission.start], [mission.to, mission.destination]] as const) {
+      const key = `${name}|${position.lat}|${position.lon}`;
+      if (!labelKeys.has(key)) {
+        labels.push({ name, lat: position.lat, lon: position.lon, kind: 'mission', minZoom: 8, priority: 100 });
+        labelKeys.add(key);
+      }
+    }
+  }
 
   const corridorLabels: MapLabel[] = currentCorridors.map(({ name, lat, lon, minZoom }) => ({ name, lat, lon, minZoom, priority: 36, kind: 'current' }));
   const corridorIsKnown = (name: string) => currentCorridors.find((corridor) => corridor.name === name)?.revealPoints.some((point) => isWorldPointExplored(project(point))) ?? false;
