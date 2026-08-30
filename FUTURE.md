@@ -163,15 +163,36 @@ Turn completed voyages into a coherent expedition without preventing replay or m
 
 This makes exploration cumulative: a player who crossed the Atlantic on an earlier leg can use the charted waters while preparing a later voyage, but must still personally discover unfamiliar seas.
 
+### Implemented historical campaigns
+
+- [x] **Magellan–Elcano Circumnavigation (1519–1522)** — sixteen legs from Sanlúcar to Tenerife, Brazil, Patagonia, the Strait of Magellan, the Pacific, the Philippines, Tidore, Timor, the Cape of Good Hope, Cape Verde and Sanlúcar. It is listed before the Loaísa–Elcano campaign in the historical voyage selector.
+
 ### Later campaigns
 
 Possible future campaigns include:
 
-- Magellan–Elcano first circumnavigation;
+1. **Vasco da Gama — India voyage (1497–1499)** — South Atlantic route choice, rounding the Cape of Good Hope, Indian Ocean monsoons and East African coastal legs. This is the preferred next campaign because it makes the Indian Ocean’s seasonal wind system central rather than repeating a circumnavigation.
+2. **Urdaneta — Manila to Acapulco, 1565** — Find the North Pacific westerlies by sailing far north, then descend the American coast. This is an especially strong navigation-first campaign: latitude choice and learned prevailing winds are the route.
+3. **Columbus — First voyage, 1492–1493** — A compact, accessible Atlantic campaign from the Canaries to the Bahamas and Hispaniola, returning through the North Atlantic westerlies. It can become the short beginner historical campaign after the tutorial.
+4. **Cabral — Brazil and India, 1500–1501** — Use the South Atlantic’s broad westward swing to reach Brazil, then recover the Cape route to India. A clear lesson in exploiting winds and currents rather than following the shortest line.
+5. **Zheng He — Indian Ocean voyages, 1405–1433** — Monsoon-timed port-to-port navigation from China through Southeast Asia and India to East Africa. Add this when the Indian Ocean needs a distinct non-European campaign and denser regional geography.
+6. **Basque whaling to Newfoundland, 16th century** — A smaller North Atlantic campaign from the Bay of Biscay to Newfoundland: seasonal winds, fog, fishing-bank approaches and the return passage. It is a natural regional campaign for Elcano’s Basque setting.
+7. **Drake’s circumnavigation, 1577–1580** — Atlantic, the Strait of Magellan, Pacific coast, global return. Defer it until later because it overlaps substantially with Magellan–Elcano’s already implemented route, despite its much stormier and more northerly character.
+
+Recommended order: Vasco da Gama, Urdaneta, Columbus, Zheng He. Keep Drake after those rather than making two early campaigns share the same circumnavigation structure.
+
 - Columbus;
 - Vasco da Gama;
 - Cabral;
 - shorter regional or Atlantic navigation challenges.
+
+## 5a. Historical-era expansions
+
+Elcano can later expand beyond the Age of Sail’s Iberian expeditions without losing its core identity: each era should add ships and campaign contexts that make wind, currents, geography and route planning feel different, not merely reskin the same voyage.
+
+- **Viking / Norse expansion** — introduce a playable **drakkar**-style Norse vessel and a North Atlantic campaign such as Greenland → Helluland → Markland → Vinland, c. 1000. Emphasize following winds, cold currents, fog, sea ice and island/coastal navigation. Historical text should distinguish securely attested Norse presence in North America from uncertain details of individual routes and landfalls.
+- **Greek and Roman expansion** — introduce Mediterranean-era merchant and warship-inspired vessels, with regional campaigns shaped by seasonal winds, short open-water crossings, coastal landmarks, island chains, straits and harbours.
+- Future eras should earn new hull/rig performance profiles, environmental contexts and navigation decisions. Do not add combat, empire management or generic historical reskins merely because a period is available.
 
 ## 6. Coastal navigation phase 2
 

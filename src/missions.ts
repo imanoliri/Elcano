@@ -46,6 +46,30 @@ const tutorialMission: Mission = {
   ],
 };
 
+// Playable checkpoints divide the three-year expedition; each historical note identifies abstractions.
+const magellanElcanoMissions: Mission[] = [
+  ['magellan-1',1,'Out of Sanlúcar','Sanlúcar de Barrameda','Tenerife','20–26 September 1519','1519-09-20T12:00:00Z',[36.7783,-6.3515],[28.2916,-16.6291],220,'Lead the five ships southwest from Sanlúcar to Tenerife. Provision before committing to the Atlantic.','Tenerife reached. The fleet can now turn south and west.','The fleet entered the Atlantic from Sanlúcar on 20 September 1519 and stopped at Tenerife on 26 September for supplies.'],
+  ['magellan-2',2,'Across to Brazil','Tenerife','Rio de Janeiro','3 October – 13 December 1519','1519-10-03T12:00:00Z',[28.2916,-16.6291],[-22.9068,-43.1729],230,'Use the Atlantic winds for the long southwest crossing to the Brazilian coast.','Rio de Janeiro reached. Begin the southern search for a passage.','After leaving the Canaries on 3 October, the fleet reached Rio de Janeiro in December 1519.'],
+  ['magellan-3',3,'South to San Julián','Rio de Janeiro','Puerto San Julián','December 1519 – March 1520','1519-12-27T12:00:00Z',[-22.9068,-43.1729],[-49.306,-67.728],205,'Follow the coast south through increasingly cold waters to the Patagonian winter harbour.','Puerto San Julián reached. Prepare the fleet.','The expedition wintered at Puerto San Julián from late March to August 1520; this leg condenses its southern coastal run.'],
+  ['magellan-4',4,'Santa Cruz','Puerto San Julián','Río Santa Cruz','August – October 1520','1520-08-24T12:00:00Z',[-49.306,-67.728],[-50.02,-68.53],195,'Continue south after winter, reading the coast and avoiding shoaling water.','Río Santa Cruz reached. Cape Virgenes is next.','Río Santa Cruz is used as a playable coastal checkpoint after the fleet resumed its search south.'],
+  ['magellan-5',5,'Cape Virgenes','Río Santa Cruz','Cape Virgenes','October 1520','1520-10-18T12:00:00Z',[-50.02,-68.53],[-52.33,-68.35],160,'Push south to the eastern landmark of the long-sought passage.','Cape Virgenes reached. The strait opens westward.','On 21 October 1520 the fleet sighted the cape it named Cape Virgenes and identified the strait beyond it.'],
+  ['magellan-6',6,'The Strait to the Pacific','Cape Virgenes','Cape Pillar','October – 28 November 1520','1520-10-21T12:00:00Z',[-52.33,-68.35],[-52.72,-74.67],255,'Use manoeuvring mode, anchoring and favourable tide windows to take the confined channel west.','Cape Pillar reached. You have entered the Pacific.','The expedition entered the strait in late October and reached the Pacific on 28 November 1520; San Antonio deserted during the passage.'],
+  ['magellan-7',7,'Into the Great Ocean','Cape Pillar','Pacific crossing checkpoint','28 November 1520 – January 1521','1520-11-28T12:00:00Z',[-52.72,-74.67],[-20,-130],300,'Leave the American coast and find a west-northwest course across a far larger ocean than expected.','The open Pacific is behind you. Keep west for the Marianas.','This is a gameplay checkpoint, not a documented landfall; the expedition crossed the Pacific without reaching easier resupply islands.'],
+  ['magellan-8',8,'The Marianas','Pacific crossing checkpoint','Guam','January – 6 March 1521','1521-01-15T12:00:00Z',[-20,-130],[13.4443,144.7937],290,'Complete the immense crossing; the world wraps, so choose the westbound route to Guam.','Guam reached. Fresh land and water lie ahead.','After about three months at sea, the fleet reached Guam on 6 March 1521.'],
+  ['magellan-9',9,'Landfall at Homonhon','Guam','Homonhon','9–16 March 1521','1521-03-09T12:00:00Z',[13.4443,144.7937],[10.743,125.722],245,'Turn southwest from the Marianas for the first Philippine landfall.','Homonhon reached. The expedition has reached the Philippine archipelago.','The fleet reached Homonhon on 16 March 1521.'],
+  ['magellan-10',10,'To Cebu','Homonhon','Cebu','March – 7 April 1521','1521-03-16T12:00:00Z',[10.743,125.722],[10.3157,123.8854],280,'Navigate through the Philippine islands to Cebu, keeping the ship under control in confined waters.','Cebu reached. The expedition pauses before its leadership changes.','Magellan reached Cebu on 7 April 1521. He died at nearby Mactan on 27 April; that battle is not a sailing objective.'],
+  ['magellan-11',11,'South to Bohol','Cebu','Bohol','May 1521','1521-05-02T12:00:00Z',[10.3157,123.8854],[9.85,124.14],145,'After Magellan’s death, take the remaining ships toward Bohol.','Bohol reached. Continue for the Spice Islands.','The surviving expedition left Cebu in May and burned Concepción at Bohol after deciding it could no longer be crewed.'],
+  ['magellan-12',12,'The Moluccas','Bohol','Tidore','May – 8 November 1521','1521-05-03T12:00:00Z',[9.85,124.14],[0.683,127.4],165,'Sail south and east through island waters to Tidore, the Spice Islands destination.','Tidore reached. The expedition has reached the Moluccas.','Victoria and Trinidad reached Tidore on 8 November 1521, with Juan Sebastián Elcano among the surviving officers.'],
+  ['magellan-13',13,'Elcano’s Homeward Course','Tidore','Timor','December 1521 – January 1522','1521-12-21T12:00:00Z',[0.683,127.4],[-10.17,123.61],220,'Command Victoria southwest from Tidore to Timor, beginning the return through Portuguese waters.','Timor reached. The Indian Ocean crossing begins.','Elcano sailed Victoria from Tidore on 21 December 1521 and stopped at Timor before crossing the Indian Ocean.'],
+  ['magellan-14',14,'Round the Cape','Timor','Cape of Good Hope','January – 6 May 1522','1522-01-25T12:00:00Z',[-10.17,123.61],[-34.3568,18.474],245,'Cross the Indian Ocean and round the Cape of Good Hope on the hazardous western route home.','The Cape is rounded. Turn north into the Atlantic.','Victoria rounded the Cape of Good Hope on 6 May 1522. This is a continuous ocean-crossing gameplay leg.'],
+  ['magellan-15',15,'Cape Verde','Cape of Good Hope','Cape Verde','May – 9 July 1522','1522-05-06T12:00:00Z',[-34.3568,18.474],[16,-24],330,'Follow the west African coast north to Cape Verde for the final Atlantic approach.','Cape Verde reached. Spain is within reach.','Victoria called at Portuguese Cape Verde for provisions in July 1522; several crew members were detained there.'],
+  ['magellan-16',16,'The First Circumnavigation','Cape Verde','Sanlúcar de Barrameda','July – 6 September 1522','1522-07-10T12:00:00Z',[16,-24],[36.7783,-6.3515],35,'Bring Victoria northeast across the final Atlantic leg and complete the voyage home.','Sanlúcar reached. Victoria has completed the first circumnavigation.','Victoria returned to Sanlúcar on 6 September 1522 under Juan Sebastián Elcano, completing the first circumnavigation.'],
+].map(([id, number, title, from, to, date, startDateIso, start, destination, headingDeg, briefing, completion, historicalNote]) => ({
+  id: id as string, number: number as number, title: title as string, from: from as string, to: to as string, date: date as string, startDateIso: startDateIso as string,
+  start: { lat: (start as number[])[0], lon: (start as number[])[1] }, destination: { lat: (destination as number[])[0], lon: (destination as number[])[1] },
+  headingDeg: headingDeg as number, briefing: briefing as string, completion: completion as string, historicalNote: historicalNote as string,
+}));
+
 const loaísaMissions: Mission[] = [
   {
     id: 'loaisa-1', number: 1, title: 'Departure for La Gomera', from: 'A Coruña', to: 'La Gomera', date: '24 July – 1 August 1525', startDateIso: '1525-07-24T12:00:00Z',
@@ -168,6 +192,13 @@ export const campaigns: Campaign[] = [
     subtitle: 'Mission 0',
     description: 'A short playable prelude from San Sebastián to A Coruña that teaches the sailing controls before the historical expedition begins.',
     missions: [tutorialMission],
+  },
+  {
+    id: 'magellan-elcano',
+    title: 'Magellan–Elcano Circumnavigation',
+    subtitle: 'First circumnavigation · 1519–1522',
+    description: 'Sail the first circumnavigation from Sanlúcar through the Atlantic, Magellan’s Strait, the Pacific, the Philippines, the Moluccas, the Indian Ocean and back to Spain under Elcano.',
+    missions: magellanElcanoMissions,
   },
   {
     id: 'loaisa-elcano',

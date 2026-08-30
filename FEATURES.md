@@ -17,6 +17,13 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - A playable San Sebastián → A Coruña introduction.
 - Three short contextual steps teach reading wind and current, making way west, and approaching Galicia.
 
+### Magellan–Elcano Circumnavigation: 1519–1522
+
+- The first selectable historical campaign, following the first circumnavigation from Sanlúcar de Barrameda back to Spain.
+- Sixteen playable legs cover Tenerife, Brazil, Patagonia, the Strait of Magellan, the Pacific, Guam, the Philippines, Tidore, Timor, the Cape of Good Hope and Cape Verde.
+- The campaign changes historical leadership in its text at Cebu: Magellan dies after the Cebu stop, while Elcano commands Victoria’s homeward route from Tidore.
+- Every mission includes a historical note; long ocean checkpoints are explicitly identified as gameplay subdivisions rather than claimed landfalls.
+
 ### Loaísa–Elcano Expedition: To the Moluccas, 1525–1527
 
 - A selectable historical campaign following the westbound route from A Coruña to Tidore.
