@@ -39,6 +39,21 @@ function signedHash(value: string) {
   return hashUnit(value) * 2 - 1;
 }
 
+const rowStatsCache = new Map<string, { mean: number; scale: number }>();
+
+function centeredCellValue(channel: string, x: number, y: number, lonCells: number) {
+  const key = `${channel}:${y}:${lonCells}`;
+  let stats = rowStatsCache.get(key);
+  if (!stats) {
+    const values = Array.from({ length: lonCells }, (_, index) => signedHash(`${channel}:${index}:${y}`));
+    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+    const scale = Math.max(0.0001, ...values.map((value) => Math.abs(value - mean)));
+    stats = { mean, scale };
+    rowStatsCache.set(key, stats);
+  }
+  return (signedHash(`${channel}:${x}:${y}`) - stats.mean) / stats.scale;
+}
+
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
 }
@@ -135,10 +150,10 @@ function spatialNoise(channel: string, position: GeoPosition, cellDeg: number) {
   const fx = smoothstep(gx - xFloor);
   const fy = smoothstep(gy - yFloor);
 
-  const a = signedHash(`${channel}:${x0}:${y0}`);
-  const b = signedHash(`${channel}:${x1}:${y0}`);
-  const c = signedHash(`${channel}:${x0}:${y1}`);
-  const d = signedHash(`${channel}:${x1}:${y1}`);
+  const a = centeredCellValue(channel, x0, y0, lonCells);
+  const b = centeredCellValue(channel, x1, y0, lonCells);
+  const c = centeredCellValue(channel, x0, y1, lonCells);
+  const d = centeredCellValue(channel, x1, y1, lonCells);
 
   return lerp(lerp(a, b, fx), lerp(c, d, fx), fy);
 }
