@@ -12,10 +12,11 @@ This is the inventory of features that are currently implemented in Elcano. It d
 
 ## Historical voyages
 
-### Tutorial: Road to the expedition
+### Campaign 0: Basque Whaling tutorial
 
-- A playable San Sebastián → A Coruña introduction.
-- Three short contextual steps teach reading wind and current, making way west, and approaching Galicia.
+- Starts with the playable San Sebastián → A Coruña introduction and its three contextual sailing lessons.
+- Continues as a seasonal North Atlantic route via the Azores, Grand Banks and Red Bay, Labrador, before the return to the Basque coast.
+- Frames Red Bay’s sixteenth-century seasonal whaling station as historical context; it does not add whale-hunting gameplay.
 
 ### Magellan–Elcano Circumnavigation: 1519–1522
 
@@ -30,6 +31,19 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - Sixteen playable legs, from the departure for La Gomera through the Atlantic, Patagonia, the Strait of Magellan, the Pacific, the Philippines, and the Moluccas.
 - Each mission has a start and destination, historical date/context, briefing, destination marker, and completion text.
 - The voyage setup and in-game mission menu both allow the player to browse campaigns and choose any available leg.
+
+### Additional historical campaign catalog
+
+- Campaign 3: Vasco da Gama’s India voyage — South Atlantic arc, Cape weather and Indian Ocean monsoons.
+- Campaign 4: Urdaneta’s tornaviaje — North Pacific latitude choice and the westerlies to Acapulco.
+- Campaign 5: Columbus’s first voyage — trade winds west, islands, then a westerly return.
+- Campaign 6: Cabral’s Brazil and India voyage — the broad South Atlantic swing and the Cape route.
+- Campaign 7: Zheng He’s Indian Ocean voyages — monsoon-timed navigation from China to East Africa.
+- Campaign 8: Drake’s circumnavigation — a stormier global route with the dedicated Strait of Magellan tools.
+- Campaign 9: Norse Road to Vinland — cold North Atlantic, fog and coastal navigation; saga geography is clearly qualified.
+- Campaign 10: Classical Mediterranean — an explicitly fictionalized Greek-inspired island-navigation route.
+
+Each campaign is fully mission-based, with date/context, briefing, completion copy and a historical note that separates documented locations from gameplay subdivisions.
 
 ## Ship choice and sailing
 

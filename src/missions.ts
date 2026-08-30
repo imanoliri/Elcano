@@ -15,6 +15,8 @@ export type Mission = {
   completion: string;
   historicalNote: string;
   tutorialSteps?: { title: string; text: string }[];
+  /** Enables the dedicated tidal chart and sheltered anchorages for Magellan's Strait. */
+  isStraitPassage?: boolean;
 };
 
 export type Campaign = {
@@ -37,12 +39,12 @@ const tutorialMission: Mission = {
   destination: { lat: 43.3623, lon: -8.4115 },
   headingDeg: 285,
   briefing: 'Sail from San Sebastián to A Coruña and learn to read wind, current, heading and track before joining the historical expedition.',
-  completion: 'A Coruña reached. The Loaísa–Elcano fleet is ready to depart for the Moluccas.',
-  historicalNote: 'This San Sebastián → A Coruña voyage is a playable tutorial prelude, not a documented leg of the historical expedition. The Loaísa fleet departed A Coruña on 24 July 1525.',
+  completion: 'A Coruña reached. Your whaling voyage can now provision for the North Atlantic.',
+  historicalNote: 'This San Sebastián → A Coruña voyage is a playable tutorial prelude, not a documented leg of one particular whaling voyage. Basque transatlantic whaling grew into a major seasonal enterprise in the sixteenth century.',
   tutorialSteps: [
     { title: '0.1 Read the Bay of Biscay', text: 'Depart San Sebastián and study the northern Spanish coastline. White arrows show prevailing wind; blue arrows show surface current. A Coruña is your destination on the Galician coast.' },
     { title: '0.2 Make way west', text: 'Set sail and work west across the Bay of Biscay. Do not simply point at A Coruña: compare heading with wind, current and actual track.' },
-    { title: '0.3 Approach Galicia', text: 'As you close the Galician coast, adjust your route for the final approach to A Coruña, where the Loaísa–Elcano fleet departed for the Moluccas on 24 July 1525.' },
+    { title: '0.3 Approach Galicia', text: 'As you close the Galician coast, adjust your route for the final approach to A Coruña. It is your last familiar port before the tutorial campaign opens into the North Atlantic.' },
   ],
 };
 
@@ -68,7 +70,7 @@ const magellanElcanoMissions: Mission[] = [
   id: id as string, number: number as number, title: title as string, from: from as string, to: to as string, date: date as string, startDateIso: startDateIso as string,
   start: { lat: (start as number[])[0], lon: (start as number[])[1] }, destination: { lat: (destination as number[])[0], lon: (destination as number[])[1] },
   headingDeg: headingDeg as number, briefing: briefing as string, completion: completion as string, historicalNote: historicalNote as string,
-}));
+})).map((mission) => mission.id === 'magellan-6' ? { ...mission, isStraitPassage: true } : mission);
 
 const loaísaMissions: Mission[] = [
   {
@@ -119,6 +121,7 @@ const loaísaMissions: Mission[] = [
     briefing: 'Make the full westbound passage through the Strait of Magellan. Use manual waypoints and anchoring to negotiate the confined channels safely.',
     completion: 'Cape Pillar reached. The surviving expedition has finally entered the Pacific.',
     historicalNote: 'After repeated storms, repairs and losses, the surviving ships emerged from the strait at Cape Deseado, now Cape Pillar, on 26 May 1526.',
+    isStraitPassage: true,
   },
   {
     id: 'loaisa-8', number: 8, title: 'The fleet scatters', from: 'Cape Pillar', to: 'Equatorial Pacific', date: '26 May – 26 June 1526', startDateIso: '1526-05-26T12:00:00Z',
@@ -185,28 +188,126 @@ const loaísaMissions: Mission[] = [
   },
 ];
 
+type Leg = [string, string, string, string, string, [number, number], [number, number], number, string, string];
+
+function campaignLegs(prefix: string, year: number, legs: Leg[]): Mission[] {
+  return legs.map(([title, from, to, date, note, start, destination, headingDeg, briefing, completion], index) => ({
+    id: `${prefix}-${index + 1}`,
+    number: index + 1,
+    title,
+    from,
+    to,
+    date,
+    startDateIso: `${year + Math.floor(index / 5)}-06-01T12:00:00Z`,
+    start: { lat: start[0], lon: start[1] },
+    destination: { lat: destination[0], lon: destination[1] },
+    headingDeg,
+    briefing,
+    completion,
+    historicalNote: note,
+  }));
+}
+
+const basqueWhalingMissions: Mission[] = [
+  tutorialMission,
+  ...campaignLegs('whaling', 1565, [
+    ['Out to the Azores', 'A Coruña', 'Horta, Azores', 'Spring 1565', 'The Azores are a useful gameplay staging point for a North Atlantic crossing, not a claim that every Basque whaling vessel called there.', [43.3623, -8.4115], [38.536, -28.63], 250, 'Leave Iberia and use the Atlantic winds to make the Azores.', 'Horta reached. The open North Atlantic lies ahead.'],
+    ['The Grand Banks', 'Horta, Azores', 'Grand Banks', 'Late spring 1565', 'Basque crews had crossed to the Newfoundland fisheries from the early sixteenth century; this offshore bank is a gameplay waypoint.', [38.536, -28.63], [47.0, -52.0], 285, 'Choose a safe westbound route through changing North Atlantic weather and fog.', 'The Grand Banks reached. Work north toward the Strait of Belle Isle.'],
+    ['Gran Baya', 'Grand Banks', 'Red Bay, Labrador', 'Summer 1565', 'Red Bay (Gran Baya) was a seasonal sixteenth-century Basque whaling station on the Strait of Belle Isle. This mission is a navigation scenario, not a simulation of whale hunting.', [47.0, -52.0], [51.73, -56.43], 330, 'Navigate the cold banks and approach Red Bay through fog and coastal water.', 'Red Bay reached. The summer shore station is secure.'],
+    ['Homeward Atlantic', 'Red Bay, Labrador', 'Azores', 'Autumn 1565', 'The return route is presented as a plausible navigation leg using the North Atlantic’s changing winds and currents.', [51.73, -56.43], [38.536, -28.63], 100, 'Wait for a favourable window, then ride the North Atlantic westerlies east.', 'The Azores reached. Iberia is within reach.'],
+    ['Back to Euskadi', 'Azores', 'San Sebastián', 'Autumn 1565', 'This final leg represents the return of a seasonal whaling voyage to the Basque coast.', [38.536, -28.63], [43.3183, -1.9812], 65, 'Finish the tutorial campaign by making a careful final approach to the Bay of Biscay.', 'San Sebastián reached. The Basque whaling tutorial campaign is complete.'],
+  ]),
+];
+
+const daGamaMissions = campaignLegs('da-gama', 1497, [
+  ['From Lisbon to São Tiago', 'Lisbon', 'Santiago, Cape Verde', '8 July – August 1497', 'Vasco da Gama’s fleet left Lisbon on 8 July 1497 and called at Santiago in Cape Verde.', [38.7223, -9.1393], [15.1, -23.6], 215, 'Begin the first India voyage with the familiar Atlantic run south.', 'Cape Verde reached. Commit to the open-ocean volta do mar.'],
+  ['The great Atlantic arc', 'Santiago, Cape Verde', 'St Helena Bay', 'August – November 1497', 'Da Gama used a wide South Atlantic arc to exploit winds rather than coast directly south; St Helena Bay is the next documented South African stop.', [15.1, -23.6], [-32.7, 17.95], 165, 'Stand far into the South Atlantic before turning east for Africa.', 'South Africa reached. The Cape route opens.'],
+  ['Round the Cape', 'St Helena Bay', 'Mossel Bay', 'November 1497', 'The fleet rounded the Cape of Good Hope in November 1497 and reached Mossel Bay later that month.', [-32.7, 17.95], [-34.18, 22.15], 110, 'Read the fierce south-western weather and round the Cape safely.', 'Mossel Bay reached. Turn north along East Africa.'],
+  ['To Malindi', 'Mossel Bay', 'Malindi', 'December 1497 – April 1498', 'The voyage made several East African calls; Malindi is the key departure point for the Indian Ocean crossing.', [-34.18, 22.15], [-3.22, 40.12], 15, 'Work north along the African coast, timing winds and currents.', 'Malindi reached. The monsoon crossing is ready.'],
+  ['The monsoon to Calicut', 'Malindi', 'Calicut / Kozhikode', 'April – May 1498', 'With a pilot from Malindi, the fleet reached Calicut on 20 May 1498. The crossing is central to the campaign’s monsoon lesson.', [-3.22, 40.12], [11.26, 75.78], 55, 'Use the seasonal Indian Ocean wind to cross northeast to India.', 'Calicut reached. Europe has reached India by sea.'],
+  ['Return around Africa', 'Calicut / Kozhikode', 'Lisbon', '1498–1499', 'The homeward journey is compressed into one gameplay leg; da Gama returned to Portugal in 1499.', [11.26, 75.78], [38.7223, -9.1393], 285, 'Plan a long return across the monsoon system, around Africa and into the Atlantic.', 'Lisbon reached. The India voyage is complete.'],
+]);
+
+const urdanetaMissions = campaignLegs('urdaneta', 1565, [
+  ['Cebu to the open Pacific', 'Cebu', 'San Bernardino Strait', '1 June 1565', 'Andrés de Urdaneta departed Cebu on 1 June 1565 seeking the eastbound return route.', [10.3157, 123.8854], [12.7, 124.1], 35, 'Leave the Philippines and find clear water for the long northeastward search.', 'San Bernardino cleared. Head north for the westerlies.'],
+  ['Find the westerlies', 'San Bernardino Strait', 'North Pacific', 'June–July 1565', 'Urdaneta deliberately sailed north into the North Pacific before turning east, using the prevailing westerlies.', [12.7, 124.1], [38, 155], 35, 'Choose latitude over the short line: climb north until west winds can carry you east.', 'North Pacific westerlies reached. Turn east.'],
+  ['Across to California', 'North Pacific', 'Cape Mendocino', 'July–September 1565', 'The San Pedro reached the California coast near Cape Mendocino on 18 September 1565.', [38, 155], [40.44, -124.4], 75, 'Hold an eastbound course across the world-wrapping ocean.', 'California reached. Follow the coast south.'],
+  ['New Spain', 'Cape Mendocino', 'Acapulco', 'September–October 1565', 'Urdaneta’s ship arrived at Acapulco on 8 October 1565, establishing the tornaviaje used by the Manila galleons.', [40.44, -124.4], [16.85, -99.9], 130, 'Descend the American coast and finish the return route at Acapulco.', 'Acapulco reached. The tornaviaje is complete.'],
+]);
+
+const columbusMissions = campaignLegs('columbus', 1492, [
+  ['Canaries departure', 'Palos de la Frontera', 'La Gomera', '3 August – 6 September 1492', 'Columbus’s fleet departed Palos in August 1492 and made its final Canarian stop at La Gomera.', [37.23, -6.89], [28.0916, -17.1133], 220, 'Provision at the Canaries before following the trade winds west.', 'La Gomera reached. The Atlantic lies open.'],
+  ['West with the trades', 'La Gomera', 'Guanahani', '6 September – 12 October 1492', 'The landfall traditionally associated with Guanahani followed a westbound trade-wind crossing; its precise modern identification remains debated.', [28.0916, -17.1133], [24.1, -74.5], 270, 'Use the dependable easterly trade winds to cross west.', 'Landfall reached. The Bahamas are ahead.'],
+  ['Among the islands', 'Guanahani', 'Hispaniola', 'October–December 1492', 'The expedition explored several islands before reaching Hispaniola in December.', [24.1, -74.5], [19.0, -72.3], 135, 'Navigate through island waters and make Hispaniola safely.', 'Hispaniola reached. Prepare the northward return.'],
+  ['The northern return', 'Hispaniola', 'Santa Maria, Azores', 'January–February 1493', 'Columbus turned north into the North Atlantic westerlies; the Niña reached the Azores in February 1493.', [19.0, -72.3], [36.97, -25.17], 55, 'Leave the trades, find the westerlies and bring the ship east.', 'Azores reached. Iberia is close.'],
+  ['Home to Palos', 'Santa Maria, Azores', 'Palos de la Frontera', 'February–March 1493', 'The Niña returned to Palos on 15 March 1493.', [36.97, -25.17], [37.23, -6.89], 75, 'Cross the final Atlantic leg and complete the first voyage.', 'Palos reached. The first Columbus campaign is complete.'],
+]);
+
+const cabralMissions = campaignLegs('cabral', 1500, [
+  ['Lisbon to Cape Verde', 'Lisbon', 'Santiago, Cape Verde', 'March 1500', 'Pedro Álvares Cabral’s India fleet left Lisbon in March 1500 and passed Cape Verde.', [38.7223, -9.1393], [15.1, -23.6], 215, 'Leave Portugal with an India-bound fleet.', 'Cape Verde reached. Make the South Atlantic arc.'],
+  ['Brazilian landfall', 'Santiago, Cape Verde', 'Porto Seguro', 'March–April 1500', 'Cabral made landfall on the Brazilian coast in April 1500 before continuing for India.', [15.1, -23.6], [-16.44, -39.06], 235, 'Use the broad Atlantic swing; landfall in Brazil changes the voyage.', 'Brazil reached. Recover the Cape route to India.'],
+  ['The Cape recovery', 'Porto Seguro', 'Cape of Good Hope', 'May–June 1500', 'The fleet returned east across the South Atlantic and rounded southern Africa; several ships were lost in storms.', [-16.44, -39.06], [-34.36, 18.47], 135, 'Turn southeast and survive the exposed Cape waters.', 'The Cape reached. India lies beyond the monsoon.'],
+  ['To Calicut', 'Cape of Good Hope', 'Calicut / Kozhikode', '1500', 'Cabral reached Calicut in September 1500 after calls on the East African coast.', [-34.36, 18.47], [11.26, 75.78], 35, 'Use the Indian Ocean’s seasonal winds for the final approach.', 'Calicut reached. The Brazil-and-India voyage is complete.'],
+]);
+
+const zhengHeMissions = campaignLegs('zheng-he', 1405, [
+  ['Into Southeast Asia', 'Nanjing', 'Malacca', '1405–1406', 'Zheng He’s first voyage departed in 1405; Malacca became a key entrepôt across his voyages.', [32.06, 118.79], [2.19, 102.25], 185, 'Sail south through the South China Sea and the Malacca Strait.', 'Malacca reached. Wait for the Indian Ocean monsoon.'],
+  ['Across the Bay of Bengal', 'Malacca', 'Calicut / Kozhikode', '1406', 'The treasure fleets visited Calicut, an important Indian Ocean trading port, on the first voyage.', [2.19, 102.25], [11.26, 75.78], 290, 'Cross the Bay of Bengal and approach India through seasonal winds.', 'Calicut reached. Turn west for Arabia.'],
+  ['To Hormuz', 'Calicut / Kozhikode', 'Hormuz', '1413–1414', 'Hormuz was reached during the fourth voyage; this leg joins documented destinations as a playable Indian Ocean route.', [11.26, 75.78], [27.1, 56.46], 310, 'Use the monsoon to reach the Persian Gulf entrance.', 'Hormuz reached. The western Indian Ocean opens.'],
+  ['East African coast', 'Hormuz', 'Malindi', '1417–1419', 'The fourth voyage reached East African ports including Malindi; exact intermediate tracks are simplified for gameplay.', [27.1, 56.46], [-3.22, 40.12], 210, 'Work southwest down the African coast under a changing monsoon.', 'Malindi reached. Begin the long return east.'],
+  ['Return to China', 'Malindi', 'Nanjing', '1419–1421', 'This return is a gameplay compression of the monsoon-timed Indian Ocean and Southeast Asian route home.', [-3.22, 40.12], [32.06, 118.79], 55, 'Time the seasonal winds home through India and Southeast Asia.', 'Nanjing reached. Zheng He’s Indian Ocean campaign is complete.'],
+]);
+
+const drakeMissions = campaignLegs('drake', 1577, [
+  ['South from Plymouth', 'Plymouth', 'Rio de Janeiro', '1577–1578', 'Francis Drake departed Plymouth in December 1577 and reached the South American coast in 1578.', [50.37, -4.14], [-22.91, -43.17], 205, 'Take the expedition down the Atlantic toward South America.', 'Rio reached. Patagonia is next.'],
+  ['Patagonia to the Strait', 'Rio de Janeiro', 'Cape Virgenes', '1578', 'Drake wintered in Patagonia before entering the Strait of Magellan in August 1578.', [-22.91, -43.17], [-52.33, -68.35], 200, 'Follow the coast south through colder, stormier waters.', 'Cape Virgenes reached. The strait opens west.'],
+  ['Drake’s Strait passage', 'Cape Virgenes', 'Cape Pillar', 'August 1578', 'Drake passed west through the Strait of Magellan in 1578; the dedicated local-tide model is a gameplay abstraction.', [-52.33, -68.35], [-52.72, -74.67], 255, 'Use the confined-water tools to make the westbound passage.', 'The Pacific reached. Severe weather lies ahead.'],
+  ['The Pacific coast', 'Cape Pillar', 'California coast', '1578–1579', 'After storms scattered the fleet, Drake sailed north along the Pacific coast to a harbour commonly associated with California.', [-52.72, -74.67], [38.0, -123.0], 345, 'Work north against the Pacific weather and reach the coast.', 'California reached. Turn west into the open Pacific.'],
+  ['Across and home', 'California coast', 'Plymouth', '1579–1580', 'Drake returned to Plymouth in September 1580; this mission condenses his Pacific, Indian Ocean and Atlantic return.', [38.0, -123.0], [50.37, -4.14], 255, 'Complete a long world-wrapping route home.', 'Plymouth reached. Drake’s circumnavigation is complete.'],
+]).map((mission) => mission.id === 'drake-3' ? { ...mission, isStraitPassage: true } : mission);
+
+const norseMissions = campaignLegs('norse', 1000, [
+  ['Greenland departure', 'Brattahlíð, Greenland', 'Baffin Island / Helluland', 'c. 1000', 'Norse sagas describe a westward sequence of Helluland, Markland and Vinland. The route and identifications are represented cautiously as gameplay geography.', [61.2, -45.5], [63.7, -68.5], 285, 'Sail west from Greenland through cold current and fog.', 'Helluland reached. Continue south along the new coast.'],
+  ['South to Markland', 'Baffin Island / Helluland', 'Labrador / Markland', 'c. 1000', 'Markland is generally associated with a forested Labrador coast, but the saga geography is not exact.', [63.7, -68.5], [54.5, -58.0], 155, 'Follow the coast south, watching for fog and ice.', 'Markland reached. The route continues toward Vinland.'],
+  ['Vinland landfall', 'Labrador / Markland', 'L’Anse aux Meadows', 'c. 1000', 'Norse presence at L’Anse aux Meadows is securely attested; treating it as Vinland is a useful campaign shorthand rather than a claim to settle every saga-geography question.', [54.5, -58.0], [51.6, -55.5], 145, 'Make the final coastal landfall at the known Norse site.', 'Vinland reached. The Norse North Atlantic campaign is complete.'],
+]);
+
+const classicalMissions = campaignLegs('classical', 1, [
+  ['Piraeus to Naxos', 'Piraeus', 'Naxos', 'Classical era', 'This is a fictionalized Mediterranean navigation campaign inspired by ancient Greek merchant and warship travel, not a reconstruction of one named expedition.', [37.94, 23.64], [37.1, 25.38], 100, 'Learn short open-water island navigation in an ancient Mediterranean vessel.', 'Naxos reached. Island-hop east.'],
+  ['Across the Aegean', 'Naxos', 'Rhodes', 'Classical era', 'The mission uses real Aegean geography and seasonal winds as a historical-era gameplay setting.', [37.1, 25.38], [36.43, 28.22], 105, 'Read the island chain and make a careful eastbound passage.', 'Rhodes reached. The Levant lies ahead.'],
+  ['To Alexandria', 'Rhodes', 'Alexandria', 'Classical era', 'Alexandria is used as a major Mediterranean destination; the campaign intentionally avoids claiming one specific voyage.', [36.43, 28.22], [31.2, 29.92], 190, 'Cross the eastern Mediterranean and approach Egypt.', 'Alexandria reached. The classical Mediterranean campaign is complete.'],
+]);
+
 export const campaigns: Campaign[] = [
   {
-    id: 'tutorial',
-    title: 'Tutorial',
-    subtitle: 'Mission 0',
-    description: 'A short playable prelude from San Sebastián to A Coruña that teaches the sailing controls before the historical expedition begins.',
-    missions: [tutorialMission],
+    id: 'basque-whaling',
+    title: 'Basque Whaling',
+    subtitle: 'Campaign 0 · North Atlantic tutorial',
+    description: 'Begin with the San Sebastián → A Coruña sailing tutorial, then take a seasonal sixteenth-century Basque whaling voyage across the North Atlantic to Red Bay and home.',
+    missions: basqueWhalingMissions,
   },
   {
     id: 'magellan-elcano',
     title: 'Magellan–Elcano Circumnavigation',
-    subtitle: 'First circumnavigation · 1519–1522',
+    subtitle: 'Campaign 1 · First circumnavigation · 1519–1522',
     description: 'Sail the first circumnavigation from Sanlúcar through the Atlantic, Magellan’s Strait, the Pacific, the Philippines, the Moluccas, the Indian Ocean and back to Spain under Elcano.',
     missions: magellanElcanoMissions,
   },
   {
     id: 'loaisa-elcano',
     title: 'Loaísa–Elcano Expedition',
-    subtitle: 'To the Moluccas · 1525–1527',
+    subtitle: 'Campaign 2 · To the Moluccas · 1525–1527',
     description: 'Follow the documented westbound route from A Coruña through La Gomera, Annobón, Patagonia, Magellan’s Strait, the Pacific, the Philippines and the Moluccas one sailing leg at a time.',
     missions: loaísaMissions,
   },
+  { id: 'vasco-da-gama', title: 'Vasco da Gama: India Voyage', subtitle: 'Campaign 3 · 1497–1499', description: 'Learn the South Atlantic ocean arc, Cape weather and Indian Ocean monsoons on the first Portuguese sea route to India.', missions: daGamaMissions },
+  { id: 'urdaneta', title: 'Urdaneta: The Tornaviaje', subtitle: 'Campaign 4 · 1565', description: 'Find the North Pacific westerlies and open the Manila-to-Acapulco return route.', missions: urdanetaMissions },
+  { id: 'columbus', title: 'Columbus: First Voyage', subtitle: 'Campaign 5 · 1492–1493', description: 'A compact Atlantic campaign: trade winds west, the island passages, then the westerlies home.', missions: columbusMissions },
+  { id: 'cabral', title: 'Cabral: Brazil and India', subtitle: 'Campaign 6 · 1500', description: 'Use the South Atlantic swing to reach Brazil, then recover the Cape route to India.', missions: cabralMissions },
+  { id: 'zheng-he', title: 'Zheng He: Indian Ocean', subtitle: 'Campaign 7 · 1405–1433', description: 'Sail a monsoon-timed route from China through Southeast Asia and India to East Africa.', missions: zhengHeMissions },
+  { id: 'drake', title: 'Drake’s Circumnavigation', subtitle: 'Campaign 8 · 1577–1580', description: 'A stormier northern counterpart to Magellan’s route, through the Strait and around the world.', missions: drakeMissions },
+  { id: 'norse-vinland', title: 'Norse: Road to Vinland', subtitle: 'Campaign 9 · c. 1000', description: 'Sail a drakkar-style North Atlantic route from Greenland through Helluland and Markland to the known Norse site at L’Anse aux Meadows.', missions: norseMissions },
+  { id: 'classical-mediterranean', title: 'Classical Mediterranean', subtitle: 'Campaign 10 · historical-era expansion', description: 'An explicitly fictionalized Greek-inspired island-navigation campaign across the Aegean and eastern Mediterranean.', missions: classicalMissions },
 ];
 
 export const allMissions = campaigns.flatMap((campaign) => campaign.missions);

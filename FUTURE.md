@@ -133,28 +133,21 @@ A campaign represents one historical expedition or coherent voyage. Each mission
 
 The player should not have to reproduce the historical route exactly. The interesting part is trying their own route under similar geographic and sailing constraints. Completed missions may later compare the player's route, time or distance with the historical route.
 
-### Campaign 0 — Tutorial / Road to the expedition
+### Implemented campaign catalog
 
-- **Mission 0: San Sebastián → A Coruña.** Keep the existing tutorial as the introductory mission and historical prelude. It teaches wind, current, helm, sails, coastal navigation and waypoint planning before the historical fleet departs.
+- [x] **Campaign 0 — Basque Whaling, 16th century.** The San Sebastián → A Coruña introductory mission now begins the tutorial campaign, followed by a seasonal North Atlantic route via the Azores, Grand Banks and Red Bay, Labrador. It teaches the game first, and treats whaling as historical context rather than a hunting mechanic.
+- [x] **Campaign 1 — Magellan–Elcano Circumnavigation, 1519–1522.** Sixteen legs from Sanlúcar to Tenerife, Brazil, Patagonia, the Strait, the Pacific, the Philippines, Tidore, Timor, the Cape, Cape Verde and home.
+- [x] **Campaign 2 — Loaísa–Elcano Expedition, 1525–1527.** Sixteen legs from A Coruña through La Gomera, Annobón, Patagonia, the Strait, the Pacific, the Philippines and the Moluccas. García Jofre de Loaísa commanded; Elcano served as second-in-command and died during the Pacific crossing.
+- [x] **Campaign 3 — Vasco da Gama, 1497–1499.** South Atlantic route choice, the Cape of Good Hope and Indian Ocean monsoons.
+- [x] **Campaign 4 — Urdaneta’s Tornaviaje, 1565.** Find the North Pacific westerlies and descend the American coast to Acapulco.
+- [x] **Campaign 5 — Columbus’s First Voyage, 1492–1493.** Trade winds west from the Canaries, island navigation, and a North Atlantic westerly return.
+- [x] **Campaign 6 — Cabral: Brazil and India, 1500.** A South Atlantic swing to Brazil, then the Cape route to India.
+- [x] **Campaign 7 — Zheng He: Indian Ocean, 1405–1433.** Monsoon-timed legs from China through Southeast Asia and India to East Africa.
+- [x] **Campaign 8 — Drake’s Circumnavigation, 1577–1580.** A stormier Atlantic, Strait and world return; it reuses the dedicated Strait navigation tools.
+- [x] **Campaign 9 — Norse Road to Vinland, c. 1000.** Greenland, Helluland, Markland and the securely attested Norse site at L’Anse aux Meadows. Saga geography is explicitly treated as uncertain.
+- [x] **Campaign 10 — Classical Mediterranean.** A clearly fictionalized Greek-inspired island-navigation expansion from Piraeus to Alexandria, rather than a claim to reproduce a named ancient voyage.
 
-### Campaign 1 — Loaísa–Elcano Expedition to the Moluccas (1525–1526)
-
-Build the voyage from A Coruña to the Moluccas as successive playable legs. The campaign should make clear that García Jofre de Loaísa commanded the expedition and Juan Sebastián Elcano served as second-in-command and pilot major; Elcano died during the Pacific crossing before the surviving flagship reached the Moluccas.
-
-Initial mission breakdown:
-
-1. **A Coruña → Canary Islands** — departure of the seven-ship fleet on 24 July 1525 and first Atlantic leg.
-2. **Canary Islands → coast of Brazil** — work south along the eastern Atlantic before crossing west.
-3. **Brazil → Patagonia** — continue south toward the entrance region of the Strait of Magellan.
-4. **Patagonian coast → Strait of Magellan** — approach the difficult strait amid worsening weather.
-5. **Passage of the Strait of Magellan** — a dedicated constrained-navigation mission through the strait, reaching the Pacific.
-6. **Strait of Magellan → central Pacific** — begin the long Pacific crossing; the fleet fragments in severe weather.
-7. **Central Pacific → Marshall Islands** — follow the surviving flagship's westward passage toward the island groups encountered in August 1526.
-8. **Marshall Islands → Guam** — continue west to the Marianas.
-9. **Guam → Mindanao** — reach the Philippine archipelago.
-10. **Mindanao → Moluccas / Tidore** — final approach to the Spice Islands by the surviving expedition.
-
-Mission endpoints are gameplay waypoints representing major historical legs, not a claim that the fleet stopped at every endpoint exactly as represented. Briefings should distinguish documented landfalls from useful geographic subdivision points.
+Every campaign is a sequence of independent, replayable missions. Historical notes distinguish documented landfalls from practical gameplay checkpoints and compressed legs.
 
 ### Campaign progress, logbook and persistent chart knowledge
 
@@ -163,35 +156,16 @@ Turn completed voyages into a coherent expedition without preventing replay or m
 
 This makes exploration cumulative: a player who crossed the Atlantic on an earlier leg can use the charted waters while preparing a later voyage, but must still personally discover unfamiliar seas.
 
-### Implemented historical campaigns
-
-- [x] **Magellan–Elcano Circumnavigation (1519–1522)** — sixteen legs from Sanlúcar to Tenerife, Brazil, Patagonia, the Strait of Magellan, the Pacific, the Philippines, Tidore, Timor, the Cape of Good Hope, Cape Verde and Sanlúcar. It is listed before the Loaísa–Elcano campaign in the historical voyage selector.
-
 ### Later campaigns
 
-Possible future campaigns include:
-
-1. **Vasco da Gama — India voyage (1497–1499)** — South Atlantic route choice, rounding the Cape of Good Hope, Indian Ocean monsoons and East African coastal legs. This is the preferred next campaign because it makes the Indian Ocean’s seasonal wind system central rather than repeating a circumnavigation.
-2. **Urdaneta — Manila to Acapulco, 1565** — Find the North Pacific westerlies by sailing far north, then descend the American coast. This is an especially strong navigation-first campaign: latitude choice and learned prevailing winds are the route.
-3. **Columbus — First voyage, 1492–1493** — A compact, accessible Atlantic campaign from the Canaries to the Bahamas and Hispaniola, returning through the North Atlantic westerlies. It can become the short beginner historical campaign after the tutorial.
-4. **Cabral — Brazil and India, 1500–1501** — Use the South Atlantic’s broad westward swing to reach Brazil, then recover the Cape route to India. A clear lesson in exploiting winds and currents rather than following the shortest line.
-5. **Zheng He — Indian Ocean voyages, 1405–1433** — Monsoon-timed port-to-port navigation from China through Southeast Asia and India to East Africa. Add this when the Indian Ocean needs a distinct non-European campaign and denser regional geography.
-6. **Basque whaling to Newfoundland, 16th century** — A smaller North Atlantic campaign from the Bay of Biscay to Newfoundland: seasonal winds, fog, fishing-bank approaches and the return passage. It is a natural regional campaign for Elcano’s Basque setting.
-7. **Drake’s circumnavigation, 1577–1580** — Atlantic, the Strait of Magellan, Pacific coast, global return. Defer it until later because it overlaps substantially with Magellan–Elcano’s already implemented route, despite its much stormier and more northerly character.
-
-Recommended order: Vasco da Gama, Urdaneta, Columbus, Zheng He. Keep Drake after those rather than making two early campaigns share the same circumnavigation structure.
-
-- Columbus;
-- Vasco da Gama;
-- Cabral;
-- shorter regional or Atlantic navigation challenges.
+Future campaigns should add a distinct navigation lesson or environment, rather than another route reskin. Good candidates include regional Atlantic challenges and additional Indian Ocean routes with richer local geography.
 
 ## 5a. Historical-era expansions
 
 Elcano can later expand beyond the Age of Sail’s Iberian expeditions without losing its core identity: each era should add ships and campaign contexts that make wind, currents, geography and route planning feel different, not merely reskin the same voyage.
 
-- **Viking / Norse expansion** — introduce a playable **drakkar**-style Norse vessel and a North Atlantic campaign such as Greenland → Helluland → Markland → Vinland, c. 1000. Emphasize following winds, cold currents, fog, sea ice and island/coastal navigation. Historical text should distinguish securely attested Norse presence in North America from uncertain details of individual routes and landfalls.
-- **Greek and Roman expansion** — introduce Mediterranean-era merchant and warship-inspired vessels, with regional campaigns shaped by seasonal winds, short open-water crossings, coastal landmarks, island chains, straits and harbours.
+- [x] **Viking / Norse expansion** — represented by the Road to Vinland campaign. A future dedicated drakkar ship preset can deepen the distinction.
+- [x] **Greek and Roman expansion** — represented by the Classical Mediterranean campaign. Future merchant and warship-inspired ship presets can deepen the distinction.
 - Future eras should earn new hull/rig performance profiles, environmental contexts and navigation decisions. Do not add combat, empire management or generic historical reskins merely because a period is available.
 
 ## 6. Coastal navigation phase 2

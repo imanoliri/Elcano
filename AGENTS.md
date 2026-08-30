@@ -192,6 +192,7 @@ When adding historical ships, routes, expeditions or geography:
 - distinguish known historical facts from gameplay abstractions;
 - avoid presenting invented details as historical fact;
 - make abstractions explicit in code/data when relevant.
+- Keep campaigns data-driven in `src/missions.ts`: each playable leg needs a date/context, briefing, completion text and a historical note that identifies compressed or approximate geography.
 
 ## Scope discipline
 

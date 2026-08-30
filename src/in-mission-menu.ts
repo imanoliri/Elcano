@@ -65,7 +65,7 @@ if (params.get('play') === '1') {
             <button id="game-briefing" type="button">Mission briefing</button>
             <button id="game-sailing-guide" type="button">Sailing guide</button>
           </div>
-          ${activeMission.id === 'loaisa-7' ? '<button id="game-strait-conditions" type="button">Strait passage conditions</button>' : ''}
+          ${activeMission.isStraitPassage ? '<button id="game-strait-conditions" type="button">Strait passage conditions</button>' : ''}
           <details class="game-menu-visibility">
             <summary>Navigation display</summary>
             <div class="game-menu-visibility-options">
