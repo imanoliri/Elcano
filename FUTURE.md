@@ -145,6 +145,16 @@ Use the simulation to explain *why* a route worked or failed, rather than adding
 14. **Accessible glossary** — tap any nautical term for a plain-language definition and a tiny supporting diagram.
 15. **Route replay** — replay a completed voyage with wind, current, decisions, anchoring and speed changes over time.
 
+### Achievements and exploration milestones
+
+Add a small, meaningful achievement collection that celebrates navigation understanding and historical exploration without turning Elcano into a grind or a generic checklist.
+
+- Award achievements for demonstrated sailing knowledge, not arbitrary repetition: first successful tack, first favourable tide window, first use of a major current, first weather-window departure, and first safe strait passage.
+- Add campaign and historical milestones: complete a campaign, reach the Moluccas, return from the Pacific, find Urdaneta’s westerlies, or make the Norse landfall at Vinland.
+- Add exploration milestones for chart knowledge: discover a named current, chart a sea or strait, and connect previously explored regions through a completed route.
+- Each achievement should contain a short explanation of the navigation or historical idea it recognizes, and link to the relevant glossary/lesson when that learning layer exists.
+- Make achievements local and replay-friendly. Never lock missions, ships or core information behind them; they should record understanding and encourage varied routes.
+
 ## 5. Historical campaigns and missions
 
 Historical voyages should be organized as **Campaign → Missions**.
