@@ -51,7 +51,10 @@ if (canvas && viewport) {
   // Keep the automatic opening view below that visible blur threshold; players
   // can still deliberately zoom farther in when they need to inspect a coast.
   const MAX_CRISP_OPENING_SCALE = 8;
-  const MAX_ZOOM_MULTIPLIER = 256;
+  // Strait and harbour approaches need considerably more chart detail than an
+  // ocean crossing. The vector coastline overlay takes over at close range, so
+  // permit a true close-pilotage view instead of stopping at the former limit.
+  const MAX_ZOOM_MULTIPLIER = 1024;
   const MAX_WRAP_DPR = 2;
   const SOURCE_REFRESH_INTERVAL_MS = 50;
 
