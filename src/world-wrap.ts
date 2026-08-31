@@ -3,6 +3,14 @@ import { WORLD_MAP_WIDTH } from './world/coordinates';
 export type WorldPoint = { x: number; y: number };
 
 /**
+ * Compatibility helper for overlays that still branch on the old polar-row
+ * renderer. Vertical wrapping is no longer supported, so no row is polar.
+ */
+export function isPolarRow(_row: number) {
+  return false;
+}
+
+/**
  * The geographic chart wraps only in longitude. Latitude is bounded by the
  * poles; reflecting/repeating the map vertically creates false geography and
  * visible horizontal seams on tall/mobile viewports.
