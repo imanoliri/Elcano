@@ -33,7 +33,7 @@ The player should eventually be able to navigate the real Atlantic and the wider
 - [x] Add a thin course trail showing the ship's actual travelled path.
 - [x] Add two forward navigation vectors at the ship: a heading vector showing where the bow is pointed and a track/course-over-ground vector showing the actual direction of movement. Their angular difference is the ship's slip/drift angle.
 - Keep an optional bearing-to-target reference line as a separate future aid so desired bearing can be compared with heading and track without confusing it with either vector.
-- Add deterministic day-to-day wind variation around the monthly climatology so voyages encounter plausible calms, stronger winds and directional shifts while remaining reproducible and static-first. Preserve the climatological mean direction and scalar wind-speed distribution rather than simply adding random noise.
+- [x] Add deterministic day-to-day wind variation around the monthly climatology. The implemented field uses broad moving synoptic anomalies, remains spatially coherent at roughly 1,000 nm, varies by wind regime, and is centred on the climatological speed and direction instead of using stationary cycles or independent daily noise.
 - Add post-voyage route debriefs using the existing logbook data: route map, time, distance, average speed, weather encountered and readable personal-best comparisons.
 - Add a short weather-window tutorial that explicitly teaches observing the forecast, anchoring, waiting and departing in favourable conditions.
 - Keep historical missions explicit that modern observed/reanalysis data represents plausible prevailing conditions, not literal weather from the 16th century.
@@ -48,13 +48,13 @@ Evolve the environment from mostly static climatological vectors into a time-var
 
 Model the environment in three layers:
 
-1. **Background climate** — persistent regional wind patterns and major ocean currents derived from climatology.
-2. **Dynamic weather systems** — moving highs, lows, storms and eventually fronts with position, radius, strength, movement and rotational wind fields. These systems modify the background wind as they move across the map.
+1. **Background climate** — persistent regional wind patterns and major ocean currents derived from climatology, with deterministic regime-aware day-to-day wind variation layered onto the prevailing wind.
+2. **Dynamic weather systems** — moving highs, lows, storms and eventually fronts with position, radius, strength, movement and rotational wind fields. These systems modify the already varied background wind as they move across the map.
 3. **Local coastal and tidal effects** — coastlines, islands, channels and tides can alter currents independently of large-scale weather, especially in constrained waters such as the Strait of Magellan.
 
 Use a simple conceptual composition:
 
-- actual wind = prevailing wind + weather-system influence;
+- actual wind = day-to-day varied prevailing wind + weather-system influence;
 - actual current = base ocean current + coastal/tidal influence + smaller weather influence.
 
 Do not make major ocean currents rotate wholesale around storms. Storms can alter surface flow, but persistent currents should retain their larger-scale structure.
@@ -282,7 +282,7 @@ Only introduce this as a deliberate later expansion of Elcano beyond the navigat
 4. Named ocean-current corridors.
 5. Nautical chart scale.
 6. Continue hardening global environment tiling and caching for long voyages.
-7. Add deterministic day-to-day environmental variation.
+7. [x] Add deterministic day-to-day wind variation; current variability remains a separate future decision.
 
 ## Scope rule
 

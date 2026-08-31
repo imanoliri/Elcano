@@ -6,17 +6,54 @@ This is Elcano's gameplay reference for the world's major sailing regions. It di
 
 - **Prevailing winds and currents** come from monthly modern reference fields: CCMP V2 10 m winds and OSCAR surface currents (with a high-resolution Bay of Biscay wind/current field). They represent plausible modern climatology for a mission month, not literal weather in the 1500s.
 - Wind arrows in Elcano show where air travels **toward**. They are not meteorological “wind from” bearings.
+- **Ordinary day-to-day wind** is a deterministic synoptic variation around the monthly prevailing field. Broad anomalies move across the ocean, gradually change shape, and differ by wind regime instead of rerolling independent random values or oscillating in place.
 - **Storm systems** are procedural gameplay systems. Their locations, intensity and movement are deterministic from simulation time, so a given voyage remains reproducible.
-- The simplified systems below represent the large-scale storm belts and tropical-cyclone seasons. They are not a weather forecast and do not simulate fronts, pressure gradients, tides, waves, or land effects yet.
+- The simplified systems below represent ordinary synoptic variability plus the large-scale storm belts and tropical-cyclone seasons. They are not a weather forecast and do not simulate fronts, pressure gradients, tides, waves, or land effects yet.
 
 ## Environmental composition
 
 ```text
-local wind    = monthly prevailing wind + weather-system wind
-local current = monthly background current + small weather-driven deflection
+varied background wind = monthly prevailing wind × day-scale speed factor, rotated by a day-scale direction shift
+local wind            = varied background wind + weather-system wind
+local current         = monthly background current + small weather-driven deflection
 ```
 
-Storms principally alter wind. Their current effect is only 0.8% of their local rotating wind contribution, preserving major ocean-current structure.
+The ordinary variation layer changes only the prevailing wind. Storms are added afterwards, so ordinary variability cannot weaken the storm model itself. Players may disable **Day-to-day wind variation** from the in-mission **Simulation** section; this bypasses the ordinary anomaly layer but leaves the monthly climatology and explicit storms active. The preference is remembered in the browser. Storm current influence remains only 0.8% of the local rotating storm-wind contribution, preserving major ocean-current structure.
+
+## Ordinary day-to-day wind variation
+
+The monthly wind field describes the prevailing climate, not identical weather every day. Elcano therefore applies a deterministic ordinary-weather layer before explicit storms:
+
+- the field is generated from simulation position and time, so replaying the same place at the same simulated time gives the same wind;
+- broad patches are about 18° across north/south — roughly 1,000 nautical miles — and neighbouring waters are blended together;
+- a primary roughly **18° / ~1,000 nm** spatial field carries most of the variation, while a broader **30°** secondary field moves at about 55% of the primary drift speed; their changing overlap makes anomalies deform as they pass rather than repeat a fixed cycle;
+- speed multipliers are centred on **1.0×** and direction changes on **0°**, preserving the monthly climatology as the long-term centre;
+- regime boundaries are feathered rather than hard-edged, so crossing a latitude or longitude does not create an artificial wind discontinuity;
+- this layer represents ordinary calms, freshening and directional shifts. Major gale/storm extremes remain the job of the explicit weather-system layer.
+
+| Wind regime | Approximate ordinary speed range | Approximate direction range | Gameplay character |
+|---|---:|---:|---|
+| Doldrums / ITCZ | about **0.30–1.70×** prevailing speed | up to about **±55°** | Fickle and often light; meaningful calms can appear without a storm. |
+| Trade winds | about **0.75–1.25×** | up to about **±12°** | Comparatively dependable, preserving their value as historical route corridors. |
+| Mid-latitude westerlies | about **0.55–1.45×** | up to about **±32°** | Changeable ordinary weather, but dramatic storm-strength events still require explicit systems. |
+| Monsoon-dominated waters | about **0.65–1.35×** | up to about **±22°** | The monthly climatology supplies the seasonal reversal; this layer adds shorter-lived variability around it. |
+| Southern Ocean westerlies | about **0.65–1.35×** | up to about **±20°** | Strong baseline with moderate ordinary variability; large extremes come from the dense Southern Ocean storm tracks. |
+
+The quoted ranges are maximum profile envelopes. Spatial interpolation means typical changes are smaller and evolve gradually. The profiles blend between regimes: for example, the trades fade into the westerlies across the subtropics instead of changing abruptly at a single latitude.
+
+### Synoptic anomaly movement
+
+Ordinary weather does not merely strengthen and weaken in place. Elcano advects the deterministic anomaly field horizontally with a regime-dependent drift speed. The values are deliberately broad navigation-scale approximations, not tracked historical weather systems:
+
+| Regime | Ordinary anomaly drift | Interpretation |
+|---|---:|---|
+| Doldrums / ITCZ | about **3 kn westward** | Slow-moving, fickle tropical variability. |
+| Trade-wind belts | about **7 kn westward** | Broad disturbances generally travel with the easterly regime. |
+| Mid-latitude westerlies | about **12 kn eastward** | Synoptic changes move through the westerly storm-track environment. |
+| Monsoon-dominated waters | about **4 kn westward** | Simplified tropical/monsoonal disturbance motion; seasonal reversal still comes from climatology. |
+| Southern Ocean | about **15 kn eastward** | Faster progression through the strong circumpolar westerly belt. |
+
+The drift speed is blended smoothly between regimes. At a fixed ship position, weather therefore changes because an anomaly approaches, passes and leaves. A ship that changes route or timing samples a different part of the same moving world field. Each deterministic latitude row is centred and normalized before advection, preventing the procedural weather layer from quietly redefining the long-term climatological mean.
 
 ## Global circulation at a glance
 

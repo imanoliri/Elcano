@@ -1,6 +1,7 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 import { createAtlanticClimatologyProvider } from './grid-environment';
 import { createGlobalTiledEnvironment, prefetchGlobalEnvironment, type EnvironmentBounds } from './global-environment-tiles';
+import { applyDailyWindVariation } from './daily-wind-variation';
 import { globalWeatherSystems, weatherCurrentInfluenceAt, weatherWindInfluenceAt } from './weather';
 import { inMagellanStrait, straitCurrentAt, straitWindAt } from './strait-navigation';
 
@@ -60,8 +61,17 @@ export const observedAtlanticEnvironment = createAtlanticClimatologyProvider(cli
 export const globalObservedEnvironment = createGlobalTiledEnvironment(observedAtlanticEnvironment);
 let activeEnvironment: EnvironmentProvider = globalObservedEnvironment;
 let straitNavigationActive = false;
+let dailyWindVariationActive = true;
 
 export function setStraitNavigationActive(active: boolean) { straitNavigationActive = active; }
+
+export function setDailyWindVariationActive(active: boolean) {
+  dailyWindVariationActive = active;
+}
+
+export function isDailyWindVariationActive() {
+  return dailyWindVariationActive;
+}
 
 export function setEnvironmentProvider(provider: EnvironmentProvider) {
   activeEnvironment = provider;
@@ -73,8 +83,9 @@ export function prefetchEnvironmentBounds(bounds: EnvironmentBounds, time: Date)
 
 export function windAt(position: GeoPosition, time: Date) {
   const base = activeEnvironment.windAt(position, time);
+  const variedBackground = dailyWindVariationActive ? applyDailyWindVariation(base, position, time) : base;
   const weather = weatherWindInfluenceAt(position, time);
-  const combined = { x: base.x + weather.x, y: base.y + weather.y };
+  const combined = { x: variedBackground.x + weather.x, y: variedBackground.y + weather.y };
   return straitNavigationActive ? straitWindAt(position, time, combined) : combined;
 }
 
