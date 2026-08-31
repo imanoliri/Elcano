@@ -144,6 +144,14 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - An off-screen target indicator points toward the destination when it is outside the visible chart.
 - The interface is designed for both desktop and phone-sized touch screens.
 
+## Voyage encounters and historical decisions
+
+- Voyages use deterministic, location-aware encounter fields rather than a global random-event list. North Atlantic fog, southern-ocean gales, Indian Ocean Portuguese traffic, western-Pacific coastal contact, and Mediterranean traffic are each tied to relevant map regions.
+- The engine combines spatial zones with current wind strength, mission time, an encounter budget and a deterministic mission seed, so a restarted mission reproduces its encounter sequence.
+- First-pass encounters are paused decision cards: seamanship problems such as fog, squalls, leaking casks and rigging strain; and contact situations such as other vessels, Portuguese sails, and cautious coastal trade.
+- Contact with coastal peoples is never automatically hostile. The first choices are distance, cautious trade, or withdrawal; combat remains a later extension once the soldiers and arms systems have live effects.
+- Each mission also receives a fixed expedition-council decision. These authored historical decision points remain distinct from dynamic zone encounters.
+
 ## Technical gameplay foundations
 
 - The browser game is static-first and deployable on Netlify without a backend.
