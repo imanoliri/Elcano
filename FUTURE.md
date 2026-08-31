@@ -264,9 +264,10 @@ Only introduce this as a deliberate later expansion of Elcano beyond the navigat
 
 ### Provisions and armament
 
-- Track a compact set of expedition resources: **food**, **weapons/ammunition**, and **gold**. Do not add freshwater unless a later voyage design makes it necessary.
-- Before a mission, let the player choose a limited crew complement of sailors and soldiers. The choice should have readable trade-offs: sailors improve sailing capability and recovery, while soldiers provide security for specifically designed encounters.
-- Use gold to pay sailors and soldiers, fund repairs and provisions, and resolve some encounter choices. Unpaid crew should affect morale gradually and visibly rather than fail the expedition without warning.
+- [x] Track a compact, shared-hold loadout: **water**, provisions, repair stores, trade goods/gifts, gold, and arms/ammunition. Water and provisions are consumed daily per sailor/soldier; gold pays daily wages.
+- [x] Before a mission, let the player choose sailors and soldiers within historically anchored vessel capacity. Sailors are intentionally cheaper than soldiers in the current game economy.
+- Add sailor sailing/repair benefits and soldier security benefits only with the associated designed systems, rather than adding invisible passive modifiers now.
+- Use gold to fund repairs and provisions, and resolve some encounter choices. Unpaid crew should affect morale gradually and visibly rather than fail the expedition without warning.
 - Let successful fishing, trading, resupply, or other contextual encounters replenish food; do not make resource collection a repetitive grind.
 - Let selected encounters offer gold gains, costs, or trade-offs, while avoiding a broad buy-low/sell-high trading economy.
 - Make shortages affect morale and expedition options rather than instantly causing opaque failure states.
