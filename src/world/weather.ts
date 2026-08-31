@@ -303,3 +303,28 @@ export function weatherCurrentInfluenceAt(position: GeoPosition, time: Date): Ea
   const wind = weatherWindInfluenceAt(position, time);
   return { x: wind.x * .008, y: wind.y * .008 };
 }
+
+export type VisibilityCloud = { id: string; center: GeoPosition; radiusNm: number; opacity: number; kind: 'storm-cloud' | 'fog' };
+
+/** Deterministic cloud and fog cover. It shares the weather clock, but does not alter wind. */
+export function visibilityClouds(time: Date): VisibilityCloud[] {
+  const day = Math.floor(time.getTime() / DAY);
+  const stormClouds = globalWeatherSystems(time).map((system) => ({ id: `${system.id}:cloud`, center: system.center, radiusNm: system.radiusNm * 1.08, opacity: system.intensity === 'severe' ? .72 : system.intensity === 'gale' ? .55 : .34, kind: 'storm-cloud' as const }));
+  const fogBelts = [
+    { id: 'grand-banks', lat: 47, lon: -51, radiusNm: 170 }, { id: 'north-pacific', lat: 48, lon: -150, radiusNm: 190 },
+    { id: 'patagonia', lat: -52, lon: -72, radiusNm: 125 }, { id: 'north-sea', lat: 55, lon: 1, radiusNm: 120 },
+  ].map((belt) => ({ id: `${belt.id}:${day}`, center: { lat: belt.lat + (hash(`${belt.id}:${day}:lat`) - .5) * 4, lon: belt.lon + (hash(`${belt.id}:${day}:lon`) - .5) * 7 }, radiusNm: belt.radiusNm, opacity: .62, kind: 'fog' as const }));
+  return [...stormClouds, ...fogBelts];
+}
+
+export function visibilityAt(position: GeoPosition, time: Date) {
+  let visibility = 1;
+  for (const cloud of visibilityClouds(time)) {
+    const north = (position.lat - cloud.center.lat) * 60;
+    const east = (position.lon - cloud.center.lon) * 60 * Math.max(.2, Math.cos(position.lat * DEG));
+    const distance = Math.hypot(east, north);
+    if (distance >= cloud.radiusNm) continue;
+    visibility *= 1 - cloud.opacity * (1 - distance / cloud.radiusNm);
+  }
+  return Math.max(.18, visibility);
+}
