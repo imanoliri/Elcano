@@ -26,9 +26,9 @@ if (smokeMode) {
   }
 
   if (smokeMode === 'south-pole') {
-    // Zoom all the way out around the lower half of the viewport. The camera is
-    // latitude-bounded, so this guards against regressions that mirror/repeat
-    // another copy of the world beyond Antarctica and create horizontal seams.
+    // Zoom all the way out around the lower half of the viewport. This exposes
+    // the Antarctica/South-Pole wrap seam and guards against artificial ocean
+    // strips appearing where the continent should continue through the pole.
     window.setTimeout(() => {
       const shell = document.querySelector<HTMLElement>('.game-shell');
       if (!shell) return;

@@ -70,7 +70,7 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - The chart can be panned and zoomed with mouse, touch drag, wheel/trackpad, and pinch gestures.
 - Close-pilotage zoom reaches 1024× the fitted-world scale, so straits, harbour approaches and dense island passages can be inspected well beyond the normal ocean view.
 - The camera can switch between a static view and follow-ship view.
-- The chart wraps continuously in longitude at the antimeridian for uninterrupted circumnavigation. Latitude is bounded at the poles rather than mirrored into false repeated worlds.
+- The chart wraps continuously at its edges, allowing uninterrupted long-distance exploration rather than stopping at a map boundary.
 - Higher-detail coastline geometry loads at close zoom without making normal camera movement heavy.
 - Zoom-aware labels identify mission locations, ports, cities, islands, straits, seas, and major ocean regions while suppressing collisions between labels.
 - Fog of war hides unexplored waters. Sailing reveals chart cells around the ship, and discovered cells remain charted across later missions and campaigns in this browser.

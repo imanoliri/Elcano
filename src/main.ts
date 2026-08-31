@@ -226,10 +226,24 @@ function revealAroundShip() {
   revealAroundWorldPoint(project(state.ship.position));
 }
 
+function arrow(x: number, y: number, vector: Vec2, length: number) {
+  const mag = Math.hypot(vector.x, vector.y) || 1; const ex = x + vector.x / mag * length; const ey = y - vector.y / mag * length;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+  const a = Math.atan2(ey - y, ex - x); ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6 * Math.cos(a - .5), ey - 6 * Math.sin(a - .5)); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6 * Math.cos(a + .5), ey - 6 * Math.sin(a + .5)); ctx.stroke();
+}
+
 function drawGrid() {
   ctx.strokeStyle = 'rgba(255,255,255,.075)'; ctx.lineWidth = 1;
   for (let lon = -180; lon <= 180; lon += 20) { const a = project({ lat: -80, lon }); const b = project({ lat: 80, lon }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
   for (let lat = -80; lat <= 80; lat += 10) { const a = project({ lat, lon: -180 }); const b = project({ lat, lon: 180 }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+}
+
+function drawEnvironment() {
+  for (let lat = -60; lat <= 60; lat += 10) for (let lon = -170; lon <= 170; lon += 15) {
+    const p = project({ lat, lon }); if (!isWorldPointExplored(p)) continue;
+    const wind = windAt({ lat, lon }, state.time); const current = currentAt({ lat, lon }, state.time);
+    ctx.strokeStyle = 'rgba(255,255,255,.34)'; arrow(p.x, p.y, wind, 14); ctx.strokeStyle = 'rgba(74,213,255,.75)'; arrow(p.x + 5, p.y + 5, current, 10);
+  }
 }
 
 function drawFog() {
@@ -240,7 +254,7 @@ function drawFog() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawGrid(); drawLand(ctx); drawFog();
+  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog();
 
   const target = project(state.destination);
   const ship = project(state.ship.position);
