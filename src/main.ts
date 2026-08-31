@@ -267,6 +267,7 @@ function updateControlReadouts() {
 function revealAroundShip() {
   revealAroundWorldPoint(project(state.ship.position));
 }
+function observationRadius() { return Math.max(10, EXPLORATION_RADIUS * Math.pow(visibilityAt(state.ship.position, state.time), 2)); }
 
 function arrow(x: number, y: number, vector: Vec2, length: number) {
   const mag = Math.hypot(vector.x, vector.y) || 1; const ex = x + vector.x / mag * length; const ey = y - vector.y / mag * length;
@@ -281,9 +282,9 @@ function drawGrid() {
 }
 
 function drawEnvironment() {
-  const ship = project(state.ship.position); const observationRadius = EXPLORATION_RADIUS * visibilityAt(state.ship.position, state.time);
+  const ship = project(state.ship.position); const liveRadius = observationRadius();
   for (let lat = -60; lat <= 60; lat += 10) for (let lon = -170; lon <= 170; lon += 15) {
-    const p = project({ lat, lon }); if (!isWorldPointExplored(p) || Math.hypot(p.x - ship.x, p.y - ship.y) > observationRadius) continue;
+    const p = project({ lat, lon }); if (!isWorldPointExplored(p) || Math.hypot(p.x - ship.x, p.y - ship.y) > liveRadius) continue;
     const wind = windAt({ lat, lon }, state.time); const current = currentAt({ lat, lon }, state.time);
     ctx.strokeStyle = 'rgba(255,255,255,.34)'; arrow(p.x, p.y, wind, 14); ctx.strokeStyle = 'rgba(74,213,255,.75)'; arrow(p.x + 5, p.y + 5, current, 10);
   }
@@ -299,10 +300,12 @@ function drawVisibilityClouds() {
   for (const cloud of clouds) {
     const point = project(cloud.center);
     if (!isWorldPointExplored(point)) continue;
-    if (cloud.kind === 'fog') { ctx.fillStyle = 'rgba(218,231,234,.16)'; for (let lobe = 0; lobe < 5; lobe += 1) { const angle = lobe * 1.256; ctx.beginPath(); ctx.ellipse(point.x + Math.cos(angle) * 15, point.y + Math.sin(angle) * 9, 19, 11, angle, 0, Math.PI * 2); ctx.fill(); } }
-    ctx.font = cloud.kind === 'fog' ? '22px system-ui' : '20px system-ui';
+    ctx.font = cloud.kind === 'fog' ? '18px system-ui' : '20px system-ui';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.globalAlpha = .8; ctx.fillText(cloud.kind === 'fog' ? '🌫️' : '☁️', point.x, point.y); ctx.globalAlpha = 1;
+    ctx.globalAlpha = .82;
+    if (cloud.kind === 'fog') [[0,0],[13,-5],[-13,5],[5,9],[-6,-10]].forEach(([x,y]) => ctx.fillText('☁️', point.x + x, point.y + y));
+    else ctx.fillText('☁️', point.x, point.y);
+    ctx.globalAlpha = 1;
   }
   const visibility = visibilityAt(state.ship.position, state.time);
   if (visibility >= .94) return;
@@ -315,9 +318,9 @@ function drawVisibilityClouds() {
 }
 
 function drawWorldVessels() {
-  const ship = project(state.ship.position); const observationRadius = EXPLORATION_RADIUS * visibilityAt(state.ship.position, state.time);
+  const ship = project(state.ship.position); const liveRadius = observationRadius();
   for (const vessel of worldVesselsAt(state.time)) {
-    const point = project(vessel.position); if (!isWorldPointExplored(point) || Math.hypot(point.x - ship.x, point.y - ship.y) > observationRadius) continue;
+    const point = project(vessel.position); if (!isWorldPointExplored(point) || Math.hypot(point.x - ship.x, point.y - ship.y) > liveRadius) continue;
     ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(vessel.headingDeg * Math.PI / 180); ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(vessel.kind === 'canoe' ? '🛶' : '⛵', 0, 0); ctx.restore();
   }
 }
@@ -335,7 +338,7 @@ function draw() {
   }));
   updateInstruments();
   window.dispatchEvent(new CustomEvent('elcano:simulation-time', { detail: state.time.toISOString() }));
-  window.dispatchEvent(new CustomEvent('elcano:observation-change', { detail: { position: state.ship.position, radius: EXPLORATION_RADIUS * visibilityAt(state.ship.position, state.time) } }));
+  window.dispatchEvent(new CustomEvent('elcano:observation-change', { detail: { position: state.ship.position, radius: observationRadius() } }));
 
   if (!reached && distanceToDestination(state) < 20) {
     reached = true;
