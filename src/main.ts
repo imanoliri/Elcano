@@ -267,7 +267,7 @@ function updateControlReadouts() {
 function revealAroundShip() {
   revealAroundWorldPoint(project(state.ship.position));
 }
-function observationRadius() { return Math.max(10, EXPLORATION_RADIUS * Math.pow(visibilityAt(state.ship.position, state.time), 2)); }
+function observationRadius() { return Math.max(5, EXPLORATION_RADIUS * .5 * Math.pow(visibilityAt(state.ship.position, state.time), 2)); }
 
 function arrow(x: number, y: number, vector: Vec2, length: number) {
   const mag = Math.hypot(vector.x, vector.y) || 1; const ex = x + vector.x / mag * length; const ey = y - vector.y / mag * length;
@@ -297,9 +297,10 @@ function drawFog() {
 
 function drawVisibilityClouds() {
   const clouds = visibilityClouds(state.time);
+  const observationShip = project(state.ship.position); const liveRadius = observationRadius();
   for (const cloud of clouds) {
     const point = project(cloud.center);
-    if (!isWorldPointExplored(point)) continue;
+    if (!isWorldPointExplored(point) || Math.hypot(point.x - observationShip.x, point.y - observationShip.y) > liveRadius) continue;
     ctx.font = cloud.kind === 'fog' ? '18px system-ui' : '20px system-ui';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.globalAlpha = .82;
@@ -309,12 +310,12 @@ function drawVisibilityClouds() {
   }
   const visibility = visibilityAt(state.ship.position, state.time);
   if (visibility >= .94) return;
-  const ship = project(state.ship.position);
+  const veilShip = project(state.ship.position);
   const radius = 26 + visibility * 82;
-  const veil = ctx.createRadialGradient(ship.x, ship.y, radius * .35, ship.x, ship.y, radius * 2.1);
+  const veil = ctx.createRadialGradient(veilShip.x, veilShip.y, radius * .35, veilShip.x, veilShip.y, radius * 2.1);
   veil.addColorStop(0, `rgba(210,224,228,${(.38 * (1 - visibility)).toFixed(2)})`);
   veil.addColorStop(1, 'rgba(210,224,228,0)');
-  ctx.fillStyle = veil; ctx.fillRect(ship.x - radius * 2.2, ship.y - radius * 2.2, radius * 4.4, radius * 4.4);
+  ctx.fillStyle = veil; ctx.fillRect(veilShip.x - radius * 2.2, veilShip.y - radius * 2.2, radius * 4.4, radius * 4.4);
 }
 
 function drawWorldVessels() {
