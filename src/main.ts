@@ -325,7 +325,12 @@ function drawWorldVessels() {
   const ship = project(state.ship.position); const liveRadius = observationRadius();
   for (const vessel of worldVesselsAt(state.time)) {
     const point = project(vessel.position); if (!isWorldPointExplored(point) || Math.hypot(point.x - ship.x, point.y - ship.y) > liveRadius) continue;
-    ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(vessel.headingDeg * Math.PI / 180); ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(vessel.kind === 'canoe' ? '🛶' : '⛵', 0, 0); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 1; ctx.translate(point.x, point.y); ctx.rotate(vessel.headingDeg * Math.PI / 180);
+    ctx.fillStyle = vessel.kind === 'canoe' ? '#d4a46c' : '#f1dfb0'; ctx.strokeStyle = '#17202a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(3, -4); ctx.lineTo(-8, -3); ctx.lineTo(-10, 0); ctx.lineTo(-8, 3); ctx.lineTo(3, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (vessel.kind === 'canoe') { ctx.strokeStyle = '#ead098'; ctx.beginPath(); ctx.moveTo(-6, -5); ctx.lineTo(5, 5); ctx.moveTo(-6, 5); ctx.lineTo(5, -5); ctx.stroke(); }
+    else { ctx.strokeStyle = '#ead098'; ctx.beginPath(); ctx.moveTo(-2, -7); ctx.lineTo(-2, 3); ctx.moveTo(3, -6); ctx.lineTo(3, 3); ctx.stroke(); ctx.fillStyle = '#f7f0d7'; ctx.fillRect(-1, -6, 5, 4); ctx.fillRect(4, -5, 4, 3); if (vessel.kind === 'portuguese') { ctx.fillStyle = '#bc3f3f'; ctx.fillRect(2, -8, 5, 2); } }
+    ctx.fillStyle = '#f4efe6'; ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(7, -3); ctx.lineTo(7, 3); ctx.closePath(); ctx.fill(); ctx.restore();
   }
 }
 
