@@ -8,7 +8,7 @@ This is Elcano's gameplay reference for the world's major sailing regions. It di
 - Wind arrows in Elcano show where air travels **toward**. They are not meteorological “wind from” bearings.
 - **Ordinary day-to-day wind** is a deterministic synoptic variation around the monthly prevailing field. Broad anomalies move across the ocean, gradually change shape, and differ by wind regime instead of rerolling independent random values or oscillating in place.
 - **Storm systems** are procedural gameplay systems. Their locations, intensity and movement are deterministic from simulation time, so a given voyage remains reproducible.
-- The simplified systems below represent ordinary synoptic variability plus the large-scale storm belts and tropical-cyclone seasons. They are not a weather forecast and do not simulate fronts, pressure gradients, tides, waves, or land effects yet.
+- The simplified systems below represent ordinary synoptic variability plus the large-scale storm belts and tropical-cyclone seasons. Extratropical lows now carry simplified deterministic warm/cold frontal bands; the game still does not simulate full pressure gradients, occlusion, tides outside dedicated local systems, waves, or broad terrain effects.
 
 ## Environmental composition
 
@@ -26,7 +26,7 @@ The monthly wind field describes the prevailing climate, not identical weather e
 
 - the field is generated from simulation position and time, so replaying the same place at the same simulated time gives the same wind;
 - broad patches are about 18° across north/south — roughly 1,000 nautical miles — and neighbouring waters are blended together;
-- a primary roughly **18° / ~1,000 nm** spatial field carries most of the variation, while a broader **30°** secondary field moves at about 55% of the primary drift speed; their changing overlap makes anomalies deform as they pass rather than repeat a fixed cycle;
+- a primary roughly **18° / ~1,000 nm** spatial field carries most of the variation, a broader **30°** secondary field moves at about 55% of the primary drift speed, and a weaker **6° / ~350 nm** field moves about three times faster; tropical trade/monsoon regimes give that fast component more weight so they visibly evolve over several days without becoming as volatile as mid-latitude westerlies;
 - speed multipliers are centred on **1.0×** and direction changes on **0°**, preserving the monthly climatology as the long-term centre;
 - regime boundaries are feathered rather than hard-edged, so crossing a latitude or longitude does not create an artificial wind discontinuity;
 - this layer represents ordinary calms, freshening and directional shifts. Major gale/storm extremes remain the job of the explicit weather-system layer.
@@ -48,9 +48,9 @@ Ordinary weather does not merely strengthen and weaken in place. Elcano advects 
 | Regime | Ordinary anomaly drift | Interpretation |
 |---|---:|---|
 | Doldrums / ITCZ | about **3 kn westward** | Slow-moving, fickle tropical variability. |
-| Trade-wind belts | about **7 kn westward** | Broad disturbances generally travel with the easterly regime. |
+| Trade-wind belts | broad field about **7 kn westward**; smaller component about **21 kn westward** | Broad disturbances remain dependable, with weaker faster changes preventing multi-day periods from looking frozen. |
 | Mid-latitude westerlies | about **12 kn eastward** | Synoptic changes move through the westerly storm-track environment. |
-| Monsoon-dominated waters | about **4 kn westward** | Simplified tropical/monsoonal disturbance motion; seasonal reversal still comes from climatology. |
+| Monsoon-dominated waters | broad field about **4 kn westward**; smaller component about **12 kn westward** | Simplified tropical/monsoonal disturbance motion with visible shorter-lived changes; seasonal reversal still comes from climatology. |
 | Southern Ocean | about **15 kn eastward** | Faster progression through the strong circumpolar westerly belt. |
 
 The drift speed is blended smoothly between regimes. At a fixed ship position, weather therefore changes because an anomaly approaches, passes and leaves. A ship that changes route or timing samples a different part of the same moving world field. Each deterministic latitude row is centred and normalized before advection, preventing the procedural weather layer from quietly redefining the long-term climatological mean.
@@ -116,9 +116,23 @@ Every procedural system still follows the same readable lifecycle: its wind cont
 
 The displayed local wind is the vector sum of the background field and that rotating contribution. Consequently, one side of a storm may have dramatically strengthened winds while the opposite side can be calm or reversed.
 
+### Simplified weather fronts
+
+Extratropical lows in the North and South Atlantic, North Pacific and Southern Ocean carry deterministic cold and warm fronts. The fronts move with the parent low and are oriented from its track and hemisphere, with a small seeded variation so consecutive systems are not geometrically identical.
+
+- The **cold front** is narrower, extends roughly **1.7–2.2× the parent low radius**, and produces the larger wind-direction change and modest local strengthening.
+- The **warm front** is broader, extends roughly **1.25–1.65× the parent low radius**, and produces a gentler wind-direction change.
+- Fronts are not clipped to the circular storm radius. Beyond the low's nominal edge they retain a weaker wind-shift influence, allowing elongated synoptic fronts to trail well away from the centre.
+- Frontal influence fades smoothly at the ends and edges of each band instead of creating a discontinuous wall.
+- Tropical cyclones and typhoons do not receive these fronts; they keep the compact rotating-wind model.
+- Fronts modify only the weather-system contribution. Monthly climatology and ordinary day-to-day wind variation remain separate layers, and the derived weather-current influence stays deliberately tiny.
+
+This is a navigation abstraction rather than a pressure-field model. It is intended to make route timing and changing wind direction around mid-latitude lows more legible before later forecast/learning features expose fronts more explicitly.
+
 ## What is deliberately not modelled yet
 
-- high-pressure systems and fronts;
+- high-pressure systems and full pressure-gradient fields;
+- front occlusion, secondary cyclogenesis, and dynamically evolving front topology;
 - storm formation, dissipation and recurvature based on live atmospheric physics;
 - tides, coastal jets and terrain-driven wind outside the dedicated Strait of Magellan local-navigation layer;
 

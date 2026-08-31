@@ -4,6 +4,19 @@ Elcano should stay simple. New features should strengthen the core loop: choose 
 
 For the intentionally deferred weather/current roadmap, see [FUTURE_WEATHER.md](./FUTURE_WEATHER.md).
 
+## Current feature candidates
+
+Keep this shortlist visible as the current pool of high-value additions. Detailed design notes remain in the relevant sections below.
+
+- [ ] **Weather windows and limited forecast** — show only locally known wind/current trends and movement of already discovered weather systems so anchoring and waiting become deliberate route decisions.
+- [ ] **Post-voyage navigation debrief** — summarize the sailed route, time, distance, average speed, anchoring, weather/current encounters, personal bests, and concise explanations of decisive gains or losses.
+- [x] **Weather fronts** — give extratropical lows deterministic warm/cold frontal bands that break the perfectly circular wind field and create readable local wind shifts.
+- [ ] **Nautical chart tools** — add a zoom-aware nautical-mile scale plus tap/click distance and bearing measurement, with an optional bearing reference line.
+- [ ] **Historical navigation mode, phase 1** — add optional dead reckoning, accumulated position uncertainty, and latitude observations before attempting a broader historical-instrument simulation.
+- [ ] **Named-current discovery** — turn the existing major current corridors into chart discoveries with compact labels/cues and learning context once explored.
+- [ ] **Dedicated historical ship types** — add genuinely distinct presets such as a Norse drakkar and Mediterranean galley/merchant vessel rather than using existing Age-of-Sail rigs as reskins.
+- [ ] **Deterministic current variability** — add subtle time variation to appropriate currents without making major persistent current corridors wander unrealistically.
+
 ## 1. Real-world map
 
 Replace the abstract test world with real geography.

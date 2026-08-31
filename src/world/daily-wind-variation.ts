@@ -4,6 +4,8 @@ const DAY_MS = 86_400_000;
 const WEATHER_EPOCH_MS = Date.UTC(1500, 0, 1);
 const PRIMARY_CELL_DEG = 18;
 const SECONDARY_CELL_DEG = 30;
+const FAST_CELL_DEG = 6;
+const FAST_DRIFT_MULTIPLIER = 3;
 const DEG = Math.PI / 180;
 
 type VariationProfile = {
@@ -11,14 +13,16 @@ type VariationProfile = {
   directionAmplitudeDeg: number;
   /** Positive moves anomalies east, negative moves them west. */
   driftKn: number;
+  /** Share of ordinary variability carried by the smaller, faster field. */
+  fastComponentWeight: number;
 };
 
 const PROFILES = {
-  doldrums: { speedAmplitude: 0.70, directionAmplitudeDeg: 55, driftKn: -3 },
-  trades: { speedAmplitude: 0.25, directionAmplitudeDeg: 12, driftKn: -7 },
-  westerlies: { speedAmplitude: 0.45, directionAmplitudeDeg: 32, driftKn: 12 },
-  monsoon: { speedAmplitude: 0.35, directionAmplitudeDeg: 22, driftKn: -4 },
-  southernOcean: { speedAmplitude: 0.35, directionAmplitudeDeg: 20, driftKn: 15 },
+  doldrums: { speedAmplitude: 0.70, directionAmplitudeDeg: 55, driftKn: -3, fastComponentWeight: 0.26 },
+  trades: { speedAmplitude: 0.25, directionAmplitudeDeg: 12, driftKn: -7, fastComponentWeight: 0.30 },
+  westerlies: { speedAmplitude: 0.45, directionAmplitudeDeg: 32, driftKn: 12, fastComponentWeight: 0.14 },
+  monsoon: { speedAmplitude: 0.35, directionAmplitudeDeg: 22, driftKn: -4, fastComponentWeight: 0.26 },
+  southernOcean: { speedAmplitude: 0.35, directionAmplitudeDeg: 20, driftKn: 15, fastComponentWeight: 0.12 },
 } as const satisfies Record<string, VariationProfile>;
 
 function hashUnit(value: string) {
@@ -77,6 +81,7 @@ function blendProfile(a: VariationProfile, b: VariationProfile, t: number): Vari
     speedAmplitude: lerp(a.speedAmplitude, b.speedAmplitude, amount),
     directionAmplitudeDeg: lerp(a.directionAmplitudeDeg, b.directionAmplitudeDeg, amount),
     driftKn: lerp(a.driftKn, b.driftKn, amount),
+    fastComponentWeight: lerp(a.fastComponentWeight, b.fastComponentWeight, amount),
   };
 }
 
@@ -161,13 +166,19 @@ function spatialNoise(channel: string, position: GeoPosition, cellDeg: number) {
 /**
  * Broad moving synoptic anomalies.
  *
- * Rather than oscillating in place, two deterministic spatial fields are
- * advected across the ocean. A primary ~1,000 nm field carries most of the
- * signal; a broader secondary field moves at a different speed so anomalies
- * gradually change shape as they pass. This gives recognisable multi-day weather
- * evolution without simulating pressure equations or fronts.
+ * Rather than oscillating in place, three deterministic spatial fields are
+ * advected across the ocean. Broad primary/secondary fields define the synoptic
+ * pattern, while a weaker ~350 nm field moves faster. Tropical regimes assign
+ * more weight to that fast component so trades and monsoons visibly evolve over
+ * several days without increasing their overall amplitude envelope.
  */
-function synopticNoise(channel: string, position: GeoPosition, time: Date, driftKn: number) {
+function synopticNoise(
+  channel: string,
+  position: GeoPosition,
+  time: Date,
+  driftKn: number,
+  fastComponentWeight: number,
+) {
   const days = (time.getTime() - WEATHER_EPOCH_MS) / DAY_MS;
 
   const primary: GeoPosition = {
@@ -178,10 +189,18 @@ function synopticNoise(channel: string, position: GeoPosition, time: Date, drift
     lat: position.lat,
     lon: advectedLongitude(position, days, driftKn * 0.55),
   };
+  const fast: GeoPosition = {
+    lat: position.lat,
+    lon: advectedLongitude(position, days, driftKn * FAST_DRIFT_MULTIPLIER),
+  };
+
+  const fastWeight = Math.max(0, Math.min(0.35, fastComponentWeight));
+  const broadWeight = 1 - fastWeight;
 
   return (
-    spatialNoise(`${channel}:primary-v3`, primary, PRIMARY_CELL_DEG) * 0.72
-    + spatialNoise(`${channel}:secondary-v3`, secondary, SECONDARY_CELL_DEG) * 0.28
+    spatialNoise(`${channel}:primary-v4`, primary, PRIMARY_CELL_DEG) * broadWeight * 0.72
+    + spatialNoise(`${channel}:secondary-v4`, secondary, SECONDARY_CELL_DEG) * broadWeight * 0.28
+    + spatialNoise(`${channel}:fast-v4`, fast, FAST_CELL_DEG) * fastWeight
   );
 }
 
@@ -200,8 +219,8 @@ export type DailyWindVariation = {
  */
 export function dailyWindVariationAt(position: GeoPosition, time: Date): DailyWindVariation {
   const profile = variationProfileAt(position);
-  const speedNoise = synopticNoise('daily-wind-speed', position, time, profile.driftKn);
-  const directionNoise = synopticNoise('daily-wind-direction', position, time, profile.driftKn);
+  const speedNoise = synopticNoise('daily-wind-speed', position, time, profile.driftKn, profile.fastComponentWeight);
+  const directionNoise = synopticNoise('daily-wind-direction', position, time, profile.driftKn, profile.fastComponentWeight);
 
   return {
     speedFactor: 1 + speedNoise * profile.speedAmplitude,

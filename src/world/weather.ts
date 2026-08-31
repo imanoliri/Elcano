@@ -1,5 +1,17 @@
 import type { EastNorthVector, GeoPosition } from './coordinates';
 
+export type WeatherFront = {
+  kind: 'cold' | 'warm';
+  /** Bearing from the low centre along the front, using nautical degrees. */
+  bearingDeg: number;
+  lengthNm: number;
+  widthNm: number;
+  /** Maximum clockwise/counter-clockwise bend applied to the storm wind. */
+  turnDeg: number;
+  /** Maximum local storm-wind speed multiplier inside the frontal band. */
+  speedMultiplier: number;
+};
+
 export type WeatherSystem = {
   id: string;
   kind: 'storm';
@@ -9,10 +21,13 @@ export type WeatherSystem = {
   strengthKn: number;
   /** Counter-clockwise in the northern hemisphere, clockwise in the southern. */
   rotation: 1 | -1;
+  /** Simplified deterministic fronts are attached only to extratropical lows. */
+  fronts?: WeatherFront[];
 };
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
+const DEG = Math.PI / 180;
 function hash(value: string) {
   let state = 2166136261;
   for (const character of value) { state ^= character.charCodeAt(0); state = Math.imul(state, 16777619); }
@@ -33,6 +48,54 @@ type StormTemplate = {
   galeThreshold: number;
   strengthScale: number;
 };
+
+const FRONTAL_TRACKS = new Set([
+  'north-atlantic',
+  'south-atlantic',
+  'north-pacific-west',
+  'north-pacific-east',
+  'southern-ocean-west',
+  'southern-ocean-pacific',
+]);
+
+function normalizeBearing(value: number) {
+  return (value % 360 + 360) % 360;
+}
+
+function trackBearingDeg(template: StormTemplate) {
+  const east = template.eastPerHour * Math.cos(template.lat * DEG);
+  return normalizeBearing(Math.atan2(east, template.northPerHour) / DEG);
+}
+
+function frontsFor(template: StormTemplate, seed: string, radiusNm: number): WeatherFront[] | undefined {
+  if (!FRONTAL_TRACKS.has(template.id)) return undefined;
+
+  const hemisphere = template.lat >= 0 ? 1 : -1;
+  const motionBearing = trackBearingDeg(template);
+  const jitter = (hash(`${seed}:front-bearing`) - .5) * 12;
+  const sizeScale = Math.max(.7, Math.min(1.35, radiusNm / 360));
+  const coldLengthFactor = 1.7 + hash(`${seed}:cold-front-length`) * .5;
+  const warmLengthFactor = 1.25 + hash(`${seed}:warm-front-length`) * .4;
+
+  return [
+    {
+      kind: 'cold',
+      bearingDeg: normalizeBearing(motionBearing + hemisphere * (135 + jitter)),
+      lengthNm: radiusNm * coldLengthFactor,
+      widthNm: 52 * sizeScale,
+      turnDeg: 48,
+      speedMultiplier: 1.18,
+    },
+    {
+      kind: 'warm',
+      bearingDeg: normalizeBearing(motionBearing - hemisphere * (28 - jitter * .35)),
+      lengthNm: radiusNm * warmLengthFactor,
+      widthNm: 78 * sizeScale,
+      turnDeg: 24,
+      speedMultiplier: 1.08,
+    },
+  ];
+}
 
 function stormFromTemplate(template: StormTemplate, start: number, progressHours: number, lifecycle = 1): WeatherSystem {
   const seed = `${template.id}:${start}`;
@@ -57,6 +120,7 @@ function stormFromTemplate(template: StormTemplate, start: number, progressHours
     radiusNm,
     strengthKn: baseStrengthKn * template.strengthScale * lifecycle,
     rotation: template.lat >= 0 ? 1 : -1,
+    fronts: frontsFor(template, seed, radiusNm),
   };
 }
 
@@ -131,20 +195,101 @@ export function globalWeatherSystems(time: Date): WeatherSystem[] {
   return templates.flatMap((template) => stormTrackSystems(template, time));
 }
 
+function rotateToward(vector: EastNorthVector, clockwiseDeg: number): EastNorthVector {
+  const angle = clockwiseDeg * DEG;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: vector.x * cos + vector.y * sin,
+    y: -vector.x * sin + vector.y * cos,
+  };
+}
+
+function frontBandFactor(front: WeatherFront, systemRadiusNm: number, east: number, north: number) {
+  const bearing = front.bearingDeg * DEG;
+  const alongEast = Math.sin(bearing);
+  const alongNorth = Math.cos(bearing);
+  const along = east * alongEast + north * alongNorth;
+  const cross = east * alongNorth - north * alongEast;
+  const start = systemRadiusNm * .12;
+  if (along <= start || along >= front.lengthNm) return 0;
+
+  const crossFactor = Math.max(0, 1 - Math.abs(cross) / front.widthNm);
+  if (crossFactor <= 0) return 0;
+  const progress = Math.max(0, Math.min(1, (along - start) / Math.max(1, front.lengthNm - start)));
+  const alongFactor = Math.sqrt(Math.max(0, Math.sin(Math.PI * progress)));
+  return crossFactor * alongFactor;
+}
+
+function applyFronts(system: WeatherSystem, east: number, north: number, wind: EastNorthVector): EastNorthVector {
+  let adjusted = wind;
+  for (const front of system.fronts ?? []) {
+    const factor = frontBandFactor(front, system.radiusNm, east, north);
+    if (factor <= 0) continue;
+    const turn = (front.kind === 'cold' ? system.rotation : -system.rotation) * front.turnDeg * factor;
+    const rotated = rotateToward(adjusted, turn);
+    const speedMultiplier = 1 + (front.speedMultiplier - 1) * factor;
+    adjusted = { x: rotated.x * speedMultiplier, y: rotated.y * speedMultiplier };
+  }
+  return adjusted;
+}
+
+function frontExtensionInfluence(
+  system: WeatherSystem,
+  east: number,
+  north: number,
+  distance: number,
+  tangent: EastNorthVector,
+): EastNorthVector {
+  if (distance < system.radiusNm) return { x: 0, y: 0 };
+
+  return (system.fronts ?? []).reduce((total, front) => {
+    const factor = frontBandFactor(front, system.radiusNm, east, north);
+    if (factor <= 0) return total;
+
+    const turn = (front.kind === 'cold' ? system.rotation : -system.rotation) * front.turnDeg * factor;
+    const direction = rotateToward(tangent, turn);
+    // Beyond the circular low, fronts retain a weaker but meaningful wind-shift
+    // signal. Cold fronts are sharper; warm fronts are broader and gentler.
+    const extensionScale = front.kind === 'cold' ? .32 : .22;
+    const strength = system.strengthKn * extensionScale * factor;
+    return {
+      x: total.x + direction.x * strength,
+      y: total.y + direction.y * strength,
+    };
+  }, { x: 0, y: 0 });
+}
+
 function influence(system: WeatherSystem, position: GeoPosition): EastNorthVector {
   const north = (position.lat - system.center.lat) * 60;
   const east = (position.lon - system.center.lon) * 60 * Math.max(.2, Math.cos(position.lat * Math.PI / 180));
   const distance = Math.hypot(east, north);
-  if (distance >= system.radiusNm || distance < 0.001) return { x: 0, y: 0 };
-  const normalizedDistance = distance / system.radiusNm;
-  // Calm at the low's centre; wind builds gradually to a broad peak ring at
-  // 70% of the radius, then drops quickly at the system's outer boundary.
-  const falloff = normalizedDistance <= .7
-    ? normalizedDistance / .7
-    : (1 - normalizedDistance) / .3;
-  const tangentEast = -north / distance * system.rotation;
-  const tangentNorth = east / distance * system.rotation;
-  return { x: tangentEast * system.strengthKn * falloff, y: tangentNorth * system.strengthKn * falloff };
+  if (distance < 0.001) return { x: 0, y: 0 };
+
+  const tangent = {
+    x: -north / distance * system.rotation,
+    y: east / distance * system.rotation,
+  };
+
+  let circularWind: EastNorthVector = { x: 0, y: 0 };
+  if (distance < system.radiusNm) {
+    const normalizedDistance = distance / system.radiusNm;
+    // Calm at the low's centre; wind builds gradually to a broad peak ring at
+    // 70% of the radius, then drops quickly at the system's outer boundary.
+    const falloff = normalizedDistance <= .7
+      ? normalizedDistance / .7
+      : (1 - normalizedDistance) / .3;
+    circularWind = applyFronts(system, east, north, {
+      x: tangent.x * system.strengthKn * falloff,
+      y: tangent.y * system.strengthKn * falloff,
+    });
+  }
+
+  const extension = frontExtensionInfluence(system, east, north, distance, tangent);
+  return {
+    x: circularWind.x + extension.x,
+    y: circularWind.y + extension.y,
+  };
 }
 
 export function weatherWindInfluenceAt(position: GeoPosition, time: Date): EastNorthVector {
