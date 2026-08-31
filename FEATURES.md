@@ -144,6 +144,35 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - An off-screen target indicator points toward the destination when it is outside the visible chart.
 - The interface is designed for both desktop and phone-sized touch screens.
 
+## Voyage encounters and historical decisions
+
+- Voyages use deterministic, location-aware encounter fields rather than a global random-event list. North Atlantic fog, southern-ocean gales, Indian Ocean Portuguese traffic, western-Pacific coastal contact, and Mediterranean traffic are each tied to relevant map regions.
+- The engine combines spatial zones with current wind strength, mission time, an encounter budget and a deterministic mission seed, so a restarted mission reproduces its encounter sequence.
+- First-pass encounters are paused decision cards: seamanship problems such as fog, squalls, leaking casks and rigging strain; and contact situations such as other vessels, Portuguese sails, and cautious coastal trade.
+- Contact with coastal peoples is never automatically hostile. The first choices are distance, cautious trade, or withdrawal; combat remains a later extension once the soldiers and arms systems have live effects.
+- Each mission also receives a fixed expedition-council decision. These authored historical decision points remain distinct from dynamic zone encounters.
+
+### Encounter atlas
+
+| Region | Dynamic encounters | Notes |
+|---|---|---|
+| North Atlantic | Fog, squalls, passing vessels | Covers the Bay of Biscay, whaling route, Grand Banks and Vinland waters. |
+| Atlantic trade-wind belt | Squalls, leaking casks, passing vessels | Covers Canaries, tropical Atlantic and Brazil crossings. |
+| Cape and Southern Ocean | Gales, rigging strain | Covers Patagonia, the Cape of Good Hope and the stormier southern passages. |
+| Indian Ocean | Squalls, Portuguese sails, passing vessels | Covers the Moluccas–Timor–Cape route and Indian Ocean campaigns. |
+| Western Pacific | Squalls, cautious coastal contact, passing vessels | Covers the Philippines, Marianas, Spice Islands and East Asian routes. |
+| South Pacific | Gales, squalls, leaking casks | Covers the long Magellan/Loaísa Pacific crossings. |
+| North Pacific | Fog, gales, passing vessels | Covers Urdaneta's westerly return and North Pacific passages. |
+| Mediterranean | Coastal contact, squalls, passing vessels | Covers the Classical Mediterranean campaign. |
+
+The card is selected deterministically from the mission, zone and elapsed voyage period. Strong winds increase the chance of a zone encounter. All missions additionally offer one fixed, mid-voyage expedition-council decision.
+
+Storms now carry visible cloud cover and deterministic fog banks form around the Grand Banks, North Pacific, Patagonia and North Sea. `☁️` and `🌫️` chart markers identify their centres; entering cloud or fog reduces the radius in which the ship reveals new chart information, with a local mist veil showing the reduced visibility.
+
+Fog leaves known land and charted geography visible, but sharply reduces **live observation**: only wind/current vectors, storm centres, cloud/fog markers and moving vessels inside the current visibility radius are shown. Fog banks render as drifting, overlapping rounded lobes rather than square tiles.
+
+Deterministic world vessels now make contact visible before it becomes an interaction: `🛶` marks regional coastal canoes and `⛵` marks merchants or Portuguese ships on historically plausible routes. They move on repeatable twelve-day route loops and trigger a contact choice only within 35 nm. Canoes offer distance or cautious gifts/local knowledge; Portuguese ships offer avoidance or peaceful signalling; merchants offer distance or exchanged news. Contact is never automatically hostile.
+
 ## Technical gameplay foundations
 
 - The browser game is static-first and deployable on Netlify without a backend.

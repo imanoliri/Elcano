@@ -323,6 +323,12 @@ Schema migrations should be introduced once saves are expected to survive releas
 
 The current expedition persistence adapter is browser-local and versioned. It stores only player knowledge (the existing exploration-cell keys) and completed-voyage summaries; it never stores hidden environmental truth or arbitrary live simulation state. Storage failures are non-fatal and save writes are debounced.
 
+## Encounter fields and historical decisions
+
+`src/voyage-encounters.ts` keeps dynamic encounters out of rendering. Its compact geographic zones contain tags and base intensity; the application samples ship position, voyage time and wind to select a plausible event. A deterministic hash of mission, zone and time period preserves replayability.
+
+Zones are world possibility, not player knowledge: the chart only receives a fired event. Fixed historical decisions belong to the campaign layer and remain distinct from dynamic zone events. Future chart knowledge may reveal qualitative warnings—frequent fog, patrol route, dangerous weather—without exposing exact probabilities.
+
 ## Optional backend
 
 A backend may later provide:

@@ -15,6 +15,7 @@ import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates'
 import { drawLand } from './world/geography';
 import {
   EXPLORATION_CELL,
+  EXPLORATION_RADIUS,
   isWorldPointExplored,
   revealAroundWorldPoint,
   restoreExploration,
@@ -24,8 +25,11 @@ import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedi
 import { shipPresetFromId } from './ship-selection';
 import { actionForKeyboardEvent } from './keyboard-controls';
 import { setStraitNavigationActive } from './world/environment';
+import { visibilityAt, visibilityClouds } from './world/weather';
+import { vesselInteractionDue, worldVesselsAt } from './world/vessels';
 import { installStraitNavigationUi } from './strait-navigation-ui';
 import { loadoutFromParams, suppliesFromLoadout } from './provisioning';
+import { applyEncounterChoice, encounterDue, historicalDecisionDue, type VoyageEncounter } from './voyage-encounters';
 
 const activeMission = missionFromUrl();
 const isStraitMission = Boolean(activeMission.isStraitPassage);
@@ -119,6 +123,10 @@ app.innerHTML = `
       <div class="modal-backdrop"></div>
       <section class="modal-card"><button id="close-modal" class="modal-close" aria-label="Close instructions">×</button><p id="mission-meta" class="eyebrow">${activeMission.from} → ${activeMission.to} · ${activeMission.date}</p><h1 id="modal-title">${activeMission.title}</h1><p id="modal-text"></p><div class="legend-row"><span><i class="legend-line wind-line"></i> Wind</span><span><i class="legend-line current-line"></i> Current</span><span><i class="legend-dot"></i> ${activeMission.to}</span></div><p id="mission-note" class="modal-note">${activeMission.historicalNote}</p><button id="start-mission" class="primary-button">Take the helm</button></section>
     </div>
+    <div id="encounter-modal" class="modal encounter-modal" role="dialog" aria-modal="true" aria-labelledby="encounter-title">
+      <div class="modal-backdrop"></div>
+      <section class="modal-card"><p id="encounter-kind" class="eyebrow">Voyage encounter</p><h1 id="encounter-title"></h1><p id="encounter-text"></p><div id="encounter-choices" class="encounter-choices"></div><p id="encounter-result" class="modal-note" hidden></p><button id="encounter-continue" class="primary-button" hidden>Continue voyage</button></section>
+    </div>
     <div id="toast" class="toast" role="status"></div>
   </main>
 `;
@@ -131,6 +139,13 @@ const wheel = document.querySelector<HTMLElement>('#wheel')!;
 const modal = document.querySelector<HTMLElement>('#modal')!;
 const modalTitle = document.querySelector<HTMLElement>('#modal-title')!;
 const modalText = document.querySelector<HTMLElement>('#modal-text')!;
+const encounterModal = document.querySelector<HTMLElement>('#encounter-modal')!;
+const encounterTitle = document.querySelector<HTMLElement>('#encounter-title')!;
+const encounterText = document.querySelector<HTMLElement>('#encounter-text')!;
+const encounterKind = document.querySelector<HTMLElement>('#encounter-kind')!;
+const encounterChoices = document.querySelector<HTMLElement>('#encounter-choices')!;
+const encounterResult = document.querySelector<HTMLElement>('#encounter-result')!;
+const encounterContinue = document.querySelector<HTMLButtonElement>('#encounter-continue')!;
 const missionTitle = document.querySelector<HTMLElement>('#mission-title')!;
 const toast = document.querySelector<HTMLElement>('#toast')!;
 const timeButtons = [...document.querySelectorAll<HTMLButtonElement>('.time-button')];
@@ -148,6 +163,8 @@ let navigationMode: 'ocean' | 'maneuvering' = 'ocean';
 let maneuveringDriveEnabled = true;
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
+const firedEncounters = new Set<string>();
+let encounterOpen = false;
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
 installStraitNavigationUi(() => state, isStraitMission);
 
@@ -226,8 +243,18 @@ function openHelp() {
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); window.dispatchEvent(new CustomEvent('elcano:mission-reset')); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
+  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; firedEncounters.clear(); encounterOpen = false; encounterModal.classList.remove('open'); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); window.dispatchEvent(new CustomEvent('elcano:mission-reset')); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
 }
+
+function openEncounter(key: string, encounter: VoyageEncounter) {
+  firedEncounters.add(key); encounterOpen = true; setTimeScale(0);
+  encounterKind.textContent = encounter.kind === 'history' ? 'Historical decision' : encounter.kind === 'contact' ? 'Contact sighting' : 'Seamanship encounter';
+  encounterTitle.textContent = encounter.title; encounterText.textContent = encounter.text; encounterResult.hidden = true; encounterContinue.hidden = true;
+  encounterChoices.innerHTML = '';
+  encounter.choices.forEach((choice) => { const button = document.createElement('button'); button.className = 'encounter-choice'; button.textContent = choice.label; button.addEventListener('click', () => { state = { ...state, expedition: applyEncounterChoice(state.expedition, choice) }; encounterChoices.querySelectorAll('button').forEach((item) => item.disabled = true); encounterResult.textContent = choice.result; encounterResult.hidden = false; encounterContinue.hidden = false; updateControlReadouts(); }); encounterChoices.append(button); });
+  encounterModal.classList.add('open');
+}
+encounterContinue.addEventListener('click', () => { encounterOpen = false; encounterModal.classList.remove('open'); });
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
   setText('rudder-readout', r === 0 ? side : `${Math.abs(r)}° ${side}`); setText('sail-readout', `${sails.value}%`); wheel.style.transform = `rotate(${r * 3.5}deg)`;
@@ -239,6 +266,10 @@ function updateControlReadouts() {
 
 function revealAroundShip() {
   revealAroundWorldPoint(project(state.ship.position));
+}
+function observationRadius() {
+  const visibility = visibilityAt(state.ship.position, state.time);
+  return visibility >= .94 ? Number.POSITIVE_INFINITY : Math.max(5, EXPLORATION_RADIUS * .5 * Math.pow(visibility, 2));
 }
 
 function arrow(x: number, y: number, vector: Vec2, length: number) {
@@ -254,8 +285,9 @@ function drawGrid() {
 }
 
 function drawEnvironment() {
+  const ship = project(state.ship.position); const liveRadius = observationRadius();
   for (let lat = -60; lat <= 60; lat += 10) for (let lon = -170; lon <= 170; lon += 15) {
-    const p = project({ lat, lon }); if (!isWorldPointExplored(p)) continue;
+    const p = project({ lat, lon }); if (!isWorldPointExplored(p) || Math.hypot(p.x - ship.x, p.y - ship.y) > liveRadius) continue;
     const wind = windAt({ lat, lon }, state.time); const current = currentAt({ lat, lon }, state.time);
     ctx.strokeStyle = 'rgba(255,255,255,.34)'; arrow(p.x, p.y, wind, 14); ctx.strokeStyle = 'rgba(74,213,255,.75)'; arrow(p.x + 5, p.y + 5, current, 10);
   }
@@ -266,10 +298,46 @@ function drawFog() {
   for (let x = 0; x < canvas.width; x += EXPLORATION_CELL) for (let y = 0; y < canvas.height; y += EXPLORATION_CELL) if (!isWorldPointExplored({ x, y })) ctx.fillRect(x, y, EXPLORATION_CELL + 1, EXPLORATION_CELL + 1);
 }
 
+function drawVisibilityClouds() {
+  const clouds = visibilityClouds(state.time);
+  const observationShip = project(state.ship.position); const liveRadius = observationRadius();
+  for (const cloud of clouds) {
+    const point = project(cloud.center);
+    if (!isWorldPointExplored(point) || Math.hypot(point.x - observationShip.x, point.y - observationShip.y) > liveRadius) continue;
+    ctx.font = cloud.kind === 'fog' ? '18px system-ui' : '20px system-ui';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.globalAlpha = .82;
+    if (cloud.kind === 'fog') [[0,0],[13,-5],[-13,5],[5,9],[-6,-10]].forEach(([x,y]) => ctx.fillText('☁️', point.x + x, point.y + y));
+    else ctx.fillText('☁️', point.x, point.y);
+    ctx.globalAlpha = 1;
+  }
+  const visibility = visibilityAt(state.ship.position, state.time);
+  if (visibility >= .94) return;
+  const veilShip = project(state.ship.position);
+  const radius = 26 + visibility * 82;
+  const veil = ctx.createRadialGradient(veilShip.x, veilShip.y, radius * .35, veilShip.x, veilShip.y, radius * 2.1);
+  veil.addColorStop(0, `rgba(210,224,228,${(.38 * (1 - visibility)).toFixed(2)})`);
+  veil.addColorStop(1, 'rgba(210,224,228,0)');
+  ctx.fillStyle = veil; ctx.fillRect(veilShip.x - radius * 2.2, veilShip.y - radius * 2.2, radius * 4.4, radius * 4.4);
+}
+
+function drawWorldVessels() {
+  const ship = project(state.ship.position); const liveRadius = observationRadius();
+  for (const vessel of worldVesselsAt(state.time)) {
+    const point = project(vessel.position); if (!isWorldPointExplored(point) || Math.hypot(point.x - ship.x, point.y - ship.y) > liveRadius) continue;
+    ctx.save(); ctx.globalAlpha = 1; ctx.translate(point.x, point.y); ctx.rotate((vessel.headingDeg - 90) * Math.PI / 180); ctx.scale(1.45, 1.45);
+    ctx.fillStyle = vessel.kind === 'canoe' ? '#d4a46c' : '#f1dfb0'; ctx.strokeStyle = '#17202a'; ctx.lineWidth = 1.25;
+    ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(3, -4); ctx.lineTo(-8, -3); ctx.lineTo(-10, 0); ctx.lineTo(-8, 3); ctx.lineTo(3, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (vessel.kind === 'canoe') { ctx.strokeStyle = '#ead098'; ctx.beginPath(); ctx.moveTo(-6, -5); ctx.lineTo(5, 5); ctx.moveTo(-6, 5); ctx.lineTo(5, -5); ctx.stroke(); }
+    else { ctx.strokeStyle = '#ead098'; ctx.beginPath(); ctx.moveTo(-2, -7); ctx.lineTo(-2, 3); ctx.moveTo(3, -6); ctx.lineTo(3, 3); ctx.stroke(); ctx.fillStyle = '#f7f0d7'; ctx.fillRect(-1, -6, 5, 4); ctx.fillRect(4, -5, 4, 3); if (vessel.kind === 'portuguese') { ctx.fillStyle = '#bc3f3f'; ctx.fillRect(2, -8, 5, 2); } }
+    ctx.fillStyle = '#f4efe6'; ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(7, -3); ctx.lineTo(7, 3); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog();
+  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog(); drawVisibilityClouds(); drawWorldVessels();
 
   const target = project(state.destination);
   const ship = project(state.ship.position);
@@ -279,6 +347,7 @@ function draw() {
   }));
   updateInstruments();
   window.dispatchEvent(new CustomEvent('elcano:simulation-time', { detail: state.time.toISOString() }));
+  window.dispatchEvent(new CustomEvent('elcano:observation-change', { detail: { position: state.ship.position, radius: observationRadius() } }));
 
   if (!reached && distanceToDestination(state) < 20) {
     reached = true;
@@ -339,7 +408,7 @@ function updateTutorial() {
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, .1); last = now;
-  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
+  if (timeScale > 0 && !reached && !encounterOpen) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); const progress = Math.max(0, Math.min(1, 1 - distanceToDestination(state) / START_DISTANCE)); const due = vesselInteractionDue(activeMission.id, state.ship.position, state.time, firedEncounters) ?? encounterDue(activeMission.id, state.ship.position, state.time, state.elapsedHours, firedEncounters) ?? historicalDecisionDue(activeMission.id, progress, firedEncounters); if (due) openEncounter(due.key, due.encounter); }
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 
