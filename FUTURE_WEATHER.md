@@ -9,7 +9,7 @@ Implemented foundation: ordinary background wind already varies deterministicall
 3. **Southern Ocean / Cape Horn belt** — make the Antarctic Circumpolar Current an explicit, persistent eastbound force alongside fast mid-latitude lows.
 4. **Strait of Magellan local water** — tidal currents, channel jets, wind funneling and sheltered anchoring windows.
 5. **Named current corridors** — playable Gulf Stream, Kuroshio, Agulhas, Brazil and East Australian Current corridors.
-6. [x] **Weather fronts** — extratropical lows now carry deterministic warm and cold frontal bands aligned to their track. The bands locally bend and strengthen the low's wind field while tropical cyclones retain the simpler circular model. Later work may add occlusion, front age, and more explicit front visualization.
+6. [x] **Weather fronts** — extratropical lows now carry deterministic warm and cold frontal bands aligned to their track. Cold fronts extend about 1.7–2.2× the parent radius and warm fronts about 1.25–1.65×, with weaker frontal wind-shift influence continuing outside the circular low. Tropical cyclones retain the simpler circular model. Later work may add occlusion, front age, and more explicit front visualization.
 7. **Pacific climate modes** — later El Niño / La Niña voyage-scale changes to Pacific winds and currents.
 
 Do not add waves, rain, visibility, damage, live weather, or opaque randomness before these navigation systems are clear and fun.

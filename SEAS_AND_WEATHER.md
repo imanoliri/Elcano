@@ -120,8 +120,9 @@ The displayed local wind is the vector sum of the background field and that rota
 
 Extratropical lows in the North and South Atlantic, North Pacific and Southern Ocean carry deterministic cold and warm fronts. The fronts move with the parent low and are oriented from its track and hemisphere, with a small seeded variation so consecutive systems are not geometrically identical.
 
-- The **cold front** is narrower and produces the larger wind-direction change and modest local strengthening.
-- The **warm front** is broader and produces a gentler wind-direction change.
+- The **cold front** is narrower, extends roughly **1.7–2.2× the parent low radius**, and produces the larger wind-direction change and modest local strengthening.
+- The **warm front** is broader, extends roughly **1.25–1.65× the parent low radius**, and produces a gentler wind-direction change.
+- Fronts are not clipped to the circular storm radius. Beyond the low's nominal edge they retain a weaker wind-shift influence, allowing elongated synoptic fronts to trail well away from the centre.
 - Frontal influence fades smoothly at the ends and edges of each band instead of creating a discontinuous wall.
 - Tropical cyclones and typhoons do not receive these fronts; they keep the compact rotating-wind model.
 - Fronts modify only the weather-system contribution. Monthly climatology and ordinary day-to-day wind variation remain separate layers, and the derived weather-current influence stays deliberately tiny.
