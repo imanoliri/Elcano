@@ -41,7 +41,9 @@ export function encounterDue(missionId: string, position: GeoPosition, time: Dat
   const wind = Math.hypot(...Object.values(windAt(position, time)));
   const chance = zone.intensity * (wind > 22 ? 1.35 : 1);
   if (hash(key) > chance * .38) return null;
-  const tag = zone.tags[Math.floor(hash(`${key}:tag`) * zone.tags.length)] ?? 'merchant';
+  const seamanshipTags = zone.tags.filter((tag) => !['portuguese', 'coastal-contact', 'merchant'].includes(tag));
+  if (seamanshipTags.length === 0) return null;
+  const tag = seamanshipTags[Math.floor(hash(`${key}:tag`) * seamanshipTags.length)] ?? 'squall';
   return { key, encounter: eventFor(tag, key) };
 }
 
