@@ -152,6 +152,21 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - Contact with coastal peoples is never automatically hostile. The first choices are distance, cautious trade, or withdrawal; combat remains a later extension once the soldiers and arms systems have live effects.
 - Each mission also receives a fixed expedition-council decision. These authored historical decision points remain distinct from dynamic zone encounters.
 
+### Encounter atlas
+
+| Region | Dynamic encounters | Notes |
+|---|---|---|
+| North Atlantic | Fog, squalls, passing vessels | Covers the Bay of Biscay, whaling route, Grand Banks and Vinland waters. |
+| Atlantic trade-wind belt | Squalls, leaking casks, passing vessels | Covers Canaries, tropical Atlantic and Brazil crossings. |
+| Cape and Southern Ocean | Gales, rigging strain | Covers Patagonia, the Cape of Good Hope and the stormier southern passages. |
+| Indian Ocean | Squalls, Portuguese sails, passing vessels | Covers the Moluccas–Timor–Cape route and Indian Ocean campaigns. |
+| Western Pacific | Squalls, cautious coastal contact, passing vessels | Covers the Philippines, Marianas, Spice Islands and East Asian routes. |
+| South Pacific | Gales, squalls, leaking casks | Covers the long Magellan/Loaísa Pacific crossings. |
+| North Pacific | Fog, gales, passing vessels | Covers Urdaneta's westerly return and North Pacific passages. |
+| Mediterranean | Coastal contact, squalls, passing vessels | Covers the Classical Mediterranean campaign. |
+
+The card is selected deterministically from the mission, zone and elapsed voyage period. Strong winds increase the chance of a zone encounter. All missions additionally offer one fixed, mid-voyage expedition-council decision.
+
 ## Technical gameplay foundations
 
 - The browser game is static-first and deployable on Netlify without a backend.
