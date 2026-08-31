@@ -2,7 +2,7 @@
 
 Keep these additions deterministic, data-driven and separate from rendering/UI.
 
-Implemented foundation: ordinary background wind already varies deterministically through broad, advecting synoptic anomalies. The anomalies move with regime-appropriate drift, gradually change shape through two spatial scales, remain centred on monthly climatology, and leave major extremes to explicit storms.
+Implemented foundation: ordinary background wind already varies deterministically through advecting synoptic anomalies. Broad primary/secondary fields provide the navigation-scale pattern, while a weaker faster ~350 nm component prevents tropical trade and monsoon regions from appearing static over multi-day voyages. The combined variation remains centred on monthly climatology and leaves major extremes to explicit storms.
 
 1. **Storm lifecycle and seasonal activity** — all current basin tracks now form, intensify, peak, weaken and dissipate with overlapping deterministic systems. Their count, size, cadence, and intensity mix now vary by basin and season. Later, add formation/dissipation areas and recurvature rather than fixed tracks.
 2. **Indian Ocean monsoon** — seasonal reversal of prevailing wind and major surface currents, including the Somali Current.
