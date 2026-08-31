@@ -97,6 +97,7 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 - Deterministic basin-scale weather systems move through the North and South Atlantic, North Pacific, Southern Ocean, and seasonally active tropical basins.
 - Weather systems alter local wind and apply a smaller surface-current influence while persistent large-scale currents remain in place.
 - A discovered storm centre is marked on the chart with a storm symbol. Storms have a calm centre, strongest winds in a surrounding ring, and intensity variation from ordinary lows to severe storms.
+- Mid-latitude lows now include deterministic warm and cold frontal bands. Cold fronts are narrower and create the stronger local wind shift; warm fronts are broader and gentler. Tropical cyclones keep the simpler circular model, and all frontal effects remain part of the deterministic simulation rather than the renderer.
 
 ## Coastal navigation and route planning
 

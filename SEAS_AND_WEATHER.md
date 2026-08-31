@@ -8,7 +8,7 @@ This is Elcano's gameplay reference for the world's major sailing regions. It di
 - Wind arrows in Elcano show where air travels **toward**. They are not meteorological “wind from” bearings.
 - **Ordinary day-to-day wind** is a deterministic synoptic variation around the monthly prevailing field. Broad anomalies move across the ocean, gradually change shape, and differ by wind regime instead of rerolling independent random values or oscillating in place.
 - **Storm systems** are procedural gameplay systems. Their locations, intensity and movement are deterministic from simulation time, so a given voyage remains reproducible.
-- The simplified systems below represent ordinary synoptic variability plus the large-scale storm belts and tropical-cyclone seasons. They are not a weather forecast and do not simulate fronts, pressure gradients, tides, waves, or land effects yet.
+- The simplified systems below represent ordinary synoptic variability plus the large-scale storm belts and tropical-cyclone seasons. Extratropical lows now carry simplified deterministic warm/cold frontal bands; the game still does not simulate full pressure gradients, occlusion, tides outside dedicated local systems, waves, or broad terrain effects.
 
 ## Environmental composition
 
@@ -116,9 +116,22 @@ Every procedural system still follows the same readable lifecycle: its wind cont
 
 The displayed local wind is the vector sum of the background field and that rotating contribution. Consequently, one side of a storm may have dramatically strengthened winds while the opposite side can be calm or reversed.
 
+### Simplified weather fronts
+
+Extratropical lows in the North and South Atlantic, North Pacific and Southern Ocean carry deterministic cold and warm fronts. The fronts move with the parent low and are oriented from its track and hemisphere, with a small seeded variation so consecutive systems are not geometrically identical.
+
+- The **cold front** is narrower and produces the larger wind-direction change and modest local strengthening.
+- The **warm front** is broader and produces a gentler wind-direction change.
+- Frontal influence fades smoothly at the ends and edges of each band instead of creating a discontinuous wall.
+- Tropical cyclones and typhoons do not receive these fronts; they keep the compact rotating-wind model.
+- Fronts modify only the weather-system contribution. Monthly climatology and ordinary day-to-day wind variation remain separate layers, and the derived weather-current influence stays deliberately tiny.
+
+This is a navigation abstraction rather than a pressure-field model. It is intended to make route timing and changing wind direction around mid-latitude lows more legible before later forecast/learning features expose fronts more explicitly.
+
 ## What is deliberately not modelled yet
 
-- high-pressure systems and fronts;
+- high-pressure systems and full pressure-gradient fields;
+- front occlusion, secondary cyclogenesis, and dynamically evolving front topology;
 - storm formation, dissipation and recurvature based on live atmospheric physics;
 - tides, coastal jets and terrain-driven wind outside the dedicated Strait of Magellan local-navigation layer;
 
