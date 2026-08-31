@@ -167,6 +167,8 @@ Each campaign is fully mission-based, with date/context, briefing, completion co
 
 The card is selected deterministically from the mission, zone and elapsed voyage period. Strong winds increase the chance of a zone encounter. All missions additionally offer one fixed, mid-voyage expedition-council decision.
 
+Storms now carry visible cloud cover and deterministic fog banks form around the Grand Banks, North Pacific, Patagonia and North Sea. `☁️` and `🌫️` chart markers identify their centres; entering cloud or fog reduces the radius in which the ship reveals new chart information, with a local mist veil showing the reduced visibility.
+
 ## Technical gameplay foundations
 
 - The browser game is static-first and deployable on Netlify without a backend.
