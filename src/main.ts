@@ -226,12 +226,6 @@ function revealAroundShip() {
   revealAroundWorldPoint(project(state.ship.position));
 }
 
-function arrow(x: number, y: number, vector: Vec2, length: number) {
-  const mag = Math.hypot(vector.x, vector.y) || 1; const ex = x + vector.x / mag * length; const ey = y - vector.y / mag * length;
-  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
-  const a = Math.atan2(ey - y, ex - x); ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6 * Math.cos(a - .5), ey - 6 * Math.sin(a - .5)); ctx.moveTo(ex, ey); ctx.lineTo(ex - 6 * Math.cos(a + .5), ey - 6 * Math.sin(a + .5)); ctx.stroke();
-}
-
 function drawGrid() {
   ctx.strokeStyle = 'rgba(255,255,255,.075)'; ctx.lineWidth = 1;
   for (let lon = -180; lon <= 180; lon += 20) { const a = project({ lat: -80, lon }); const b = project({ lat: 80, lon }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
