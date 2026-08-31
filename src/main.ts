@@ -267,7 +267,10 @@ function updateControlReadouts() {
 function revealAroundShip() {
   revealAroundWorldPoint(project(state.ship.position));
 }
-function observationRadius() { return Math.max(5, EXPLORATION_RADIUS * .5 * Math.pow(visibilityAt(state.ship.position, state.time), 2)); }
+function observationRadius() {
+  const visibility = visibilityAt(state.ship.position, state.time);
+  return visibility >= .94 ? Number.POSITIVE_INFINITY : Math.max(5, EXPLORATION_RADIUS * .5 * Math.pow(visibility, 2));
+}
 
 function arrow(x: number, y: number, vector: Vec2, length: number) {
   const mag = Math.hypot(vector.x, vector.y) || 1; const ex = x + vector.x / mag * length; const ey = y - vector.y / mag * length;
