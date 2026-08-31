@@ -326,5 +326,5 @@ export function visibilityAt(position: GeoPosition, time: Date) {
     if (distance >= cloud.radiusNm) continue;
     visibility *= 1 - cloud.opacity * (1 - distance / cloud.radiusNm);
   }
-  return Math.max(.18, visibility);
+  return Math.max(.1, visibility);
 }
