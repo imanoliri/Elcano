@@ -85,9 +85,11 @@ export function enduranceDays(loadout: ProvisioningLoadout) {
 export function loadoutFromParams(params: URLSearchParams, shipId: string): ProvisioningLoadout {
   const defaults = { ...profileForShip(shipId).defaultLoadout };
   (Object.keys(CARGO_LABELS) as CargoKind[]).forEach((kind) => {
+    if (!params.has(kind)) return;
     const value = Number(params.get(kind)); if (Number.isFinite(value) && value >= 0) defaults[kind] = value;
   });
   (['sailors', 'soldiers'] as const).forEach((kind) => {
+    if (!params.has(kind)) return;
     const value = Number(params.get(kind)); if (Number.isInteger(value) && value >= 0) defaults[kind] = value;
   });
   return defaults;
