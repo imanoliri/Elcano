@@ -26,6 +26,7 @@ import { shipPresetFromId } from './ship-selection';
 import { actionForKeyboardEvent } from './keyboard-controls';
 import { setStraitNavigationActive } from './world/environment';
 import { visibilityAt, visibilityClouds } from './world/weather';
+import { vesselInteractionDue, worldVesselsAt } from './world/vessels';
 import { installStraitNavigationUi } from './strait-navigation-ui';
 import { loadoutFromParams, suppliesFromLoadout } from './provisioning';
 import { applyEncounterChoice, encounterDue, historicalDecisionDue, type VoyageEncounter } from './voyage-encounters';
@@ -311,10 +312,17 @@ function drawVisibilityClouds() {
   ctx.fillStyle = veil; ctx.fillRect(ship.x - radius * 2.2, ship.y - radius * 2.2, radius * 4.4, radius * 4.4);
 }
 
+function drawWorldVessels() {
+  for (const vessel of worldVesselsAt(state.time)) {
+    const point = project(vessel.position); if (!isWorldPointExplored(point)) continue;
+    ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(vessel.headingDeg * Math.PI / 180); ctx.font = '18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(vessel.kind === 'canoe' ? '🛶' : '⛵', 0, 0); ctx.restore();
+  }
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog(); drawVisibilityClouds();
+  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog(); drawVisibilityClouds(); drawWorldVessels();
 
   const target = project(state.destination);
   const ship = project(state.ship.position);
@@ -384,7 +392,7 @@ function updateTutorial() {
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, .1); last = now;
-  if (timeScale > 0 && !reached && !encounterOpen) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); const progress = Math.max(0, Math.min(1, 1 - distanceToDestination(state) / START_DISTANCE)); const due = encounterDue(activeMission.id, state.ship.position, state.time, state.elapsedHours, firedEncounters) ?? historicalDecisionDue(activeMission.id, progress, firedEncounters); if (due) openEncounter(due.key, due.encounter); }
+  if (timeScale > 0 && !reached && !encounterOpen) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); const progress = Math.max(0, Math.min(1, 1 - distanceToDestination(state) / START_DISTANCE)); const due = vesselInteractionDue(activeMission.id, state.ship.position, state.time, firedEncounters) ?? encounterDue(activeMission.id, state.ship.position, state.time, state.elapsedHours, firedEncounters) ?? historicalDecisionDue(activeMission.id, progress, firedEncounters); if (due) openEncounter(due.key, due.encounter); }
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 
