@@ -169,6 +169,8 @@ The card is selected deterministically from the mission, zone and elapsed voyage
 
 Storms now carry visible cloud cover and deterministic fog banks form around the Grand Banks, North Pacific, Patagonia and North Sea. `☁️` and `🌫️` chart markers identify their centres; entering cloud or fog reduces the radius in which the ship reveals new chart information, with a local mist veil showing the reduced visibility.
 
+Fog leaves known land and charted geography visible, but sharply reduces **live observation**: only wind/current vectors, storm centres, cloud/fog markers and moving vessels inside the current visibility radius are shown. Fog banks render as drifting, overlapping rounded lobes rather than square tiles.
+
 Deterministic world vessels now make contact visible before it becomes an interaction: `🛶` marks regional coastal canoes and `⛵` marks merchants or Portuguese ships on historically plausible routes. They move on repeatable twelve-day route loops and trigger a contact choice only within 35 nm. Canoes offer distance or cautious gifts/local knowledge; Portuguese ships offer avoidance or peaceful signalling; merchants offer distance or exchanged news. Contact is never automatically hostile.
 
 ## Technical gameplay foundations
