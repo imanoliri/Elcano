@@ -1,7 +1,7 @@
 import './environment-visualization.css';
 import { currentAt, windAt, type Vec2 } from './simulation';
 import { isWorldPointExplored } from './exploration';
-import { project, unproject } from './world/coordinates';
+import { project, unproject, type GeoPosition } from './world/coordinates';
 import { prefetchEnvironmentBounds } from './world/environment';
 import { globalWeatherSystems } from './world/environment';
 import { drawLandMask } from './world/geography';
@@ -71,6 +71,7 @@ if (ocean && shell) {
   let camera: Camera | null = null;
   let prefetchTimer = 0;
   let latestSimulationTime: Date | null = null;
+  let observation: { position: GeoPosition; radius: number } | null = null;
   const visibility: Record<FieldId, boolean> = { wind: true, current: true };
 
   function resizeOverlay() {
@@ -97,7 +98,7 @@ if (ocean && shell) {
       const { lat, lon } = storm.center;
       if (lat < visible.minLat || lat > visible.maxLat || lon < visible.minLon || lon > visible.maxLon) continue;
       const world = project(storm.center);
-      if (!isWorldPointExplored(world)) continue;
+      if (!isWorldPointExplored(world) || (observation && Math.hypot(world.x - project(observation.position).x, world.y - project(observation.position).y) > observation.radius)) continue;
       const x = value.x + world.x * value.scale;
       const y = value.y + world.y * value.scale;
       ctx.save();
@@ -186,7 +187,7 @@ if (ocean && shell) {
       for (let lon = startLon; lon <= maxLon + step * 0.25; lon += step) {
         const position = { lat, lon };
         const world = project(position);
-        if (!isWorldPointExplored(world)) continue;
+        if (!isWorldPointExplored(world) || (observation && Math.hypot(world.x - project(observation.position).x, world.y - project(observation.position).y) > observation.radius)) continue;
         const x = value.x + world.x * value.scale;
         const y = value.y + world.y * value.scale;
         drawArrow(x, y, field.vectorAt(position, time), field);
@@ -238,6 +239,7 @@ if (ocean && shell) {
     const parsed = new Date(value);
     if (!Number.isNaN(parsed.getTime())) latestSimulationTime = parsed;
   });
+  window.addEventListener('elcano:observation-change', (event) => { const value = (event as CustomEvent<{ position: GeoPosition; radius: number }>).detail; if (value) { observation = value; scheduleRender(); } });
   window.addEventListener('elcano:exploration-change', scheduleRender);
   window.addEventListener('elcano:navigation-visibility', (event) => {
     const detail = (event as CustomEvent<{ wind?: boolean; current?: boolean }>).detail;
