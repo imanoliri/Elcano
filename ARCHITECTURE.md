@@ -265,6 +265,8 @@ Camera responsibilities:
 - zoom;
 - pan;
 - viewport bounds;
+- longitude-only antimeridian wrapping;
+- latitude clamping at the poles (never vertical map mirroring);
 - off-screen indicators;
 - pointer/touch conversion from screen → world.
 

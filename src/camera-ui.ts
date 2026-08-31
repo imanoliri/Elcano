@@ -1,7 +1,7 @@
 import './camera-ui.css';
 import { missionFromUrl } from './missions';
 import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates';
-import { isPolarRow, virtualWorldPoint, visibleWorldRange } from './world-wrap';
+import { virtualWorldPoint, visibleWorldRange } from './world-wrap';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#ocean')!;
 const viewport = document.querySelector<HTMLElement>('.game-shell')!;
@@ -76,9 +76,15 @@ if (canvas && viewport) {
 
   function normalizeCamera() {
     const mapWidth = WORLD_MAP_WIDTH * scale;
-    const globeHeightPeriod = WORLD_MAP_HEIGHT * scale * 2;
+    const mapHeight = WORLD_MAP_HEIGHT * scale;
+    const { height } = viewportSize();
+
+    // Longitude repeats continuously at the antimeridian. Latitude does not:
+    // keep the viewport inside the north/south chart bounds instead of
+    // reflecting another copy of the world across each pole.
     offsetX = -positiveModulo(-offsetX, mapWidth);
-    offsetY = -positiveModulo(-offsetY, globeHeightPeriod);
+    if (mapHeight <= height) offsetY = (height - mapHeight) / 2;
+    else offsetY = Math.max(height - mapHeight, Math.min(0, offsetY));
   }
 
   function resizeWrapLayer() {
@@ -95,23 +101,12 @@ if (canvas && viewport) {
     wrapCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
-  function drawWorldTile(column: number, row: number) {
+  function drawWorldTile(column: number) {
     const dx = offsetX + column * WORLD_MAP_WIDTH * scale;
-    const dy = offsetY + row * WORLD_MAP_HEIGHT * scale;
+    const dy = offsetY;
     const dw = WORLD_MAP_WIDTH * scale;
     const dh = WORLD_MAP_HEIGHT * scale;
-
-    if (!isPolarRow(row)) {
-      wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT, dx, dy, dw, dh);
-      return;
-    }
-
-    wrapCtx.save();
-    wrapCtx.translate(dx, dy + dh);
-    wrapCtx.scale(1, -1);
-    wrapCtx.drawImage(canvas, WORLD_MAP_WIDTH / 2, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, 0, 0, dw / 2, dh);
-    wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH / 2, WORLD_MAP_HEIGHT, dw / 2, 0, dw / 2, dh);
-    wrapCtx.restore();
+    wrapCtx.drawImage(canvas, 0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT, dx, dy, dw, dh);
   }
 
   function renderWrappedWorld() {
@@ -119,10 +114,8 @@ if (canvas && viewport) {
     const { width, height } = viewportSize();
     wrapCtx.clearRect(0, 0, width, height);
     const range = visibleWorldRange(offsetX, offsetY, scale, width, height);
-    for (let row = range.minRow; row <= range.maxRow; row += 1) {
-      for (let column = range.minColumn; column <= range.maxColumn; column += 1) {
-        drawWorldTile(column, row);
-      }
+    for (let column = range.minColumn; column <= range.maxColumn; column += 1) {
+      drawWorldTile(column);
     }
   }
 
@@ -171,14 +164,12 @@ if (canvas && viewport) {
     const { width, height } = viewportSize();
     const range = visibleWorldRange(offsetX, offsetY, scale, width, height);
     let best = { x: 0, y: 0, distance: Infinity };
-    for (let row = range.minRow - 1; row <= range.maxRow + 1; row += 1) {
-      for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
-        const virtual = virtualWorldPoint(point, column, row);
-        const x = offsetX + virtual.x * scale;
-        const y = offsetY + virtual.y * scale;
-        const distance = Math.hypot(x - width / 2, y - height / 2);
-        if (distance < best.distance) best = { x, y, distance };
-      }
+    for (let column = range.minColumn - 1; column <= range.maxColumn + 1; column += 1) {
+      const virtual = virtualWorldPoint(point, column);
+      const x = offsetX + virtual.x * scale;
+      const y = offsetY + virtual.y * scale;
+      const distance = Math.hypot(x - width / 2, y - height / 2);
+      if (distance < best.distance) best = { x, y, distance };
     }
     return best;
   }

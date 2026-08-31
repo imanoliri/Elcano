@@ -238,14 +238,6 @@ function drawGrid() {
   for (let lat = -80; lat <= 80; lat += 10) { const a = project({ lat, lon: -180 }); const b = project({ lat, lon: 180 }); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
 }
 
-function drawEnvironment() {
-  for (let lat = -60; lat <= 60; lat += 10) for (let lon = -170; lon <= 170; lon += 15) {
-    const p = project({ lat, lon }); if (!isWorldPointExplored(p)) continue;
-    const wind = windAt({ lat, lon }, state.time); const current = currentAt({ lat, lon }, state.time);
-    ctx.strokeStyle = 'rgba(255,255,255,.34)'; arrow(p.x, p.y, wind, 14); ctx.strokeStyle = 'rgba(74,213,255,.75)'; arrow(p.x + 5, p.y + 5, current, 10);
-  }
-}
-
 function drawFog() {
   ctx.fillStyle = 'rgba(3,12,18,.53)';
   for (let x = 0; x < canvas.width; x += EXPLORATION_CELL) for (let y = 0; y < canvas.height; y += EXPLORATION_CELL) if (!isWorldPointExplored({ x, y })) ctx.fillRect(x, y, EXPLORATION_CELL + 1, EXPLORATION_CELL + 1);
@@ -254,7 +246,7 @@ function drawFog() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog();
+  drawGrid(); drawLand(ctx); drawFog();
 
   const target = project(state.destination);
   const ship = project(state.ship.position);
