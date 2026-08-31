@@ -15,6 +15,7 @@ import { project, WORLD_MAP_HEIGHT, WORLD_MAP_WIDTH } from './world/coordinates'
 import { drawLand } from './world/geography';
 import {
   EXPLORATION_CELL,
+  EXPLORATION_RADIUS,
   isWorldPointExplored,
   revealAroundWorldPoint,
   restoreExploration,
@@ -24,6 +25,7 @@ import { getExpeditionProgress, recordVoyage, saveExploredCells } from './expedi
 import { shipPresetFromId } from './ship-selection';
 import { actionForKeyboardEvent } from './keyboard-controls';
 import { setStraitNavigationActive } from './world/environment';
+import { visibilityAt, visibilityClouds } from './world/weather';
 import { installStraitNavigationUi } from './strait-navigation-ui';
 import { loadoutFromParams, suppliesFromLoadout } from './provisioning';
 import { applyEncounterChoice, encounterDue, historicalDecisionDue, type VoyageEncounter } from './voyage-encounters';
@@ -262,7 +264,7 @@ function updateControlReadouts() {
 }
 
 function revealAroundShip() {
-  revealAroundWorldPoint(project(state.ship.position));
+  revealAroundWorldPoint(project(state.ship.position), EXPLORATION_RADIUS * visibilityAt(state.ship.position, state.time));
 }
 
 function arrow(x: number, y: number, vector: Vec2, length: number) {
@@ -290,10 +292,29 @@ function drawFog() {
   for (let x = 0; x < canvas.width; x += EXPLORATION_CELL) for (let y = 0; y < canvas.height; y += EXPLORATION_CELL) if (!isWorldPointExplored({ x, y })) ctx.fillRect(x, y, EXPLORATION_CELL + 1, EXPLORATION_CELL + 1);
 }
 
+function drawVisibilityClouds() {
+  const clouds = visibilityClouds(state.time);
+  for (const cloud of clouds) {
+    const point = project(cloud.center);
+    if (!isWorldPointExplored(point)) continue;
+    ctx.font = cloud.kind === 'fog' ? '22px system-ui' : '20px system-ui';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.globalAlpha = .8; ctx.fillText(cloud.kind === 'fog' ? '🌫️' : '☁️', point.x, point.y); ctx.globalAlpha = 1;
+  }
+  const visibility = visibilityAt(state.ship.position, state.time);
+  if (visibility >= .94) return;
+  const ship = project(state.ship.position);
+  const radius = 26 + visibility * 82;
+  const veil = ctx.createRadialGradient(ship.x, ship.y, radius * .35, ship.x, ship.y, radius * 2.1);
+  veil.addColorStop(0, `rgba(210,224,228,${(.38 * (1 - visibility)).toFixed(2)})`);
+  veil.addColorStop(1, 'rgba(210,224,228,0)');
+  ctx.fillStyle = veil; ctx.fillRect(ship.x - radius * 2.2, ship.y - radius * 2.2, radius * 4.4, radius * 4.4);
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, '#1b5367'); gradient.addColorStop(.55, '#123d52'); gradient.addColorStop(1, '#092b3d'); ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog();
+  drawGrid(); drawLand(ctx); drawEnvironment(); drawFog(); drawVisibilityClouds();
 
   const target = project(state.destination);
   const ship = project(state.ship.position);
