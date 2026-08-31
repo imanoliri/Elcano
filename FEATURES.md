@@ -10,6 +10,14 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - Restart the current mission at any time.
 - Complete a mission by reaching its destination, then continue directly to the next mission or return to the voyage menu at the end of a campaign.
 
+## Voyage provisioning and crew
+
+- Every selectable ship has a historically anchored **tons-burden** hold capacity, crew cap, and reference note. Broad ship classes use a named representative vessel or a documented historical range rather than claiming one exact universal measurement.
+- Before departure, choose water, provisions, repair stores, trade goods and gifts, gold, and arms/ammunition within the ship’s hold capacity, plus a sailor/soldier crew mix.
+- Water and provisions are consumed per person as voyage time passes. Gold pays daily wages in maravedís; sailors cost less than soldiers in this first gameplay abstraction.
+- The preparation view shows cargo used, crew, daily consumption, daily wages, and the limiting water/provisions endurance. Repair stores, trade goods, arms and crew roles otherwise reserve their gameplay effects for later features.
+- See [HISTORICAL_BASIS.md](./HISTORICAL_BASIS.md) for the representative-vessel sources and stated gameplay abstractions.
+
 ## Historical voyages
 
 ### Campaign 0: Basque Whaling tutorial

@@ -6,6 +6,7 @@ import {
 } from './world/coordinates';
 import { currentAt, windAt } from './world/environment';
 import { isAnchored, reportCoastalState, resolveLandCollision } from './coastal-navigation';
+import { consumeSupplies, type ExpeditionSupplies } from './provisioning';
 
 export type Vec2 = EastNorthVector;
 
@@ -20,6 +21,7 @@ export type WorldState = {
   elapsedHours: number;
   ship: ShipState;
   destination: GeoPosition;
+  expedition?: ExpeditionSupplies;
 };
 
 export type PolarPoint = {
@@ -171,6 +173,7 @@ export function stepWorld(state: WorldState, dtHours: number, sailTrim = 1): Wor
       time: nextTime,
       elapsedHours: state.elapsedHours + dtHours,
       ship: { ...state.ship, speed: 0 },
+      expedition: state.expedition ? consumeSupplies(state.expedition, dtHours) : undefined,
     };
   }
 
@@ -193,6 +196,7 @@ export function stepWorld(state: WorldState, dtHours: number, sailTrim = 1): Wor
       position: collision.position,
       speed: collision.collided ? 0 : Math.hypot(vx, vy),
     },
+    expedition: state.expedition ? consumeSupplies(state.expedition, dtHours) : undefined,
   };
 }
 
