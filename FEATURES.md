@@ -16,6 +16,7 @@ This is the inventory of features that are currently implemented in Elcano. It d
 - Before departure, choose water, provisions, repair stores, trade goods and gifts, gold, and arms/ammunition within the ship’s hold capacity, plus a sailor/soldier crew mix.
 - Water and provisions are consumed per person as voyage time passes. Gold pays daily wages in maravedís; sailors cost less than soldiers in this first gameplay abstraction.
 - The preparation view shows cargo used, crew, daily consumption, daily wages, and the limiting water/provisions endurance. Repair stores, trade goods, arms and crew roles otherwise reserve their gameplay effects for later features.
+- During a mission, a compact, horizontally scrollable top expedition bar shows water, provisions, repair stores, trade goods/gifts, gold treasury, arms, sailors, soldiers, and the current limiting endurance. Live-consumed resources are highlighted.
 - See [HISTORICAL_BASIS.md](./HISTORICAL_BASIS.md) for the representative-vessel sources and stated gameplay abstractions.
 
 ## Historical voyages

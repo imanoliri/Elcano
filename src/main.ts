@@ -50,13 +50,24 @@ app.innerHTML = `
       </div>
     </header>
 
+    <section class="expedition-status-bar" aria-label="Expedition resources and crew">
+      <div class="expedition-status-heading"><span>Expedition</span><small id="expedition-endurance">0 days</small></div>
+      <div class="expedition-status-item is-live"><span>Water</span><strong id="water-supply">0.0 t</strong></div>
+      <div class="expedition-status-item is-live"><span>Provisions</span><strong id="provisions-supply">0.0 t</strong></div>
+      <div class="expedition-status-item"><span>Repairs</span><strong id="repairs-supply">0.0 t</strong></div>
+      <div class="expedition-status-item"><span>Trade & gifts</span><strong id="trade-supply">0.0 t</strong></div>
+      <div class="expedition-status-item is-live"><span>Gold</span><strong id="treasury">0 m</strong></div>
+      <div class="expedition-status-item"><span>Arms</span><strong id="arms-supply">0.0 t</strong></div>
+      <div class="expedition-status-item"><span>Sailors</span><strong id="sailors-count">0</strong></div>
+      <div class="expedition-status-item"><span>Soldiers</span><strong id="soldiers-count">0</strong></div>
+    </section>
+
     <section class="instrument-strip" aria-label="Navigation instruments">
       <div class="instrument compass-instrument"><span class="instrument-label">Heading</span><div class="compass"><span id="compass-needle" class="compass-needle">↑</span></div><strong id="heading">0°</strong></div>
       <div class="instrument"><span class="instrument-label">Speed</span><strong id="speed">0.0 kn</strong><div class="meter"><span id="speed-bar" class="meter-fill"></span></div></div>
       <div class="instrument"><span class="instrument-label">Wind</span><strong id="wind">0.0</strong><div class="meter"><span id="wind-bar" class="meter-fill wind-fill"></span></div><small id="wind-bearing">0°</small></div>
       <div class="instrument"><span class="instrument-label">Current</span><strong id="current">0.0</strong><div class="meter"><span id="current-bar" class="meter-fill current-fill"></span></div><small id="current-bearing">0°</small></div>
       <div class="instrument progress-instrument"><span class="instrument-label">Voyage</span><strong id="distance">0 nm</strong><div class="meter"><span id="progress-bar" class="meter-fill progress-fill"></span></div><small id="elapsed">0.0 d</small></div>
-      <div class="instrument supplies-instrument"><span class="instrument-label">Supplies</span><strong id="water-supply">0.0 t water</strong><small id="provisions-supply">0.0 t provisions</small><small id="treasury">0 maravedís</small></div>
     </section>
 
     <div class="control-dock">
@@ -285,7 +296,21 @@ function updateInstruments() {
   const ground = { x: sail.x + drive.x + current.x, y: sail.y + drive.y + current.y }; const apparent = { x: wind.x - ground.x, y: wind.y - ground.y };
   const speed = Math.hypot(ground.x, ground.y); const windSpeed = Math.hypot(wind.x, wind.y); const currentSpeed = Math.hypot(current.x, current.y); const distance = distanceToDestination(state); const progress = Math.max(0, Math.min(1, 1 - distance / START_DISTANCE));
   setText('heading', formatSignedHeading(state.ship.headingDeg)); setText('speed', `${speed.toFixed(2)} kn`); setText('wind', windSpeed.toFixed(1)); setText('wind-bearing', bearing(wind)); setText('current', currentSpeed.toFixed(2)); setText('current-bearing', bearing(current)); setText('distance', `${distance.toFixed(0)} nm`); setText('elapsed', `${(state.elapsedHours / 24).toFixed(1)} d`);
-  if (state.expedition) { setText('water-supply', `${state.expedition.water.toFixed(1)} t water`); setText('provisions-supply', `${state.expedition.provisions.toFixed(1)} t provisions`); setText('treasury', `${Math.floor(state.expedition.goldMaravedis).toLocaleString()} maravedís`); }
+  if (state.expedition) {
+    const supplies = state.expedition;
+    const people = supplies.sailors + supplies.soldiers;
+    const waterDays = people ? supplies.water / (people * .003) : 0;
+    const provisionDays = people ? supplies.provisions / (people * .0015) : 0;
+    setText('water-supply', `${supplies.water.toFixed(1)} t`);
+    setText('provisions-supply', `${supplies.provisions.toFixed(1)} t`);
+    setText('repairs-supply', `${supplies.repairStores.toFixed(1)} t`);
+    setText('trade-supply', `${supplies.tradeGoods.toFixed(1)} t`);
+    setText('treasury', `${Math.floor(supplies.goldMaravedis).toLocaleString()} m`);
+    setText('arms-supply', `${supplies.arms.toFixed(1)} t`);
+    setText('sailors-count', String(supplies.sailors));
+    setText('soldiers-count', String(supplies.soldiers));
+    setText('expedition-endurance', `${Math.floor(Math.min(waterDays, provisionDays))} days`);
+  }
   setWidth('speed-bar', speed / 10 * 100); setWidth('wind-bar', windSpeed / 25 * 100); setWidth('current-bar', currentSpeed / 1.5 * 100); setWidth('progress-bar', progress * 100); document.querySelector<HTMLElement>('#compass-needle')!.style.transform = `rotate(${state.ship.headingDeg}deg)`;
   const course = vectorBearing(ground); const slip = signedAngleDifference(course, state.ship.headingDeg); setText('slip-readout', `${Math.abs(slip).toFixed(1)}°${Math.abs(slip) < .5 ? '' : slip < 0 ? ' port' : ' starboard'}`); const indicator = document.querySelector<HTMLElement>('#slip-indicator')!; indicator.style.left = `${50 + Math.max(-45, Math.min(45, slip)) / 90 * 100}%`;
   setText('apparent-wind-readout', `${Math.hypot(apparent.x, apparent.y).toFixed(2)} kn`); setWidth('apparent-wind-fill', Math.hypot(apparent.x, apparent.y) / 25 * 100); updateShipDiagram(apparent, current, ground);
