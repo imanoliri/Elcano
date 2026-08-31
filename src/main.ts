@@ -26,6 +26,7 @@ import { actionForKeyboardEvent } from './keyboard-controls';
 import { setStraitNavigationActive } from './world/environment';
 import { installStraitNavigationUi } from './strait-navigation-ui';
 import { loadoutFromParams, suppliesFromLoadout } from './provisioning';
+import { applyEncounterChoice, encounterDue, historicalDecisionDue, type VoyageEncounter } from './voyage-encounters';
 
 const activeMission = missionFromUrl();
 const isStraitMission = Boolean(activeMission.isStraitPassage);
@@ -119,6 +120,10 @@ app.innerHTML = `
       <div class="modal-backdrop"></div>
       <section class="modal-card"><button id="close-modal" class="modal-close" aria-label="Close instructions">×</button><p id="mission-meta" class="eyebrow">${activeMission.from} → ${activeMission.to} · ${activeMission.date}</p><h1 id="modal-title">${activeMission.title}</h1><p id="modal-text"></p><div class="legend-row"><span><i class="legend-line wind-line"></i> Wind</span><span><i class="legend-line current-line"></i> Current</span><span><i class="legend-dot"></i> ${activeMission.to}</span></div><p id="mission-note" class="modal-note">${activeMission.historicalNote}</p><button id="start-mission" class="primary-button">Take the helm</button></section>
     </div>
+    <div id="encounter-modal" class="modal encounter-modal" role="dialog" aria-modal="true" aria-labelledby="encounter-title">
+      <div class="modal-backdrop"></div>
+      <section class="modal-card"><p id="encounter-kind" class="eyebrow">Voyage encounter</p><h1 id="encounter-title"></h1><p id="encounter-text"></p><div id="encounter-choices" class="encounter-choices"></div><p id="encounter-result" class="modal-note" hidden></p><button id="encounter-continue" class="primary-button" hidden>Continue voyage</button></section>
+    </div>
     <div id="toast" class="toast" role="status"></div>
   </main>
 `;
@@ -131,6 +136,13 @@ const wheel = document.querySelector<HTMLElement>('#wheel')!;
 const modal = document.querySelector<HTMLElement>('#modal')!;
 const modalTitle = document.querySelector<HTMLElement>('#modal-title')!;
 const modalText = document.querySelector<HTMLElement>('#modal-text')!;
+const encounterModal = document.querySelector<HTMLElement>('#encounter-modal')!;
+const encounterTitle = document.querySelector<HTMLElement>('#encounter-title')!;
+const encounterText = document.querySelector<HTMLElement>('#encounter-text')!;
+const encounterKind = document.querySelector<HTMLElement>('#encounter-kind')!;
+const encounterChoices = document.querySelector<HTMLElement>('#encounter-choices')!;
+const encounterResult = document.querySelector<HTMLElement>('#encounter-result')!;
+const encounterContinue = document.querySelector<HTMLButtonElement>('#encounter-continue')!;
 const missionTitle = document.querySelector<HTMLElement>('#mission-title')!;
 const toast = document.querySelector<HTMLElement>('#toast')!;
 const timeButtons = [...document.querySelectorAll<HTMLButtonElement>('.time-button')];
@@ -148,6 +160,8 @@ let navigationMode: 'ocean' | 'maneuvering' = 'ocean';
 let maneuveringDriveEnabled = true;
 let distanceSailedNm = 0;
 let route: { lat: number; lon: number }[] = [{ ...state.ship.position }];
+const firedEncounters = new Set<string>();
+let encounterOpen = false;
 const tutorial = activeMission.tutorialSteps ?? [{ title: `Mission ${activeMission.number}. ${activeMission.title}`, text: activeMission.briefing }];
 installStraitNavigationUi(() => state, isStraitMission);
 
@@ -226,8 +240,18 @@ function openHelp() {
 }
 function closeHelp() { modal.classList.remove('open'); }
 function resetMission() {
-  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); window.dispatchEvent(new CustomEvent('elcano:mission-reset')); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
+  state = structuredClone(START); reached = false; tutorialStage = 0; distanceSailedNm = 0; route = [{ ...state.ship.position }]; firedEncounters.clear(); encounterOpen = false; encounterModal.classList.remove('open'); rudder.value = '0'; sails.value = '100'; setTimeScale(0); revealAroundShip(); window.dispatchEvent(new CustomEvent('elcano:mission-reset')); updateControlReadouts(); missionTitle.textContent = tutorial[0].title; showToast('Mission restarted · chart retained');
 }
+
+function openEncounter(key: string, encounter: VoyageEncounter) {
+  firedEncounters.add(key); encounterOpen = true; setTimeScale(0);
+  encounterKind.textContent = encounter.kind === 'history' ? 'Historical decision' : encounter.kind === 'contact' ? 'Contact sighting' : 'Seamanship encounter';
+  encounterTitle.textContent = encounter.title; encounterText.textContent = encounter.text; encounterResult.hidden = true; encounterContinue.hidden = true;
+  encounterChoices.innerHTML = '';
+  encounter.choices.forEach((choice) => { const button = document.createElement('button'); button.className = 'encounter-choice'; button.textContent = choice.label; button.addEventListener('click', () => { state = { ...state, expedition: applyEncounterChoice(state.expedition, choice) }; encounterChoices.querySelectorAll('button').forEach((item) => item.disabled = true); encounterResult.textContent = choice.result; encounterResult.hidden = false; encounterContinue.hidden = false; updateControlReadouts(); }); encounterChoices.append(button); });
+  encounterModal.classList.add('open');
+}
+encounterContinue.addEventListener('click', () => { encounterOpen = false; encounterModal.classList.remove('open'); });
 function updateControlReadouts() {
   const r = Number(rudder.value); const side = r < 0 ? 'Port' : r > 0 ? 'Starboard' : 'Centered';
   setText('rudder-readout', r === 0 ? side : `${Math.abs(r)}° ${side}`); setText('sail-readout', `${sails.value}%`); wheel.style.transform = `rotate(${r * 3.5}deg)`;
@@ -339,7 +363,7 @@ function updateTutorial() {
 
 function frame(now: number) {
   const seconds = Math.min((now - last) / 1000, .1); last = now;
-  if (timeScale > 0 && !reached) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); }
+  if (timeScale > 0 && !reached && !encounterOpen) { const dtHours = seconds * timeScale; const r = Number(rudder.value); const speedFactor = Math.max(.25, Math.min(1, state.ship.speed / 6)); const helmRate = navigationMode === 'maneuvering' ? 1.55 : .9; state.ship.headingDeg = (state.ship.headingDeg + r * helmRate * speedFactor * dtHours + 360) % 360; state = stepWorld(state, dtHours, Number(sails.value) / 100); distanceSailedNm += state.ship.speed * dtHours; const lastRoute = route[route.length - 1]; if (route.length < 48 && Math.hypot(lastRoute.lat - state.ship.position.lat, lastRoute.lon - state.ship.position.lon) > .8) route.push({ ...state.ship.position }); const progress = Math.max(0, Math.min(1, 1 - distanceToDestination(state) / START_DISTANCE)); const due = encounterDue(activeMission.id, state.ship.position, state.time, state.elapsedHours, firedEncounters) ?? historicalDecisionDue(activeMission.id, progress, firedEncounters); if (due) openEncounter(due.key, due.encounter); }
   revealAroundShip(); updateTutorial(); updateControlReadouts(); draw(); requestAnimationFrame(frame);
 }
 
